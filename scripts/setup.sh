@@ -21,6 +21,14 @@ else
   echo "Docker already installed; skipping."
 fi
 
+if ! command -v npm >/dev/null 2>&1; then
+  echo "Installing Node.js/npm (requires sudo)..."
+  sudo apt-get update
+  sudo apt-get install -y nodejs npm
+else
+  echo "Node.js/npm already installed; skipping."
+fi
+
 if [[ ! -f .env && -f env.example ]]; then
   cp env.example .env
   echo "Created .env from env.example (edit with your secrets)."
