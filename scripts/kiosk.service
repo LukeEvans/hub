@@ -1,0 +1,15 @@
+[Unit]
+Description=Skylight-style kiosk app
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+Environment=DISPLAY=:0
+WorkingDirectory=/home/pi/hub
+ExecStart=/usr/bin/chromium-browser --noerrdialogs --disable-infobars --kiosk http://localhost:3000
+Restart=always
+
+[Install]
+WantedBy=graphical.target
+

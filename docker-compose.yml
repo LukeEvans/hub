@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  app:
+    build: ./app
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./env.example
+    volumes:
+      - ./data/photos:/app/photos
+      - ./data/google:/app/data/google
+    depends_on:
+      - mealie
+    restart: unless-stopped
+
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    ports:
+      - "9000:9000"
+    environment:
+      ALLOW_SIGNUP: "false"
+      PUID: "1000"
+      PGID: "1000"
+      BASE_URL: "http://localhost:9000"
+    volumes:
+      - ./data/mealie:/app/data
+    restart: unless-stopped
+
+  icloudpd:
+    image: ghcr.io/boredazfcuk/icloudpd:latest
+    environment:
+      apple_id: ${APPLE_ID}
+      apple_password: ${APPLE_APP_PASSWORD}
+      authentication_type: 2FA
+      download_destination: /photos
+      folder_structure: "{:/Shared}"
+      photo_size: original
+      synchronisation_interval: ${ICLOUD_SYNC_INTERVAL:-900}
+      shared_album: ${ICLOUD_SHARED_ALBUM}
+    volumes:
+      - ./data/photos:/photos
+    restart: unless-stopped
+
