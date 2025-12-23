@@ -27,18 +27,3 @@ services:
       - ./data/mealie:/app/data
     restart: unless-stopped
 
-  icloudpd:
-    image: ghcr.io/boredazfcuk/icloudpd:latest
-    environment:
-      apple_id: ${APPLE_ID}
-      apple_password: ${APPLE_APP_PASSWORD}
-      authentication_type: 2FA
-      download_destination: /photos
-      folder_structure: "{:/Shared}"
-      photo_size: original
-      synchronisation_interval: ${ICLOUD_SYNC_INTERVAL:-900}
-      shared_album: ${ICLOUD_SHARED_ALBUM}
-    volumes:
-      - ./data/photos:/photos
-    restart: unless-stopped
-
