@@ -7,7 +7,7 @@ Wants=network-online.target
 User=pi
 Environment=DISPLAY=:0
 WorkingDirectory=/home/pi/hub
-ExecStart=/usr/bin/chromium-browser --noerrdialogs --disable-infobars --kiosk http://localhost:3000
+ExecStart=/usr/bin/chromium-browser --noerrdialogs --disable-infobars --kiosk http://localhost
 Restart=always
 
 [Install]

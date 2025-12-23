@@ -19,13 +19,13 @@ Raspberry Pi kiosk that boots into a Skylight-like calendar with Google Calendar
 2) Install Docker + Docker Compose on the Pi.
 3) `chmod +x scripts/setup.sh && scripts/setup.sh`
    - Or manually: `docker compose up --build -d`
-   - App on `http://localhost:3000`
+   - App on `http://localhost`
    - Mealie on `http://localhost:9000`
    - Photos synced into `./data/photos`
 
 ## Google Calendar auth
-1) With the stack running, open `http://<pi-ip>:3000`.
-2) Fetch auth URL: `curl http://<pi-ip>:3000/api/google/auth-url`.
+1) With the stack running, open `http://<pi-ip>`.
+2) Fetch auth URL: `curl http://<pi-ip>/api/google/auth-url`.
 3) Open the URL, complete consent, and on callback you'll see “Google auth completed.” Tokens persist at `./data/google/token.json`.
 
 ## Kiosk
