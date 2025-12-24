@@ -4,6 +4,17 @@ let idleTimer;
 let slideshowImages = [];
 let slideshowIndex = 0;
 
+const pastelColors = ['pastel-mint', 'pastel-coral', 'pastel-peach', 'pastel-lavender', 'pastel-sky', 'pastel-rose'];
+
+function getEventColor(str, index) {
+  if (!str) return pastelColors[index % pastelColors.length];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return pastelColors[Math.abs(hash) % pastelColors.length];
+}
+
 function setView(target) {
   views.forEach((view) => {
     document.querySelector(`#view-${view}`).classList.toggle('active', view === target);
@@ -41,17 +52,17 @@ async function loadWeather() {
   }
   container.innerHTML = `
     <div class="weather-card">
-      <div>Now</div>
-      <div style="font-size:32px;font-weight:700">${Math.round(current.temp)}°</div>
-      <div>${current.weather?.[0]?.description || ''}</div>
+      <div class="label">Now</div>
+      <div class="temp">${Math.round(current.temp)}°</div>
+      <div class="desc">${current.weather?.[0]?.description || ''}</div>
     </div>
     ${daily
       .map(
         (d) => `
       <div class="weather-card">
-        <div>${new Date(d.dt * 1000).toLocaleDateString(undefined, { weekday: 'short' })}</div>
-        <div>${Math.round(d.temp.min)}° / ${Math.round(d.temp.max)}°</div>
-        <div>${d.weather?.[0]?.main || ''}</div>
+        <div class="label">${new Date(d.dt * 1000).toLocaleDateString(undefined, { weekday: 'short' })}</div>
+        <div class="temp">${Math.round(d.temp.min)}° / ${Math.round(d.temp.max)}°</div>
+        <div class="desc">${d.weather?.[0]?.main || ''}</div>
       </div>`
       )
       .join('')}
@@ -87,8 +98,8 @@ async function loadCalendar() {
         </div>
         ${days[day]
           .map(
-            (ev) => `
-          <div class="event">
+            (ev, idx) => `
+          <div class="event ${getEventColor(ev.summary, idx)}">
             <div class="event-title">${ev.summary || 'Busy'}</div>
             <div class="event-time">${formatTime(new Date(ev.start))} – ${formatTime(
               new Date(ev.end)
@@ -135,8 +146,8 @@ async function loadMealPlan() {
     .map(
       (m) => `
     <div class="meal-card" data-id="${m.recipeId}">
-      <div>${m.name || 'Meal'}</div>
-      <div style="color:var(--muted)">${m.date || ''}</div>
+      <div class="meal-name">${m.name || 'Meal'}</div>
+      <div class="meal-date">${m.date || ''}</div>
     </div>`
     )
     .join('');
@@ -157,8 +168,8 @@ async function loadRecipe(id) {
   }
   const data = await res.json();
   detail.innerHTML = `
-    <div style="font-size:18px;font-weight:700">${data.name}</div>
-    <div style="margin:8px 0;color:var(--muted)">${data.description || ''}</div>
+    <div class="recipe-title">${data.name}</div>
+    <div class="recipe-desc">${data.description || ''}</div>
     <ol>
       ${data.steps
         ?.map((s) => `<li>${s.description}</li>`)
