@@ -40,6 +40,30 @@ async function saveGoogleToken(token) {
   await fs.writeFile(GOOGLE_TOKEN_PATH, JSON.stringify(token));
 }
 
+function getMockCalendarEvents() {
+  const now = new Date();
+  const build = (offset, startHour, endHour, summary) => {
+    const start = new Date(now);
+    start.setDate(now.getDate() + offset);
+    start.setHours(startHour, 0, 0, 0);
+    const end = new Date(start);
+    end.setHours(endHour, 0, 0, 0);
+    return {
+      id: `mock-${offset}-${startHour}`,
+      calendarId: 'mock',
+      summary,
+      start: start.toISOString(),
+      end: end.toISOString(),
+    };
+  };
+  return [
+    build(0, 9, 10, 'Coffee with Alex'),
+    build(0, 12, 13, 'Lunch Break'),
+    build(1, 10, 11, 'Planning Session'),
+    build(2, 18, 19, 'Dinner Out'),
+  ];
+}
+
 app.get('/api/google/auth-url', async (_req, res) => {
   const scopes = [
     'https://www.googleapis.com/auth/calendar.readonly',
@@ -73,8 +97,11 @@ app.get('/api/google/oauth/callback', async (req, res) => {
 app.get('/api/calendar/events', async (req, res) => {
   try {
     const token = await getGoogleToken();
-    if (!token) {
-      return res.status(400).json({ error: 'Google token missing. Authenticate first.' });
+    const googleConfigured = Boolean(
+      process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && token
+    );
+    if (!googleConfigured) {
+      return res.json({ events: getMockCalendarEvents() });
     }
     const calendar = google.calendar({ version: 'v3', auth: authClient });
     const now = new Date();
