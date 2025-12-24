@@ -25,11 +25,20 @@ function formatTime(date) {
 
 async function loadWeather() {
   const res = await fetch('/api/weather');
-  if (!res.ok) return;
-  const data = await res.json();
   const container = document.getElementById('weather-panel');
+  if (!res.ok) {
+    container.innerHTML = '<div class="weather-card">Weather unavailable</div>';
+    document.getElementById('current-weather').textContent = 'Weather unavailable';
+    return;
+  }
+  const data = await res.json();
   const current = data.current;
   const daily = data.daily?.slice(0, 4) || [];
+  if (!current) {
+    container.innerHTML = '<div class="weather-card">Weather unavailable</div>';
+    document.getElementById('current-weather').textContent = 'Weather unavailable';
+    return;
+  }
   container.innerHTML = `
     <div class="weather-card">
       <div>Now</div>
@@ -54,9 +63,12 @@ async function loadWeather() {
 
 async function loadCalendar() {
   const res = await fetch('/api/calendar/events');
-  if (!res.ok) return;
-  const { events } = await res.json();
   const grid = document.getElementById('calendar-grid');
+  if (!res.ok) {
+    grid.innerHTML = '<div class="day-card">Calendar unavailable</div>';
+    return;
+  }
+  const { events = [] } = await res.json();
   const days = {};
   events.forEach((e) => {
     const key = e.start?.slice(0, 10);
@@ -87,25 +99,38 @@ async function loadCalendar() {
       </div>`;
     })
     .join('');
+  if (!sortedKeys.length) {
+    grid.innerHTML = '<div class="day-card">No events</div>';
+  }
 }
 
 async function loadPhotos() {
   const res = await fetch('/api/photos');
-  if (!res.ok) return;
-  const { images } = await res.json();
-  slideshowImages = images;
   const grid = document.getElementById('photos-grid');
+  if (!res.ok) {
+    grid.innerHTML = '<div class="photo">Photos unavailable</div>';
+    slideshowImages = [];
+    return;
+  }
+  const { images = [] } = await res.json();
+  slideshowImages = images;
   grid.innerHTML = images
     .map((src) => `<div class="photo"><img src="${src}" loading="lazy" /></div>`)
     .join('');
+  if (!images.length) {
+    grid.innerHTML = '<div class="photo">No photos yet</div>';
+  }
 }
 
 async function loadMealPlan() {
   const res = await fetch('/api/mealie/mealplan');
-  if (!res.ok) return;
+  const container = document.getElementById('meal-plan');
+  if (!res.ok) {
+    container.innerHTML = '<div class="meal-card">Meal plan unavailable</div>';
+    return;
+  }
   const data = await res.json();
   const meals = data?.mealPlan?.meals || [];
-  const container = document.getElementById('meal-plan');
   container.innerHTML = meals
     .map(
       (m) => `
@@ -118,13 +143,19 @@ async function loadMealPlan() {
   container.querySelectorAll('.meal-card').forEach((card) => {
     card.addEventListener('click', () => loadRecipe(card.dataset.id));
   });
+  if (!meals.length) {
+    container.innerHTML = '<div class="meal-card">No meals planned</div>';
+  }
 }
 
 async function loadRecipe(id) {
   const res = await fetch(`/api/mealie/recipe/${id}`);
-  if (!res.ok) return;
-  const data = await res.json();
   const detail = document.getElementById('recipe-detail');
+  if (!res.ok) {
+    detail.innerHTML = '<div>Recipe unavailable</div>';
+    return;
+  }
+  const data = await res.json();
   detail.innerHTML = `
     <div style="font-size:18px;font-weight:700">${data.name}</div>
     <div style="margin:8px 0;color:var(--muted)">${data.description || ''}</div>

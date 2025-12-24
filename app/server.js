@@ -64,6 +64,27 @@ function getMockCalendarEvents() {
   ];
 }
 
+function getMockWeather() {
+  const now = Math.floor(Date.now() / 1000);
+  const day = (offset, main) => ({
+    dt: now + offset * 86400,
+    temp: { min: 65 + offset, max: 75 + offset },
+    weather: [{ main }],
+  });
+  return {
+    current: { temp: 72, weather: [{ main: 'Clear', description: 'Mock data' }] },
+    daily: [day(1, 'Clouds'), day(2, 'Rain'), day(3, 'Clear'), day(4, 'Wind')],
+  };
+}
+
+function getEmptyMealPlan() {
+  return { mealPlan: { meals: [] } };
+}
+
+function getEmptyRecipe() {
+  return { name: 'Recipe unavailable', description: '', steps: [] };
+}
+
 app.get('/api/google/auth-url', async (_req, res) => {
   const scopes = [
     'https://www.googleapis.com/auth/calendar.readonly',
@@ -154,7 +175,7 @@ app.get('/api/weather', async (_req, res) => {
     const lon = process.env.WEATHER_LON;
     const apiKey = process.env.OPENWEATHER_API_KEY;
     if (!lat || !lon || !apiKey) {
-      return res.status(400).json({ error: 'Weather not configured' });
+      return res.json(getMockWeather());
     }
     const cacheKey = `weather:${lat}:${lon}`;
     const cached = cache.get(cacheKey);
@@ -176,7 +197,7 @@ app.get('/api/weather', async (_req, res) => {
     res.json(payload);
   } catch (err) {
     console.error('Weather error', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to fetch weather' });
+    res.json(getMockWeather());
   }
 });
 
@@ -190,7 +211,7 @@ app.get('/api/photos', async (_req, res) => {
     res.json({ images });
   } catch (err) {
     console.error('Photos error', err);
-    res.status(500).json({ error: 'Failed to list photos' });
+    res.json({ images: [] });
   }
 });
 
@@ -201,7 +222,7 @@ app.get('/api/mealie/mealplan', async (_req, res) => {
     const baseUrl = process.env.MEALIE_BASE_URL;
     const token = process.env.MEALIE_API_TOKEN;
     if (!baseUrl || !token) {
-      return res.status(400).json({ error: 'Mealie not configured' });
+      return res.json(getEmptyMealPlan());
     }
     const resp = await axios.get(`${baseUrl}/api/meal-plans/current`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -209,7 +230,7 @@ app.get('/api/mealie/mealplan', async (_req, res) => {
     res.json(resp.data);
   } catch (err) {
     console.error('Mealie meal plan error', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to fetch meal plan' });
+    res.json(getEmptyMealPlan());
   }
 });
 
@@ -217,6 +238,9 @@ app.get('/api/mealie/recipe/:id', async (req, res) => {
   try {
     const baseUrl = process.env.MEALIE_BASE_URL;
     const token = process.env.MEALIE_API_TOKEN;
+    if (!baseUrl || !token) {
+      return res.json(getEmptyRecipe());
+    }
     const { id } = req.params;
     const resp = await axios.get(`${baseUrl}/api/recipes/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -224,7 +248,7 @@ app.get('/api/mealie/recipe/:id', async (req, res) => {
     res.json(resp.data);
   } catch (err) {
     console.error('Mealie recipe error', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to fetch recipe' });
+    res.json(getEmptyRecipe());
   }
 });
 
