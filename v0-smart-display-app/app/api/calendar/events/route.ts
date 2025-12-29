@@ -6,6 +6,7 @@ import cache from '@/lib/cache';
 function getMockCalendarEvents() {
   const now = new Date();
   const events = [];
+  
   const build = (offset: number, startHour: number, endHour: number, summary: string) => {
     const start = new Date(now);
     start.setDate(now.getDate() + offset);
@@ -13,11 +14,24 @@ function getMockCalendarEvents() {
     const end = new Date(start);
     end.setHours(endHour, 0, 0, 0);
     return {
-      id: `mock-${offset}-${startHour}`,
+      id: `mock-${offset}-${startHour}-${summary.replace(/\s+/g, '-')}`,
       calendarId: 'mock',
       summary,
       start: start.toISOString(),
       end: end.toISOString(),
+    };
+  };
+
+  const buildAllDay = (offset: number, summary: string) => {
+    const date = new Date(now);
+    date.setDate(now.getDate() + offset);
+    const dateStr = date.toISOString().split('T')[0];
+    return {
+      id: `mock-allday-${offset}-${summary.replace(/\s+/g, '-')}`,
+      calendarId: 'mock',
+      summary,
+      start: dateStr,
+      end: dateStr,
     };
   };
 
@@ -28,11 +42,17 @@ function getMockCalendarEvents() {
     'Yoga Class', 'Coding Practice', 'Team Sync', 'Laundry'
   ];
 
-  for (let d = 0; d < 14; d++) {
-    const numEvents = 8;
+  // Generate 60 days of events (prev 30, next 30)
+  for (let d = -30; d < 30; d++) {
+    // Add 1-2 all-day events every few days
+    if (d % 3 === 0) {
+      events.push(buildAllDay(d, `All-day Event ${d}`));
+    }
+    
+    const numEvents = Math.floor(Math.random() * 4) + 2;
     for (let i = 0; i < numEvents; i++) {
-      const startHour = 8 + i;
-      const activity = activities[(d * numEvents + i) % activities.length];
+      const startHour = 8 + (i * 3);
+      const activity = activities[Math.abs(d * numEvents + i) % activities.length];
       events.push(build(d, startHour, startHour + 1, activity));
     }
   }
