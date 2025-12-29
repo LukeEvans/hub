@@ -4,6 +4,7 @@ import { Calendar, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
+import { format, startOfWeek, addDays, isSameDay, parseISO } from "date-fns"
 
 interface CalendarEvent {
   id: string;
@@ -18,43 +19,59 @@ export default function CalendarPage() {
   const [view, setView] = useState("Week")
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [currentTemp, setCurrentTemp] = useState<number | null>(null)
   
+  const today = new Date()
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 }) // Start week on Monday
+
   useEffect(() => {
-    async function fetchEvents() {
+    async function fetchCalendarData() {
       try {
-        const res = await fetch('/api/calendar/events')
-        if (res.ok) {
-          const data = await res.json()
+        const [eventsRes, weatherRes] = await Promise.all([
+          fetch('/api/calendar/events'),
+          fetch('/api/weather')
+        ])
+
+        if (eventsRes.ok) {
+          const data = await eventsRes.json()
           setEvents(data.events || [])
         }
+
+        if (weatherRes.ok) {
+          const weatherData = await weatherRes.json()
+          setCurrentTemp(Math.round(weatherData.current?.temp))
+        }
       } catch (err) {
-        console.error('Failed to fetch events', err)
+        console.error('Failed to fetch calendar data', err)
       } finally {
         setLoading(false)
       }
     }
-    fetchEvents()
+    fetchCalendarData()
   }, [])
 
-  const currentTime = new Date().toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  })
+  const currentTime = format(today, "h:mm a")
+  const currentMonthYear = format(today, "MMMM yyyy")
 
-  // Group events by day
+  // Group events by day (yyyy-MM-dd)
   const eventsByDay: Record<string, CalendarEvent[]> = {}
   events.forEach(event => {
-    const day = new Date(event.start).toLocaleDateString('en-US', { weekday: 'short' })
-    if (!eventsByDay[day]) eventsByDay[day] = []
-    eventsByDay[day].push(event)
+    const dateStr = format(parseISO(event.start), 'yyyy-MM-dd')
+    if (!eventsByDay[dateStr]) eventsByDay[dateStr] = []
+    eventsByDay[dateStr].push(event)
   })
 
-  const weekDays = ["Wed", "Thu", "Fri", "Sat", "Sun"].map(name => ({
-    name,
-    date: 18 + ["Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(name), // Mocking dates for now to match UI layout
-    events: eventsByDay[name] || []
-  }))
+  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+    const date = addDays(weekStart, i)
+    const dateStr = format(date, 'yyyy-MM-dd')
+    return {
+      name: format(date, 'EEE'),
+      date: format(date, 'd'),
+      dateStr,
+      isToday: isSameDay(date, today),
+      events: eventsByDay[dateStr] || []
+    }
+  })
 
   return (
     <div className="min-h-screen p-8 bg-background">
@@ -67,7 +84,9 @@ export default function CalendarPage() {
             </div>
             <div>
               <h1 className="text-4xl font-bold">Evans Family</h1>
-              <p className="text-muted-foreground text-lg">{currentTime} • 80°</p>
+              <p className="text-muted-foreground text-lg">
+                {currentTime} • {currentTemp !== null ? `${currentTemp}°` : "--°"} • {currentMonthYear}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -115,55 +134,82 @@ export default function CalendarPage() {
       ) : (
         <Card className="p-6">
           {/* Week Days Header */}
-          <div className="grid grid-cols-[100px_repeat(5,1fr)] gap-4 mb-4">
+          <div className="grid grid-cols-[100px_repeat(7,1fr)] gap-4 mb-4">
             <div className="text-sm font-medium text-muted-foreground">Time</div>
             {weekDays.map((day) => (
-              <div key={day.name} className="text-center">
+              <div key={day.dateStr} className="text-center">
                 <div className="text-2xl font-bold mb-1">
-                  {day.name} <span className={day.name === "Wed" ? "text-primary" : ""}>{day.date}</span>
+                  {day.name} <span className={day.isToday ? "text-primary" : ""}>{day.date}</span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Time Grid */}
-          <div className="grid grid-cols-[100px_repeat(5,1fr)] gap-4 relative">
-            {/* Time Labels */}
-            <div className="space-y-32">
-              {["9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM"].map((time) => (
-                <div key={time} className="text-sm text-muted-foreground font-medium h-8">
-                  {time}
-                </div>
-              ))}
-            </div>
-
-            {/* Day Columns */}
-            {weekDays.map((day) => (
-              <div key={day.name} className="relative min-h-[800px] border-l border-border">
-                {day.events.map((event, idx) => {
-                  const startDate = new Date(event.start)
-                  const startHour = startDate.getHours()
-                  const startMinutes = startDate.getMinutes()
-                  const top = (startHour - 9) * 160 + (startMinutes / 60) * 160 // 160px per hour approx based on space-y-32
-                  
+          {/* Time Grid Scrollable Area */}
+          <div className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="grid grid-cols-[100px_repeat(7,1fr)] gap-4 relative">
+              {/* Time Labels */}
+              <div className="relative">
+                {Array.from({ length: 16 }).map((_, i) => {
+                  const hour = 7 + i
+                  const ampm = hour >= 12 ? "PM" : "AM"
+                  const displayHour = hour > 12 ? hour - 12 : hour
                   return (
-                    <div 
-                      key={event.id} 
-                      className="absolute left-2 right-2"
-                      style={{ top: `${top}px` }}
-                    >
-                      <Card className="p-3 bg-[var(--widget-blue)] mb-2 cursor-pointer hover:shadow-md transition-shadow">
-                        <div className="font-semibold text-sm text-foreground truncate">{event.summary}</div>
-                        <div className="text-xs text-foreground/70">
-                          {new Date(event.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - 
-                          {new Date(event.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                        </div>
-                      </Card>
+                    <div key={hour} className="text-sm text-muted-foreground font-medium h-24 flex items-start pt-0">
+                      {displayHour} {ampm}
                     </div>
                   )
                 })}
               </div>
-            ))}
+
+              {/* Day Columns */}
+              {weekDays.map((day) => (
+                <div key={day.dateStr} className="relative min-h-[1536px] border-l border-border">
+                  {/* Hour horizontal lines */}
+                  {Array.from({ length: 16 }).map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="absolute w-full border-t border-border/50" 
+                      style={{ top: `${i * 96}px` }}
+                    />
+                  ))}
+                  
+                  {day.events.map((event) => {
+                    const startDate = parseISO(event.start)
+                    const endDate = parseISO(event.end)
+                    const startHour = startDate.getHours()
+                    const startMinutes = startDate.getMinutes()
+                    
+                    // Only show if it overlaps with our 7 AM - 10 PM range
+                    if (startHour < 7 || startHour >= 23) return null
+
+                    const hourHeight = 96 // Matching h-24 (24 * 4 = 96px)
+                    const top = (startHour - 7) * hourHeight + (startMinutes / 60) * hourHeight
+                    
+                    const durationMs = endDate.getTime() - startDate.getTime()
+                    const height = Math.max((durationMs / (1000 * 60 * 60)) * hourHeight, 40) // Min height 40px
+                    
+                    return (
+                      <div 
+                        key={event.id} 
+                        className="absolute left-1 right-1 z-10"
+                        style={{ 
+                          top: `${top}px`,
+                          height: `${height - 4}px` // Small gap between events
+                        }}
+                      >
+                        <Card className="h-full p-2 bg-[var(--widget-blue)] overflow-hidden cursor-pointer hover:shadow-md transition-shadow border-none shadow-sm">
+                          <div className="font-semibold text-xs text-foreground leading-tight mb-1">{event.summary}</div>
+                          <div className="text-[10px] text-foreground/70">
+                            {format(startDate, 'h:mm a')}
+                          </div>
+                        </Card>
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
         </Card>
       )}
