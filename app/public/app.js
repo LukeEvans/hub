@@ -264,6 +264,7 @@ async function init() {
   await loadPhotos();
   await loadMealPlan();
   enableDragScroll(document.getElementById('calendar-grid'), 'x');
+  enableDragScroll(document.querySelector('main'), 'y');
   resetIdleTimer();
   ['click', 'touchstart', 'mousemove', 'keydown'].forEach((evt) =>
     document.addEventListener(evt, resetIdleTimer)
