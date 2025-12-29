@@ -140,10 +140,14 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
   body {
     @apply bg-background text-foreground;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
     overscroll-behavior: contain;
   }
   :where(button, [role="button"], a) {
@@ -152,5 +156,7 @@
   }
   :where(input, select, textarea) {
     touch-action: manipulation;
+    user-select: text;
+    -webkit-user-select: text;
   }
 }
