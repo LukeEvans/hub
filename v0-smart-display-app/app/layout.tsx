@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { SidebarNavigation } from "@/components/sidebar-navigation"
+import { TouchScrollProvider } from "@/components/touch-scroll-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -38,6 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
+        <TouchScrollProvider />
         <SidebarNavigation />
         <main>
           {children}

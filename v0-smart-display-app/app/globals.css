@@ -160,6 +160,10 @@
     bottom: 0;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  main::-webkit-scrollbar {
+    display: none;
   }
   button, [role="button"] {
     min-height: 44px;
