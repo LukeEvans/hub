@@ -48,6 +48,7 @@ body {
   background: var(--bg);
   color: var(--text);
   height: 100vh;
+  overflow: hidden; /* Prevent the whole page from bouncing */
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -118,6 +119,7 @@ main {
   overflow-y: auto;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+  min-height: 0;
 }
 
 .topbar {
@@ -158,6 +160,7 @@ main {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
+  min-width: 0;
 }
 
 .day-card {
