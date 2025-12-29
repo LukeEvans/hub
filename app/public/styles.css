@@ -39,7 +39,6 @@
   -ms-overflow-style: none; /* IE/Edge */
   user-select: none;
   -webkit-user-select: none;
-  touch-action: pan-y;
 }
 
 *::-webkit-scrollbar {
