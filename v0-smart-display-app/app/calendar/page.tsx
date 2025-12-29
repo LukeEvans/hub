@@ -101,6 +101,7 @@ export default function CalendarPage() {
         date: format(currentDate, 'd'),
         dateStr,
         isToday: isSameDay(currentDate, new Date()),
+        isCurrentMonth: true,
         events: eventsByDay[dateStr] || { timed: [], allDay: [] }
       }]
     }
@@ -136,6 +137,7 @@ export default function CalendarPage() {
         date: format(date, 'd'),
         dateStr,
         isToday: isSameDay(date, new Date()),
+        isCurrentMonth: true,
         events: eventsByDay[dateStr] || { timed: [], allDay: [] }
       }
     })
@@ -143,36 +145,52 @@ export default function CalendarPage() {
 
   const viewDays = getDaysForView()
 
-  const [touchStart, setTouchStart] = useState<{x: number, y: number} | null>(null)
-  const [touchEnd, setTouchEnd] = useState<{x: number, y: number} | null>(null)
-  const minSwipeDistance = 50
+  // Swipe logic using pointer events
+  useEffect(() => {
+    let startX: number | null = null
+    let startY: number | null = null
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null)
-    setTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY })
-  }
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY })
-  }
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
-    const distanceX = touchStart.x - touchEnd.x
-    const distanceY = touchStart.y - touchEnd.y
-    const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY)
-    
-    if (isHorizontalSwipe && Math.abs(distanceX) > minSwipeDistance) {
-      if (distanceX > 0) handleNext()
-      else handlePrevious()
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement
+      if (target.closest('button, a, input, [role="button"], .no-swipe')) return
+      
+      startX = e.clientX
+      startY = e.clientY
     }
-  }
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (startX === null || startY === null) return
+
+      const diffX = startX - e.clientX
+      const diffY = startY - e.clientY
+      const absDiffX = Math.abs(diffX)
+      const absDiffY = Math.abs(diffY)
+
+      // Only trigger if horizontal movement is significantly greater than vertical
+      // and exceeds the threshold
+      if (absDiffX > absDiffY && absDiffX > 50) {
+        if (diffX > 0) {
+          handleNext()
+        } else {
+          handlePrevious()
+        }
+      }
+
+      startX = null
+      startY = null
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown, { capture: true })
+    document.addEventListener('pointerup', handlePointerUp, { capture: true })
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, { capture: true })
+      document.removeEventListener('pointerup', handlePointerUp, { capture: true })
+    }
+  }, [view, currentDate]) // Re-bind when view or date changes to ensure handlers use fresh state
 
   return (
-    <div 
-      className="min-h-screen p-8 bg-background overflow-hidden flex flex-col"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
+    <div className="min-h-screen p-8 bg-background overflow-hidden flex flex-col">
       {/* Header */}
       <div className="mb-4 shrink-0">
         <div className="flex items-center justify-between mb-4">
