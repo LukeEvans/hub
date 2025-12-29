@@ -222,6 +222,40 @@ function initMeta() {
   document.getElementById('current-date').textContent = formatDate(now);
 }
 
+function enableDragScroll(el, axis = 'x') {
+  if (!el) return;
+  let isDown = false;
+  let startPos = 0;
+  let startScroll = 0;
+
+  el.addEventListener('pointerdown', (e) => {
+    isDown = true;
+    startPos = axis === 'x' ? e.clientX : e.clientY;
+    startScroll = axis === 'x' ? el.scrollLeft : el.scrollTop;
+    el.setPointerCapture(e.pointerId);
+  });
+
+  el.addEventListener('pointermove', (e) => {
+    if (!isDown) return;
+    const delta = (axis === 'x' ? e.clientX : e.clientY) - startPos;
+    if (axis === 'x') {
+      el.scrollLeft = startScroll - delta;
+    } else {
+      el.scrollTop = startScroll - delta;
+    }
+    e.preventDefault();
+  });
+
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
+    el.addEventListener(evt, (e) => {
+      isDown = false;
+      if (e.pointerId !== undefined) {
+        el.releasePointerCapture(e.pointerId);
+      }
+    });
+  });
+}
+
 async function init() {
   bindNav();
   initMeta();
@@ -229,6 +263,7 @@ async function init() {
   await loadWeather();
   await loadPhotos();
   await loadMealPlan();
+  enableDragScroll(document.getElementById('calendar-grid'), 'x');
   resetIdleTimer();
   ['click', 'touchstart', 'mousemove', 'keydown'].forEach((evt) =>
     document.addEventListener(evt, resetIdleTimer)
