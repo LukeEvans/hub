@@ -143,7 +143,7 @@
   html,
   body {
     @apply bg-background text-foreground;
-    touch-action: manipulation;
+    touch-action: pan-x pan-y;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     user-select: none;

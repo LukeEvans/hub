@@ -39,7 +39,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
         <SidebarNavigation />
-        <main className="ml-20 min-h-screen">{children}</main>
+        <main className="ml-20 h-screen overflow-y-auto">{children}</main>
         <Analytics />
       </body>
     </html>
