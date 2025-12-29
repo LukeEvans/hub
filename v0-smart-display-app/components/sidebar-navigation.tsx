@@ -2,7 +2,7 @@
 
 import { Calendar, Cloud, ImageIcon, Utensils, Music, HomeIcon, LayoutDashboard, Moon, Sun } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
@@ -54,6 +54,7 @@ const navigationItems = [
 
 export function SidebarNavigation() {
   const pathname = usePathname()
+  const router = useRouter()
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
@@ -87,12 +88,18 @@ export function SidebarNavigation() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={cn(
                 "w-full aspect-square min-h-16 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200",
                 "hover:bg-sidebar-accent",
                 isActive && "bg-sidebar-primary text-sidebar-primary-foreground",
               )}
-              title={item.label}
+              aria-label={item.label}
+              draggable={false}
+              onClick={(e) => {
+                e.preventDefault()
+                router.push(item.href)
+              }}
             >
               <Icon className="w-7 h-7" />
               <span className="text-[10px] font-medium">{item.label}</span>
