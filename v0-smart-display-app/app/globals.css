@@ -149,6 +149,8 @@
     user-select: none;
     -webkit-user-select: none;
     overscroll-behavior: contain;
+    height: 100vh;
+    overflow: hidden;
   }
   :where(button, [role="button"], a) {
     touch-action: manipulation;
