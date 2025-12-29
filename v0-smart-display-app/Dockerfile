@@ -1,4 +1,4 @@
-FROM node:18-bullseye AS builder
+FROM node:20-bullseye AS builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN corepack enable && pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build
 
-FROM node:18-bullseye AS runner
+FROM node:20-bullseye AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production

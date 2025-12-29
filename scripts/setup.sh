@@ -21,12 +21,12 @@ else
   echo "Docker already installed; skipping."
 fi
 
-if ! command -v node >/dev/null 2>&1 || ! node -v | grep -Eq '^v1[89]|^v2[0-9]'; then
-  echo "Installing Node.js 18 (requires sudo)..."
-  curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+if ! command -v node >/dev/null 2>&1 || ! node -v | grep -Eq '^v2[0-9]'; then
+  echo "Installing Node.js 20 (requires sudo)..."
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
   sudo apt-get install -y nodejs
 else
-  echo "Node.js 18+ already installed; skipping."
+  echo "Node.js 20+ already installed; skipping."
 fi
 
 if ! command -v pnpm >/dev/null 2>&1; then
