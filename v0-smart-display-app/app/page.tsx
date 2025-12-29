@@ -16,7 +16,7 @@ export default function DashboardPage() {
     return () => clearInterval(timer)
   }, [])
 
-  const timeString = currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  const timeString = currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
   const dateString = currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
 
   return (

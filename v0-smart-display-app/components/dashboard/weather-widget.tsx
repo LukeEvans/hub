@@ -35,7 +35,7 @@ export function WeatherWidget() {
   }
 
   const current = weatherData?.current || {}
-  const daily = weatherData?.daily?.slice(0, 3) || []
+  const daily = weatherData?.daily?.slice(0, 7) || []
   const hourly = weatherData?.hourly?.slice(0, 8) || []
 
   const getWeatherIcon = (main: string) => {
@@ -68,7 +68,7 @@ export function WeatherWidget() {
           {hourly.map((hour: any, i: number) => (
             <div key={i} className="flex flex-col items-center min-w-[40px] gap-1">
               <span className="text-[10px] text-foreground/70">
-                {new Date(hour.dt * 1000).getHours()}:00
+                {new Date(hour.dt * 1000).toLocaleTimeString([], { hour: 'numeric', hour12: true })}
               </span>
               <div className="w-5 h-5 text-foreground/80">
                 {getWeatherIcon(hour.weather?.[0]?.main)}
@@ -78,19 +78,19 @@ export function WeatherWidget() {
           ))}
         </div>
 
-        {/* 3-Day Daily */}
-        <div className="space-y-2">
+        {/* 7-Day Daily */}
+        <div className="flex justify-between items-center pt-4 border-t border-foreground/10 overflow-x-auto scrollbar-hide">
           {daily.map((day: any, i: number) => (
-            <div key={i} className="flex items-center justify-between text-sm">
-              <span className="w-12 font-medium">
+            <div key={i} className="flex flex-col items-center min-w-[50px] gap-1">
+              <span className="text-[10px] font-medium text-foreground/70 uppercase">
                 {i === 0 ? 'Today' : new Date(day.dt * 1000).toLocaleDateString([], { weekday: 'short' })}
               </span>
-              <div className="w-5 h-5 text-foreground/80">
+              <div className="w-6 h-6 text-foreground/80">
                 {getWeatherIcon(day.weather?.[0]?.main)}
               </div>
-              <div className="flex gap-2 text-xs">
-                <span className="font-bold">{Math.round(day.temp.max)}°</span>
-                <span className="text-foreground/60">{Math.round(day.temp.min)}°</span>
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-sm font-bold">{Math.round(day.temp.max)}°</span>
+                <span className="text-[10px] text-foreground/60">{Math.round(day.temp.min)}°</span>
               </div>
             </div>
           ))}

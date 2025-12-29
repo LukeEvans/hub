@@ -130,7 +130,7 @@ export default function WeatherPage() {
               return (
                 <div key={index} className="flex flex-col items-center min-w-[100px] gap-2">
                   <div className="text-sm font-medium text-muted-foreground">
-                    {new Date(hour.dt * 1000).toLocaleTimeString([], { hour: 'numeric' })}
+                    {new Date(hour.dt * 1000).toLocaleTimeString([], { hour: 'numeric', hour12: true })}
                   </div>
                   <Cloud className="w-8 h-8 text-primary" />
                   <div className="text-2xl font-bold">{hour.temp !== undefined ? Math.round(hour.temp) : '--'}°</div>

@@ -59,7 +59,7 @@ export function CalendarWidget() {
           ) : (
             events.map((event, i) => {
               const start = new Date(event.start)
-              const time = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+              const time = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
               const isAllDay = event.start.length <= 10 // Date string format YYYY-MM-DD
               
               return (
