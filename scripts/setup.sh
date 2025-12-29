@@ -21,12 +21,17 @@ else
   echo "Docker already installed; skipping."
 fi
 
-if ! command -v npm >/dev/null 2>&1; then
-  echo "Installing Node.js/npm (requires sudo)..."
-  sudo apt-get update
-  sudo apt-get install -y nodejs npm
+if ! command -v node >/dev/null 2>&1 || ! node -v | grep -Eq '^v1[89]|^v2[0-9]'; then
+  echo "Installing Node.js 18 (requires sudo)..."
+  curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+  sudo apt-get install -y nodejs
 else
-  echo "Node.js/npm already installed; skipping."
+  echo "Node.js 18+ already installed; skipping."
+fi
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "Installing pnpm (requires sudo)..."
+  sudo npm install -g pnpm
 fi
 
 if [[ ! -f .env && -f env.example ]]; then
@@ -35,8 +40,8 @@ if [[ ! -f .env && -f env.example ]]; then
 fi
 
 echo "Installing app dependencies..."
-cd "$ROOT/app"
-npm install
+cd "$ROOT/v0-smart-display-app"
+pnpm install --frozen-lockfile
 
 cd "$ROOT"
 echo "Building and starting containers..."
