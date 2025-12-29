@@ -150,7 +150,7 @@
     -webkit-user-select: none;
     overscroll-behavior: contain;
     height: 100%;
-    overflow-y: auto;
+    overflow: hidden;
   }
   main {
     height: 100vh;

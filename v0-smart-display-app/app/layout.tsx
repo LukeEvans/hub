@@ -39,7 +39,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
         <SidebarNavigation />
-        <main className="ml-20 h-screen overflow-y-auto overscroll-contain touch-pan-y" style={{ WebkitOverflowScrolling: "touch" }}>
+        <main className="ml-20 h-screen overflow-y-auto overscroll-contain">
           {children}
         </main>
         <Analytics />
