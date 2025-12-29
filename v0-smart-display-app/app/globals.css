@@ -152,6 +152,13 @@
     height: 100vh;
     overflow: hidden;
   }
+  main {
+    height: 100vh;
+    overflow-y: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
   :where(button, [role="button"], a) {
     touch-action: manipulation;
     min-height: 56px;
