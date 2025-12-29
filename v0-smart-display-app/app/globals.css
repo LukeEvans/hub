@@ -149,8 +149,8 @@
     user-select: none;
     -webkit-user-select: none;
     overscroll-behavior: contain;
-    height: 100vh;
-    overflow: hidden;
+    height: 100%;
+    overflow-y: auto;
   }
   main {
     height: 100vh;
