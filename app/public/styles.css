@@ -41,6 +41,9 @@ body {
   background: var(--bg);
   color: var(--text);
   height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app {
@@ -106,6 +109,7 @@ main {
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+  touch-action: pan-y;
 }
 
 .topbar {
@@ -145,6 +149,7 @@ main {
   padding-bottom: 16px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
 }
 
 .day-card {
