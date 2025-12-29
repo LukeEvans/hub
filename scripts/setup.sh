@@ -57,5 +57,15 @@ else
   echo "systemd not found; skipping kiosk.service install."
 fi
 
+if command -v raspi-config >/dev/null 2>&1; then
+  echo "Configuring boot to desktop autologin..."
+  sudo raspi-config nonint do_boot_behaviour B4
+fi
+
+if [ -f /etc/profile.d/sshpw.sh ]; then
+  echo "Removing default password warning..."
+  sudo rm -f /etc/profile.d/sshpw.sh
+fi
+
 echo "Done. App on http://localhost:3000, Mealie on http://localhost:9000."
 
