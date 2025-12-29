@@ -48,8 +48,8 @@ export function WeatherWidget() {
 
   return (
     <Link href="/weather" className="block h-full">
-      <Card className="h-full p-4 bg-gradient-to-br from-[var(--widget-peach)] to-[var(--widget-yellow)] hover:shadow-lg transition-all border-none">
-        <div className="flex justify-between items-start mb-4">
+      <Card className="h-full p-4 bg-gradient-to-br from-[var(--widget-peach)] to-[var(--widget-yellow)] hover:shadow-lg transition-all border-none flex flex-col">
+        <div className="flex justify-between items-start mb-4 shrink-0">
           <div>
             <div className="text-5xl font-bold text-foreground">
               {current.temp !== undefined ? Math.round(current.temp) : '--'}°
@@ -63,37 +63,43 @@ export function WeatherWidget() {
           </div>
         </div>
 
-        {/* Hourly */}
-        <div className="flex gap-4 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-          {hourly.map((hour: any, i: number) => (
-            <div key={i} className="flex flex-col items-center min-w-[40px] gap-1">
-              <span className="text-[10px] text-foreground/70">
-                {new Date(hour.dt * 1000).toLocaleTimeString([], { hour: 'numeric', hour12: true })}
-              </span>
-              <div className="w-5 h-5 text-foreground/80">
-                {getWeatherIcon(hour.weather?.[0]?.main)}
-              </div>
-              <span className="text-xs font-bold">{Math.round(hour.temp)}°</span>
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Hourly */}
+          <div className="flex-1 flex items-center min-h-0">
+            <div className="w-full flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {hourly.map((hour: any, i: number) => (
+                <div key={i} className="flex flex-col items-center min-w-[40px] gap-1">
+                  <span className="text-[10px] text-foreground/70">
+                    {new Date(hour.dt * 1000).toLocaleTimeString([], { hour: 'numeric', hour12: true })}
+                  </span>
+                  <div className="w-5 h-5 text-foreground/80">
+                    {getWeatherIcon(hour.weather?.[0]?.main)}
+                  </div>
+                  <span className="text-xs font-bold">{Math.round(hour.temp)}°</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* 7-Day Daily */}
-        <div className="flex justify-between items-center pt-4 border-t border-foreground/10 overflow-x-auto scrollbar-hide">
-          {daily.map((day: any, i: number) => (
-            <div key={i} className="flex flex-col items-center min-w-[50px] gap-1">
-              <span className="text-[10px] font-medium text-foreground/70 uppercase">
-                {i === 0 ? 'Today' : new Date(day.dt * 1000).toLocaleDateString([], { weekday: 'short' })}
-              </span>
-              <div className="w-6 h-6 text-foreground/80">
-                {getWeatherIcon(day.weather?.[0]?.main)}
-              </div>
-              <div className="flex flex-col items-center leading-none">
-                <span className="text-sm font-bold">{Math.round(day.temp.max)}°</span>
-                <span className="text-[10px] text-foreground/60">{Math.round(day.temp.min)}°</span>
-              </div>
+          {/* 7-Day Daily */}
+          <div className="flex-1 flex items-center min-h-0 pt-4 border-t border-foreground/10">
+            <div className="w-full flex justify-between items-center overflow-x-auto scrollbar-hide">
+              {daily.map((day: any, i: number) => (
+                <div key={i} className="flex flex-col items-center min-w-[50px] gap-1">
+                  <span className="text-[10px] font-medium text-foreground/70 uppercase">
+                    {i === 0 ? 'Today' : new Date(day.dt * 1000).toLocaleDateString([], { weekday: 'short' })}
+                  </span>
+                  <div className="w-6 h-6 text-foreground/80">
+                    {getWeatherIcon(day.weather?.[0]?.main)}
+                  </div>
+                  <div className="flex flex-col items-center leading-none">
+                    <span className="text-sm font-bold">{Math.round(day.temp.max)}°</span>
+                    <span className="text-[10px] text-foreground/60">{Math.round(day.temp.min)}°</span>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </Card>
     </Link>
