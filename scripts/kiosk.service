@@ -7,7 +7,7 @@ Wants=network-online.target
 User=pi
 Environment=DISPLAY=:0
 WorkingDirectory=/home/pi/hub
-ExecStart=/usr/bin/chromium --noerrdialogs --disable-infobars --kiosk --app=http://localhost --touch-events=enabled --overscroll-history-navigation=0 --check-for-update-interval=31536000
+ExecStart=/usr/bin/chromium --noerrdialogs --disable-infobars --kiosk --app=http://localhost --touch-events=enabled --enable-pinch --enable-viewport --enable-threaded-scrolling --overscroll-history-navigation=0 --check-for-update-interval=31536000
 Restart=always
 
 [Install]
