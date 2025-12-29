@@ -39,7 +39,9 @@ export default function CalendarPage() {
 
         if (weatherRes.ok) {
           const weatherData = await weatherRes.json()
-          setCurrentTemp(Math.round(weatherData.current?.temp))
+          if (weatherData.current?.temp !== undefined) {
+            setCurrentTemp(Math.round(weatherData.current.temp))
+          }
         }
       } catch (err) {
         console.error('Failed to fetch calendar data', err)

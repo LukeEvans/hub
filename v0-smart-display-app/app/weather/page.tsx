@@ -58,13 +58,13 @@ export default function WeatherPage() {
           <div className="flex items-start justify-between mb-6">
             <div>
               <div className="text-8xl font-bold text-foreground mb-2">
-                {Math.round(current.temp)}°
+                {current.temp !== undefined ? Math.round(current.temp) : '--'}°
               </div>
               <div className="text-2xl text-foreground/80 mb-1">
-                {current.weather?.[0]?.main}
+                {current.weather?.[0]?.main || 'Unknown'}
               </div>
               <div className="text-lg text-foreground/70">
-                Feels like {Math.round(current.feels_like)}°
+                Feels like {current.feels_like !== undefined ? Math.round(current.feels_like) : '--'}°
               </div>
             </div>
             <Sun className="w-24 h-24 text-foreground/80" />
@@ -72,15 +72,15 @@ export default function WeatherPage() {
           <div className="flex gap-6 text-foreground/80">
             <div>
               <span className="text-sm">High: </span>
-              <span className="font-semibold text-lg">{Math.round(daily[0]?.temp?.max || 0)}°</span>
+              <span className="font-semibold text-lg">{daily[0]?.temp?.max !== undefined ? Math.round(daily[0].temp.max) : '--'}°</span>
             </div>
             <div>
               <span className="text-sm">Low: </span>
-              <span className="font-semibold text-lg">{Math.round(daily[0]?.temp?.min || 0)}°</span>
+              <span className="font-semibold text-lg">{daily[0]?.temp?.min !== undefined ? Math.round(daily[0].temp.min) : '--'}°</span>
             </div>
             <div>
               <span className="text-sm">Humidity: </span>
-              <span className="font-semibold text-lg">{current.humidity}%</span>
+              <span className="font-semibold text-lg">{current.humidity ?? '--'}%</span>
             </div>
           </div>
         </Card>
@@ -92,7 +92,7 @@ export default function WeatherPage() {
               <Wind className="w-5 h-5 text-foreground/70" />
               <span className="text-sm text-foreground/70">Wind</span>
             </div>
-            <div className="text-2xl font-bold text-foreground">{Math.round(current.wind_speed)} mph</div>
+            <div className="text-2xl font-bold text-foreground">{current.wind_speed !== undefined ? Math.round(current.wind_speed) : '--'} mph</div>
           </Card>
 
           <Card className="p-4 bg-[var(--widget-mint)]">
@@ -100,7 +100,7 @@ export default function WeatherPage() {
               <Droplets className="w-5 h-5 text-foreground/70" />
               <span className="text-sm text-foreground/70">Humidity</span>
             </div>
-            <div className="text-2xl font-bold text-foreground">{current.humidity}%</div>
+            <div className="text-2xl font-bold text-foreground">{current.humidity ?? '--'}%</div>
           </Card>
 
           <Card className="p-4 bg-[var(--widget-lavender)]">
@@ -108,7 +108,7 @@ export default function WeatherPage() {
               <Eye className="w-5 h-5 text-foreground/70" />
               <span className="text-sm text-foreground/70">Visibility</span>
             </div>
-            <div className="text-2xl font-bold text-foreground">{(current.visibility / 1609).toFixed(1)} mi</div>
+            <div className="text-2xl font-bold text-foreground">{current.visibility !== undefined ? (current.visibility / 1609).toFixed(1) : '--'} mi</div>
           </Card>
 
           <Card className="p-4 bg-[var(--widget-pink)]">
@@ -116,7 +116,7 @@ export default function WeatherPage() {
               <Gauge className="w-5 h-5 text-foreground/70" />
               <span className="text-sm text-foreground/70">Pressure</span>
             </div>
-            <div className="text-2xl font-bold text-foreground">{(current.pressure * 0.02953).toFixed(2)} in</div>
+            <div className="text-2xl font-bold text-foreground">{current.pressure !== undefined ? (current.pressure * 0.02953).toFixed(2) : '--'} in</div>
           </Card>
         </div>
       </div>
@@ -133,8 +133,8 @@ export default function WeatherPage() {
                     {new Date(hour.dt * 1000).toLocaleTimeString([], { hour: 'numeric' })}
                   </div>
                   <Cloud className="w-8 h-8 text-primary" />
-                  <div className="text-2xl font-bold">{Math.round(hour.temp)}°</div>
-                  <div className="text-xs text-muted-foreground text-center">{hour.weather?.[0]?.main}</div>
+                  <div className="text-2xl font-bold">{hour.temp !== undefined ? Math.round(hour.temp) : '--'}°</div>
+                  <div className="text-xs text-muted-foreground text-center">{hour.weather?.[0]?.main || 'Unknown'}</div>
                 </div>
               )
             })}
@@ -158,12 +158,12 @@ export default function WeatherPage() {
                       {index === 0 ? 'Today' : new Date(day.dt * 1000).toLocaleDateString([], { weekday: 'long' })}
                     </div>
                     <Sun className="w-6 h-6 text-primary" />
-                    <div className="text-sm text-muted-foreground flex-1">{day.weather?.[0]?.main}</div>
+                    <div className="text-sm text-muted-foreground flex-1">{day.weather?.[0]?.main || 'Unknown'}</div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="text-muted-foreground">{Math.round(day.temp.min)}°</div>
+                    <div className="text-muted-foreground">{day.temp?.min !== undefined ? Math.round(day.temp.min) : '--'}°</div>
                     <div className="w-24 h-2 bg-gradient-to-r from-[var(--widget-blue)] to-[var(--widget-peach)] rounded-full" />
-                    <div className="font-semibold">{Math.round(day.temp.max)}°</div>
+                    <div className="font-semibold">{day.temp?.max !== undefined ? Math.round(day.temp.max) : '--'}°</div>
                   </div>
                 </div>
               )

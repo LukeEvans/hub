@@ -9,9 +9,32 @@ function getMockWeather() {
     temp: { min: 65 + offset, max: 75 + offset },
     weather: [{ main }],
   });
+  const hour = (offset: number, main: string) => ({
+    dt: now + offset * 3600,
+    temp: 70 + offset,
+    weather: [{ main }],
+  });
   return {
-    current: { temp: 72, weather: [{ main: 'Clear', description: 'Mock data' }] },
-    daily: [day(1, 'Clouds'), day(2, 'Rain'), day(3, 'Clear'), day(4, 'Wind')],
+    current: {
+      temp: 72,
+      feels_like: 70,
+      humidity: 45,
+      wind_speed: 5,
+      visibility: 10000,
+      pressure: 1013,
+      weather: [{ main: 'Clear', description: 'Mock data' }]
+    },
+    daily: [
+      { dt: now, temp: { min: 65, max: 75 }, weather: [{ main: 'Clear' }] },
+      day(1, 'Clouds'),
+      day(2, 'Rain'),
+      day(3, 'Clear'),
+      day(4, 'Wind'),
+      day(5, 'Clouds'),
+      day(6, 'Clear'),
+      day(7, 'Clear'),
+    ],
+    hourly: Array.from({ length: 24 }, (_, i) => hour(i, i % 3 === 0 ? 'Clouds' : 'Clear'))
   };
 }
 
@@ -21,7 +44,7 @@ export async function GET() {
     const lon = process.env.WEATHER_LON;
     const apiKey = process.env.OPENWEATHER_API_KEY;
 
-    if (!lat || !lon || !apiKey) {
+    if (!lat || !lon || !apiKey || apiKey === 'your-openweather-key') {
       return NextResponse.json(getMockWeather());
     }
 
@@ -30,7 +53,7 @@ export async function GET() {
     if (cached) return NextResponse.json(cached);
 
     const resp = await axios.get(
-      'https://api.openweathermap.org/data/2.5/onecall',
+      'https://api.openweathermap.org/data/3.0/onecall',
       {
         params: {
           lat,
