@@ -147,6 +147,8 @@
   body {
     @apply bg-background text-foreground;
     display: flex;
+    user-select: none;
+    -webkit-user-select: none;
   }
   main {
     flex: 1;
@@ -159,5 +161,9 @@
   }
   button, [role="button"] {
     min-height: 44px;
+  }
+  input, select, textarea {
+    user-select: text;
+    -webkit-user-select: text;
   }
 }
