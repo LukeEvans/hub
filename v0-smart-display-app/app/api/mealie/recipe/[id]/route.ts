@@ -7,7 +7,7 @@ function getEmptyRecipe() {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const baseUrl = process.env.MEALIE_BASE_URL;
@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json(getEmptyRecipe());
     }
 
-    const { id } = params;
+    const { id } = await params;
     const resp = await axios.get(`${baseUrl}/api/recipes/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
