@@ -42,6 +42,7 @@ async function saveGoogleToken(token) {
 
 function getMockCalendarEvents() {
   const now = new Date();
+  const events = [];
   const build = (offset, startHour, endHour, summary) => {
     const start = new Date(now);
     start.setDate(now.getDate() + offset);
@@ -56,12 +57,23 @@ function getMockCalendarEvents() {
       end: end.toISOString(),
     };
   };
-  return [
-    build(0, 9, 10, 'Coffee with Alex'),
-    build(0, 12, 13, 'Lunch Break'),
-    build(1, 10, 11, 'Planning Session'),
-    build(2, 18, 19, 'Dinner Out'),
+
+  const activities = [
+    'Coffee with Alex', 'Lunch Break', 'Planning Session', 'Dinner Out',
+    'Gym Session', 'Project Review', 'Doctor Appointment', 'Grocery Shopping',
+    'Call with Mom', 'Watch Movie', 'Reading Time', 'Walk the Dog',
+    'Yoga Class', 'Coding Practice', 'Team Sync', 'Laundry'
   ];
+
+  for (let d = 0; d < 14; d++) {
+    const numEvents = 8;
+    for (let i = 0; i < numEvents; i++) {
+      const startHour = 8 + i;
+      const activity = activities[(d * numEvents + i) % activities.length];
+      events.push(build(d, startHour, startHour + 1, activity));
+    }
+  }
+  return events;
 }
 
 function getMockWeather() {
