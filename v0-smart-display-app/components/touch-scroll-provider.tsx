@@ -4,54 +4,66 @@ import { useEffect } from "react"
 
 export function TouchScrollProvider() {
   useEffect(() => {
-    const mainElement = document.querySelector("main")
-    if (!mainElement) return
-
     let isScrolling = false
     let startY = 0
     let scrollStartTop = 0
+    let activeScrollElement: HTMLElement | null = null
+
+    const getScrollableParent = (element: HTMLElement | null): HTMLElement | null => {
+      if (!element) return null
+      
+      const style = window.getComputedStyle(element)
+      const overflowY = style.getPropertyValue("overflow-y")
+      const isScrollable = overflowY === "auto" || overflowY === "scroll" || element.tagName === "MAIN"
+      
+      if (isScrollable && element.scrollHeight > element.clientHeight) {
+        return element
+      }
+      
+      return getScrollableParent(element.parentElement)
+    }
 
     const handlePointerDown = (e: PointerEvent) => {
-      // Don't intercept if we're clicking a button, link, or input
       const target = e.target as HTMLElement
       if (target.closest('button, a, input, [role="button"]')) {
         return
       }
 
-      // Check if we are inside a scrollable element other than main
-      const scrollableParent = target.closest('.overflow-y-auto')
-      if (scrollableParent && scrollableParent !== mainElement) {
-        return
-      }
+      const scrollable = getScrollableParent(target)
+      if (!scrollable) return
 
       isScrolling = true
+      activeScrollElement = scrollable
       startY = e.clientY
-      scrollStartTop = mainElement.scrollTop
-      mainElement.setPointerCapture(e.pointerId)
+      scrollStartTop = scrollable.scrollTop
+      scrollable.setPointerCapture(e.pointerId)
     }
 
     const handlePointerMove = (e: PointerEvent) => {
-      if (!isScrolling) return
+      if (!isScrolling || !activeScrollElement) return
       
       const deltaY = startY - e.clientY
-      mainElement.scrollTop = scrollStartTop + deltaY
+      activeScrollElement.scrollTop = scrollStartTop + deltaY
     }
 
     const handlePointerUp = (e: PointerEvent) => {
+      if (isScrolling && activeScrollElement) {
+        activeScrollElement.releasePointerCapture(e.pointerId)
+      }
       isScrolling = false
-      mainElement.releasePointerCapture(e.pointerId)
+      activeScrollElement = null
     }
 
-    mainElement.addEventListener("pointerdown", handlePointerDown)
-    mainElement.addEventListener("pointermove", handlePointerMove)
-    mainElement.addEventListener("pointerup", handlePointerUp)
-    mainElement.addEventListener("pointercancel", handlePointerUp)
+    document.addEventListener("pointerdown", handlePointerDown, { capture: true })
+    document.addEventListener("pointermove", handlePointerMove, { capture: true })
+    document.addEventListener("pointerup", handlePointerUp, { capture: true })
+    document.addEventListener("pointercancel", handlePointerUp, { capture: true })
 
     return () => {
-      mainElement.removeEventListener("pointerdown", handlePointerDown)
-      mainElement.removeEventListener("pointermove", handlePointerMove)
-      mainElement.removeEventListener("pointerup", handlePointerUp)
-      mainElement.removeEventListener("pointercancel", handlePointerUp)
+      document.removeEventListener("pointerdown", handlePointerDown, { capture: true })
+      document.removeEventListener("pointermove", handlePointerMove, { capture: true })
+      document.removeEventListener("pointerup", handlePointerUp, { capture: true })
+      document.removeEventListener("pointercancel", handlePointerUp, { capture: true })
     }
   }, [])
 
