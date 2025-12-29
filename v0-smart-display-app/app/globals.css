@@ -155,9 +155,13 @@
   main {
     height: 100vh;
     overflow-y: auto;
-    touch-action: pan-y;
+    touch-action: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  main::-webkit-scrollbar {
+    display: none;
   }
   :where(button, [role="button"], a) {
     touch-action: manipulation;
