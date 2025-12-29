@@ -38,10 +38,10 @@ export default function DashboardPage() {
 
         {/* Right Column: Weather and Calendar */}
         <div className="flex flex-col gap-8">
-          <div className="flex-1 min-h-[250px]">
+          <div className="flex-1 min-h-[280px]">
             <WeatherWidget />
           </div>
-          <div className="flex-1 min-h-[250px]">
+          <div className="flex-1 min-h-[280px]">
             <CalendarWidget />
           </div>
         </div>

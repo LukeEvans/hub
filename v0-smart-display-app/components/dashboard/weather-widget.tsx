@@ -64,7 +64,7 @@ export function WeatherWidget() {
         </div>
 
         {/* Hourly */}
-        <div className="flex gap-4 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+        <div className="flex gap-4 overflow-x-auto pb-4 mb-4 scrollbar-hide">
           {hourly.map((hour: any, i: number) => (
             <div key={i} className="flex flex-col items-center min-w-[40px] gap-1">
               <span className="text-[10px] text-foreground/70">
