@@ -190,10 +190,10 @@ export default function CalendarPage() {
   }, [view, currentDate]) // Re-bind when view or date changes to ensure handlers use fresh state
 
   return (
-    <div className="min-h-screen p-8 bg-background overflow-hidden flex flex-col">
+    <div className="h-screen p-4 sm:p-6 bg-background overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="mb-4 shrink-0">
-        <div className="flex items-center justify-between mb-4">
+      <div className="mb-2 shrink-0">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center">
               <Calendar className="w-7 h-7 text-primary-foreground" />
@@ -250,7 +250,7 @@ export default function CalendarPage() {
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
         </div>
       ) : (
-        <Card className="flex-1 overflow-hidden flex flex-col p-6">
+        <Card className="flex-1 overflow-hidden flex flex-col p-4">
           {view === "Month" ? (
             <div className="grid grid-cols-7 h-full gap-px bg-border flex-1 border border-border">
               {/* Day headers */}
@@ -288,7 +288,7 @@ export default function CalendarPage() {
           ) : (
             <>
               {/* Day/Week View Header */}
-              <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 mb-4 shrink-0`}>
+              <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 mb-2 shrink-0`}>
                 <div className="text-sm font-medium text-muted-foreground">Time</div>
                 {viewDays.map((day) => (
                   <div key={day.dateStr} className="text-center">
@@ -300,12 +300,12 @@ export default function CalendarPage() {
               </div>
 
               {/* All-Day Events Row */}
-              <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 mb-4 shrink-0`}>
-                <div className="text-[10px] uppercase font-bold text-muted-foreground self-center">All Day</div>
+              <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 mb-2 shrink-0 max-h-[120px] overflow-y-auto custom-scrollbar`}>
+                <div className="text-[10px] uppercase font-bold text-muted-foreground pt-2">All Day</div>
                 {viewDays.map((day) => (
-                  <div key={day.dateStr} className="flex flex-col gap-1">
+                  <div key={day.dateStr} className="flex flex-col gap-1 py-1">
                     {day.events.allDay.map(event => (
-                      <div key={event.id} className="bg-primary/20 text-primary-foreground border-l-4 border-primary px-2 py-1 rounded text-xs font-semibold">
+                      <div key={event.id} className="bg-primary/20 text-primary-foreground border-l-4 border-primary px-2 py-1 rounded text-[10px] sm:text-xs font-semibold truncate">
                         {event.summary}
                       </div>
                     ))}
@@ -313,17 +313,17 @@ export default function CalendarPage() {
                 ))}
               </div>
 
-              {/* Time Grid Scrollable Area */}
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar touch-pan-y pointer-events-auto min-h-0">
-                <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 relative`}>
+              {/* Time Grid Area */}
+              <div className="flex-1 min-h-0 pointer-events-auto">
+                <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 h-full relative`}>
                   {/* Time Labels */}
-                  <div className="relative">
+                  <div className="flex flex-col h-full">
                     {Array.from({ length: 16 }).map((_, i) => {
                       const hour = 7 + i
                       const ampm = hour >= 12 ? "PM" : "AM"
                       const displayHour = hour > 12 ? hour - 12 : hour
                       return (
-                        <div key={hour} className="text-sm text-muted-foreground font-medium h-24 flex items-start pt-0">
+                        <div key={hour} className="text-sm text-muted-foreground font-medium flex-1 flex items-start pt-0 border-t border-transparent">
                           {displayHour} {ampm}
                         </div>
                       )
@@ -332,49 +332,54 @@ export default function CalendarPage() {
 
                   {/* Day Columns */}
                   {viewDays.map((day) => (
-                    <div key={day.dateStr} className="relative min-h-[1536px] border-l border-border">
+                    <div key={day.dateStr} className="relative h-full border-l border-border flex flex-col">
                       {/* Hour horizontal lines */}
                       {Array.from({ length: 16 }).map((_, i) => (
                         <div 
                           key={i} 
-                          className="absolute w-full border-t border-border/50" 
-                          style={{ top: `${i * 96}px` }}
+                          className="flex-1 border-t border-border/50" 
                         />
                       ))}
                       
-                      {day.events.timed.map((event) => {
-                        const startDate = parseISO(event.start)
-                        const endDate = parseISO(event.end)
-                        const startHour = startDate.getHours()
-                        const startMinutes = startDate.getMinutes()
-                        
-                        // Only show if it overlaps with our 7 AM - 10 PM range
-                        if (startHour < 7 || startHour >= 23) return null
+                      {/* Overlay for events */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        {day.events.timed.map((event) => {
+                          const startDate = parseISO(event.start)
+                          const endDate = parseISO(event.end)
+                          const startHour = startDate.getHours()
+                          const startMinutes = startDate.getMinutes()
+                          
+                          // Only show if it overlaps with our 7 AM - 10 PM range (16 hours)
+                          if (startHour < 7 || startHour >= 23) return null
 
-                        const hourHeight = 96 // Matching h-24 (24 * 4 = 96px)
-                        const top = (startHour - 7) * hourHeight + (startMinutes / 60) * hourHeight
-                        
-                        const durationMs = endDate.getTime() - startDate.getTime()
-                        const height = Math.max((durationMs / (1000 * 60 * 60)) * hourHeight, 40) // Min height 40px
-                        
-                        return (
-                          <div 
-                            key={event.id} 
-                            className="absolute left-1 right-1 z-10"
-                            style={{ 
-                              top: `${top}px`,
-                              height: `${height - 4}px` // Small gap between events
-                            }}
-                          >
-                            <Card className="h-full p-2 bg-[var(--widget-blue)] overflow-hidden cursor-pointer hover:shadow-md transition-shadow border-none shadow-sm">
-                              <div className="font-semibold text-xs text-foreground leading-tight mb-1">{event.summary}</div>
-                              <div className="text-[10px] text-foreground/70">
-                                {format(startDate, 'h:mm a')}
-                              </div>
-                            </Card>
-                          </div>
-                        )
-                      })}
+                          const totalHours = 16
+                          const top = ((startHour - 7) + (startMinutes / 60)) / totalHours * 100
+                          
+                          const durationMs = endDate.getTime() - startDate.getTime()
+                          const durationHours = durationMs / (1000 * 60 * 60)
+                          const height = (durationHours / totalHours) * 100
+                          
+                          return (
+                            <div 
+                              key={event.id} 
+                              className="absolute left-1 right-1 z-10 pointer-events-auto"
+                              style={{ 
+                                top: `${top}%`,
+                                height: `calc(${height}% - 2px)` // Small gap
+                              }}
+                            >
+                              <Card className="h-full p-2 bg-[var(--widget-blue)] overflow-hidden cursor-pointer hover:shadow-md transition-shadow border-none shadow-sm flex flex-col">
+                                <div className="font-semibold text-[10px] sm:text-xs text-foreground leading-tight truncate">{event.summary}</div>
+                                {height > 5 && (
+                                  <div className="text-[8px] sm:text-[10px] text-foreground/70">
+                                    {format(startDate, 'h:mm a')}
+                                  </div>
+                                )}
+                              </Card>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   ))}
                 </div>
