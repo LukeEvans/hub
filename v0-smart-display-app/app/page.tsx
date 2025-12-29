@@ -30,9 +30,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Dashboard Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 overflow-hidden">
         {/* Left Column: Rotating Photo (2/3 width on large screens) */}
-        <div className="lg:col-span-2 h-[500px] lg:h-auto">
+        <div className="lg:col-span-2 relative h-[500px]">
           <PhotoWidget />
         </div>
 

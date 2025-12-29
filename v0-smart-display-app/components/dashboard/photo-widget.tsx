@@ -39,11 +39,11 @@ export function PhotoWidget() {
   }
 
   return (
-    <div className="w-full h-full relative rounded-2xl overflow-hidden bg-black">
+    <div className="w-full h-full relative rounded-2xl overflow-hidden bg-black flex items-center justify-center">
       <img
         src={photos[currentPhotoIndex]}
         alt="Rotating Photo"
-        className="w-full h-full object-cover transition-opacity duration-1000"
+        className="max-w-full max-h-full object-contain transition-opacity duration-1000"
       />
     </div>
   )
