@@ -4,36 +4,46 @@ import { useEffect } from "react"
 
 export function TouchScrollProvider() {
   useEffect(() => {
+    const mainElement = document.querySelector("main")
+    if (!mainElement) return
+
+    let isScrolling = false
     let startY = 0
     let scrollStartTop = 0
-    let mainElement: HTMLElement | null = null
 
-    const handleTouchStart = (e: TouchEvent) => {
-      mainElement = document.querySelector("main")
-      if (!mainElement) return
-      
-      startY = e.touches[0].clientY
+    const handlePointerDown = (e: PointerEvent) => {
+      isScrolling = true
+      startY = e.clientY
       scrollStartTop = mainElement.scrollTop
+      mainElement.setPointerCapture(e.pointerId)
     }
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!mainElement) return
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isScrolling) return
       
-      const currentY = e.touches[0].clientY
-      const deltaY = startY - currentY
-      
+      const deltaY = startY - e.clientY
       mainElement.scrollTop = scrollStartTop + deltaY
     }
 
-    document.addEventListener("touchstart", handleTouchStart, { passive: true })
-    document.addEventListener("touchmove", handleTouchMove, { passive: true })
+    const handlePointerUp = (e: PointerEvent) => {
+      isScrolling = false
+      mainElement.releasePointerCapture(e.pointerId)
+    }
+
+    mainElement.addEventListener("pointerdown", handlePointerDown)
+    mainElement.addEventListener("pointermove", handlePointerMove)
+    mainElement.addEventListener("pointerup", handlePointerUp)
+    mainElement.addEventListener("pointercancel", handlePointerUp)
 
     return () => {
-      document.removeEventListener("touchstart", handleTouchStart)
-      document.removeEventListener("touchmove", handleTouchMove)
+      mainElement.removeEventListener("pointerdown", handlePointerDown)
+      mainElement.removeEventListener("pointermove", handlePointerMove)
+      mainElement.removeEventListener("pointerup", handlePointerUp)
+      mainElement.removeEventListener("pointercancel", handlePointerUp)
     }
   }, [])
 
   return null
 }
+
 
