@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Cloud, ImageIcon, Utensils, Music, HomeIcon, LayoutDashboard, Moon, Sun } from "lucide-react"
+import { Calendar, Cloud, ImageIcon, Utensils, Music, HomeIcon, LayoutDashboard, Moon, Sun, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -49,6 +49,12 @@ const navigationItems = [
     href: "/home",
     icon: HomeIcon,
     label: "Home",
+  },
+  {
+    name: "Settings",
+    href: "/settings",
+    icon: Settings,
+    label: "Settings",
   },
 ]
 
