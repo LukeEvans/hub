@@ -4,7 +4,7 @@ import { Calendar, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { format, startOfWeek, addDays, isSameDay, parseISO } from "date-fns"
+import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, startOfMonth, addMonths, subMonths, addDays as addDaysFn, subDays } from "date-fns"
 
 interface CalendarEvent {
   id: string;
@@ -20,9 +20,9 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [currentTemp, setCurrentTemp] = useState<number | null>(null)
+  const [currentDate, setCurrentDate] = useState(new Date())
   
-  const today = new Date()
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 }) // Start week on Monday
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }) // Start week on Monday
 
   useEffect(() => {
     async function fetchCalendarData() {
@@ -50,8 +50,24 @@ export default function CalendarPage() {
     fetchCalendarData()
   }, [])
 
-  const currentTime = format(today, "h:mm a")
-  const currentMonthYear = format(today, "MMMM yyyy")
+  const currentTime = format(new Date(), "h:mm a")
+  const currentMonthYear = format(currentDate, "MMMM yyyy")
+
+  const handlePrevious = () => {
+    if (view === "Week") setCurrentDate(subWeeks(currentDate, 1))
+    else if (view === "Day") setCurrentDate(subDays(currentDate, 1))
+    else if (view === "Month") setCurrentDate(subMonths(currentDate, 1))
+  }
+
+  const handleNext = () => {
+    if (view === "Week") setCurrentDate(addWeeks(currentDate, 1))
+    else if (view === "Day") setCurrentDate(addDaysFn(currentDate, 1))
+    else if (view === "Month") setCurrentDate(addMonths(currentDate, 1))
+  }
+
+  const handleToday = () => {
+    setCurrentDate(new Date())
+  }
 
   // Group events by day (yyyy-MM-dd)
   const eventsByDay: Record<string, CalendarEvent[]> = {}
@@ -68,7 +84,7 @@ export default function CalendarPage() {
       name: format(date, 'EEE'),
       date: format(date, 'd'),
       dateStr,
-      isToday: isSameDay(date, today),
+      isToday: isSameDay(date, new Date()),
       events: eventsByDay[dateStr] || []
     }
   })
@@ -116,11 +132,13 @@ export default function CalendarPage() {
                 Month
               </Button>
             </div>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={handlePrevious}>
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <span className="text-sm font-medium">Today</span>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" className="text-sm font-medium" onClick={handleToday}>
+              Today
+            </Button>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={handleNext}>
               <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
@@ -146,7 +164,7 @@ export default function CalendarPage() {
           </div>
 
           {/* Time Grid Scrollable Area */}
-          <div className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar touch-pan-y pointer-events-auto">
             <div className="grid grid-cols-[100px_repeat(7,1fr)] gap-4 relative">
               {/* Time Labels */}
               <div className="relative">

@@ -18,6 +18,12 @@ export function TouchScrollProvider() {
         return
       }
 
+      // Check if we are inside a scrollable element other than main
+      const scrollableParent = target.closest('.overflow-y-auto')
+      if (scrollableParent && scrollableParent !== mainElement) {
+        return
+      }
+
       isScrolling = true
       startY = e.clientY
       scrollStartTop = mainElement.scrollTop
