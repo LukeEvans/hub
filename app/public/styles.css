@@ -139,9 +139,12 @@ main {
 
 /* Calendar Grid */
 .calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
   gap: var(--gap);
+  overflow-x: auto;
+  padding-bottom: 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
 }
 
 .day-card {
@@ -149,10 +152,12 @@ main {
   border-radius: var(--radius);
   padding: 20px;
   min-height: 240px;
+  flex: 0 0 300px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   box-shadow: var(--shadow);
+  scroll-snap-align: start;
 }
 
 .day-header {
