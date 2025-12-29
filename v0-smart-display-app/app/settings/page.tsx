@@ -7,17 +7,25 @@ import { LogIn, Settings } from "lucide-react"
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)
+    setError(null)
     try {
       const response = await fetch("/api/google/auth-url")
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`)
+      }
       const data = await response.json()
       if (data.url) {
         window.location.href = data.url
+      } else {
+        setError("No URL returned from server")
       }
-    } catch (error) {
-      console.error("Failed to fetch auth URL:", error)
+    } catch (err) {
+      console.error("Failed to fetch auth URL:", err)
+      setError(err instanceof Error ? err.message : "Failed to connect to server")
     } finally {
       setIsLoading(false)
     }
@@ -30,7 +38,13 @@ export default function SettingsPage() {
         <h1 className="text-4xl font-bold">Settings</h1>
       </div>
 
-      <div className="max-w-2xl">
+      <div className="max-w-2xl space-y-4">
+        {error && (
+          <div className="p-4 bg-destructive/15 text-destructive border border-destructive/20 rounded-lg text-sm">
+            Error: {error}
+          </div>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle>Authentication</CardTitle>
