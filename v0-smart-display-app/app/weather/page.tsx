@@ -1,28 +1,42 @@
-import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge } from "lucide-react"
+"use client"
+
+import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
-
-const hourlyForecast = [
-  { time: "Now", temp: 72, icon: Sun, condition: "Sunny" },
-  { time: "1 PM", temp: 73, icon: Sun, condition: "Sunny" },
-  { time: "2 PM", temp: 74, icon: Sun, condition: "Sunny" },
-  { time: "3 PM", temp: 75, icon: Cloud, condition: "Partly Cloudy" },
-  { time: "4 PM", temp: 74, icon: Cloud, condition: "Cloudy" },
-  { time: "5 PM", temp: 73, icon: Cloud, condition: "Cloudy" },
-  { time: "6 PM", temp: 71, icon: Cloud, condition: "Cloudy" },
-  { time: "7 PM", temp: 69, icon: CloudRain, condition: "Rain" },
-]
-
-const weeklyForecast = [
-  { day: "Today", high: 75, low: 65, icon: Sun, condition: "Partly Cloudy" },
-  { day: "Tuesday", high: 73, low: 64, icon: CloudRain, condition: "Rain Showers" },
-  { day: "Wednesday", high: 71, low: 62, icon: Cloud, condition: "Cloudy" },
-  { day: "Thursday", high: 74, low: 63, icon: Sun, condition: "Sunny" },
-  { day: "Friday", high: 76, low: 65, icon: Sun, condition: "Sunny" },
-  { day: "Saturday", high: 78, low: 66, icon: Sun, condition: "Mostly Sunny" },
-  { day: "Sunday", high: 72, low: 64, icon: CloudRain, condition: "Rain" },
-]
+import { useState, useEffect } from "react"
 
 export default function WeatherPage() {
+  const [weatherData, setWeatherData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchWeather() {
+      try {
+        const res = await fetch('/api/weather')
+        if (res.ok) {
+          const data = await res.json()
+          setWeatherData(data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch weather', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchWeather()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  const current = weatherData?.current || {}
+  const daily = weatherData?.daily || []
+  const hourly = weatherData?.hourly?.slice(0, 12) || []
+
   return (
     <div className="min-h-screen p-8 bg-background">
       {/* Header */}
@@ -33,7 +47,7 @@ export default function WeatherPage() {
           </div>
           <div>
             <h1 className="text-4xl font-bold">Weather</h1>
-            <p className="text-muted-foreground text-lg">San Francisco, CA</p>
+            <p className="text-muted-foreground text-lg">Current Location</p>
           </div>
         </div>
       </div>
@@ -43,24 +57,30 @@ export default function WeatherPage() {
         <Card className="lg:col-span-2 p-8 bg-gradient-to-br from-[var(--widget-peach)] to-[var(--widget-yellow)]">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <div className="text-8xl font-bold text-foreground mb-2">72°</div>
-              <div className="text-2xl text-foreground/80 mb-1">Partly Cloudy</div>
-              <div className="text-lg text-foreground/70">Feels like 70°</div>
+              <div className="text-8xl font-bold text-foreground mb-2">
+                {Math.round(current.temp)}°
+              </div>
+              <div className="text-2xl text-foreground/80 mb-1">
+                {current.weather?.[0]?.main}
+              </div>
+              <div className="text-lg text-foreground/70">
+                Feels like {Math.round(current.feels_like)}°
+              </div>
             </div>
             <Sun className="w-24 h-24 text-foreground/80" />
           </div>
           <div className="flex gap-6 text-foreground/80">
             <div>
               <span className="text-sm">High: </span>
-              <span className="font-semibold text-lg">75°</span>
+              <span className="font-semibold text-lg">{Math.round(daily[0]?.temp?.max || 0)}°</span>
             </div>
             <div>
               <span className="text-sm">Low: </span>
-              <span className="font-semibold text-lg">65°</span>
+              <span className="font-semibold text-lg">{Math.round(daily[0]?.temp?.min || 0)}°</span>
             </div>
             <div>
-              <span className="text-sm">Precipitation: </span>
-              <span className="font-semibold text-lg">10%</span>
+              <span className="text-sm">Humidity: </span>
+              <span className="font-semibold text-lg">{current.humidity}%</span>
             </div>
           </div>
         </Card>
@@ -72,8 +92,7 @@ export default function WeatherPage() {
               <Wind className="w-5 h-5 text-foreground/70" />
               <span className="text-sm text-foreground/70">Wind</span>
             </div>
-            <div className="text-2xl font-bold text-foreground">8 mph</div>
-            <div className="text-xs text-foreground/60">NW</div>
+            <div className="text-2xl font-bold text-foreground">{Math.round(current.wind_speed)} mph</div>
           </Card>
 
           <Card className="p-4 bg-[var(--widget-mint)]">
@@ -81,7 +100,7 @@ export default function WeatherPage() {
               <Droplets className="w-5 h-5 text-foreground/70" />
               <span className="text-sm text-foreground/70">Humidity</span>
             </div>
-            <div className="text-2xl font-bold text-foreground">62%</div>
+            <div className="text-2xl font-bold text-foreground">{current.humidity}%</div>
           </Card>
 
           <Card className="p-4 bg-[var(--widget-lavender)]">
@@ -89,7 +108,7 @@ export default function WeatherPage() {
               <Eye className="w-5 h-5 text-foreground/70" />
               <span className="text-sm text-foreground/70">Visibility</span>
             </div>
-            <div className="text-2xl font-bold text-foreground">10 mi</div>
+            <div className="text-2xl font-bold text-foreground">{(current.visibility / 1609).toFixed(1)} mi</div>
           </Card>
 
           <Card className="p-4 bg-[var(--widget-pink)]">
@@ -97,7 +116,7 @@ export default function WeatherPage() {
               <Gauge className="w-5 h-5 text-foreground/70" />
               <span className="text-sm text-foreground/70">Pressure</span>
             </div>
-            <div className="text-2xl font-bold text-foreground">30.12 in</div>
+            <div className="text-2xl font-bold text-foreground">{(current.pressure * 0.02953).toFixed(2)} in</div>
           </Card>
         </div>
       </div>
@@ -107,14 +126,15 @@ export default function WeatherPage() {
         <h2 className="text-2xl font-bold mb-4">Hourly Forecast</h2>
         <Card className="p-6">
           <div className="flex gap-4 overflow-x-auto pb-2">
-            {hourlyForecast.map((hour, index) => {
-              const Icon = hour.icon
+            {hourly.map((hour: any, index: number) => {
               return (
                 <div key={index} className="flex flex-col items-center min-w-[100px] gap-2">
-                  <div className="text-sm font-medium text-muted-foreground">{hour.time}</div>
-                  <Icon className="w-8 h-8 text-primary" />
-                  <div className="text-2xl font-bold">{hour.temp}°</div>
-                  <div className="text-xs text-muted-foreground text-center">{hour.condition}</div>
+                  <div className="text-sm font-medium text-muted-foreground">
+                    {new Date(hour.dt * 1000).toLocaleTimeString([], { hour: 'numeric' })}
+                  </div>
+                  <Cloud className="w-8 h-8 text-primary" />
+                  <div className="text-2xl font-bold">{Math.round(hour.temp)}°</div>
+                  <div className="text-xs text-muted-foreground text-center">{hour.weather?.[0]?.main}</div>
                 </div>
               )
             })}
@@ -127,22 +147,23 @@ export default function WeatherPage() {
         <h2 className="text-2xl font-bold mb-4">7-Day Forecast</h2>
         <Card className="p-6">
           <div className="space-y-3">
-            {weeklyForecast.map((day, index) => {
-              const Icon = day.icon
+            {daily.map((day: any, index: number) => {
               return (
                 <div
                   key={index}
                   className="flex items-center justify-between py-3 border-b border-border last:border-0"
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <div className="w-24 font-semibold">{day.day}</div>
-                    <Icon className="w-6 h-6 text-primary" />
-                    <div className="text-sm text-muted-foreground flex-1">{day.condition}</div>
+                    <div className="w-24 font-semibold">
+                      {index === 0 ? 'Today' : new Date(day.dt * 1000).toLocaleDateString([], { weekday: 'long' })}
+                    </div>
+                    <Sun className="w-6 h-6 text-primary" />
+                    <div className="text-sm text-muted-foreground flex-1">{day.weather?.[0]?.main}</div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="text-muted-foreground">{day.low}°</div>
+                    <div className="text-muted-foreground">{Math.round(day.temp.min)}°</div>
                     <div className="w-24 h-2 bg-gradient-to-r from-[var(--widget-blue)] to-[var(--widget-peach)] rounded-full" />
-                    <div className="font-semibold">{day.high}°</div>
+                    <div className="font-semibold">{Math.round(day.temp.max)}°</div>
                   </div>
                 </div>
               )

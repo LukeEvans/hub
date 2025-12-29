@@ -28,3 +28,41 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+## Google Calendar Integration
+
+To connect your Google Family Calendar, follow these steps:
+
+### 1. Create Google Cloud Credentials
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project (e.g., "Smart Hub Display").
+3. Go to **APIs & Services > Library**, search for **Google Calendar API**, and click **Enable**.
+4. Go to **APIs & Services > OAuth consent screen**:
+   - Choose **External** user type.
+   - Fill in the required app information (App name, support email).
+   - **Crucial:** Under "Test users", add the Google account email that owns the family calendar.
+5. Go to **APIs & Services > Credentials**:
+   - Click **Create Credentials** > **OAuth client ID**.
+   - Select **Web application**.
+   - Add an **Authorized redirect URI**: `http://localhost:3000/api/google/oauth/callback` (or your Pi's IP/hostname).
+   - Save and copy your **Client ID** and **Client Secret**.
+
+### 2. Get your Family Calendar ID
+1. Open [Google Calendar](https://calendar.google.com/).
+2. Find your **Family** calendar in the left sidebar.
+3. Click the three dots (options) > **Settings and sharing**.
+4. Scroll down to the **Integrate calendar** section and copy the **Calendar ID**.
+
+### 3. Configure Environment Variables
+Update your `.env` file in the root directory:
+```env
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+GOOGLE_CALENDAR_IDS=your_family_calendar_id
+```
+
+### 4. Authorize the App
+1. Start the application.
+2. Navigate to `http://localhost:3000/api/google/auth-url` (or your Pi's address).
+3. Click the link provided to log in with your Google account.
+4. Once completed, you'll see a success message and your tokens will be saved to `./data/google/token.json`.

@@ -1,89 +1,59 @@
 "use client"
 
-import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame } from "lucide-react"
+import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useState } from "react"
-
-const recipes = [
-  {
-    id: 1,
-    name: "Chicken Parmesan",
-    image: "/chicken-parmesan-dish.jpg",
-    time: 45,
-    servings: 4,
-    difficulty: "Medium",
-    category: "Italian",
-    calories: 520,
-    favorite: true,
-  },
-  {
-    id: 2,
-    name: "Salmon with Asparagus",
-    image: "/grilled-salmon-asparagus.jpg",
-    time: 30,
-    servings: 2,
-    difficulty: "Easy",
-    category: "Healthy",
-    calories: 380,
-    favorite: true,
-  },
-  {
-    id: 3,
-    name: "Chocolate Cake",
-    image: "/chocolate-cake-slice.jpg",
-    time: 60,
-    servings: 8,
-    difficulty: "Hard",
-    category: "Dessert",
-    calories: 450,
-    favorite: false,
-  },
-  {
-    id: 4,
-    name: "Caesar Salad",
-    image: "/caesar-salad-bowl.jpg",
-    time: 15,
-    servings: 4,
-    difficulty: "Easy",
-    category: "Salad",
-    calories: 210,
-    favorite: false,
-  },
-  {
-    id: 5,
-    name: "Beef Tacos",
-    image: "/beef-tacos-platter.jpg",
-    time: 35,
-    servings: 6,
-    difficulty: "Easy",
-    category: "Mexican",
-    calories: 380,
-    favorite: true,
-  },
-  {
-    id: 6,
-    name: "Mushroom Risotto",
-    image: "/creamy-mushroom-risotto.jpg",
-    time: 50,
-    servings: 4,
-    difficulty: "Medium",
-    category: "Italian",
-    calories: 420,
-    favorite: false,
-  },
-]
+import { useState, useEffect } from "react"
 
 export default function RecipesPage() {
-  const [selectedRecipe, setSelectedRecipe] = useState<number | null>(null)
+  const [selectedRecipe, setSelectedRecipe] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [meals, setMeals] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filteredRecipes = recipes.filter((recipe) => recipe.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  useEffect(() => {
+    async function fetchMealPlan() {
+      try {
+        const res = await fetch('/api/mealie/mealplan')
+        if (res.ok) {
+          const data = await res.json()
+          setMeals(data.mealPlan?.meals || [])
+        }
+      } catch (err) {
+        console.error('Failed to fetch meal plan', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMealPlan()
+  }, [])
 
-  const currentRecipe = selectedRecipe ? recipes.find((r) => r.id === selectedRecipe) : null
+  const fetchRecipeDetails = async (recipeId: string) => {
+    try {
+      const res = await fetch(`/api/mealie/recipe/${recipeId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSelectedRecipe(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch recipe details', err)
+    }
+  }
+
+  const filteredMeals = meals.filter((meal) => 
+    meal.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen p-8 bg-background">
@@ -95,21 +65,17 @@ export default function RecipesPage() {
               <Utensils className="w-7 h-7 text-foreground" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold">Recipes</h1>
+              <h1 className="text-4xl font-bold">Meal Plan</h1>
               <p className="text-muted-foreground text-lg">Mealie Recipe Manager</p>
             </div>
           </div>
-          <Button className="rounded-full" size="lg">
-            <ChefHat className="w-5 h-5 mr-2" />
-            Cook Mode
-          </Button>
         </div>
 
         {/* Search Bar */}
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Search recipes..."
+            placeholder="Search planned meals..."
             className="pl-10 h-12 rounded-xl"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -117,85 +83,20 @@ export default function RecipesPage() {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <Card className="p-4 text-center">
-          <div className="text-3xl font-bold text-primary">{recipes.length}</div>
-          <div className="text-sm text-muted-foreground">Total Recipes</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-3xl font-bold text-primary">{recipes.filter((r) => r.favorite).length}</div>
-          <div className="text-sm text-muted-foreground">Favorites</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-3xl font-bold text-primary">12</div>
-          <div className="text-sm text-muted-foreground">Categories</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-3xl font-bold text-primary">8</div>
-          <div className="text-sm text-muted-foreground">This Week</div>
-        </Card>
-      </div>
-
       {/* Recipes Grid */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">All Recipes</h2>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              All
-            </Button>
-            <Button variant="ghost" size="sm">
-              Favorites
-            </Button>
-            <Button variant="ghost" size="sm">
-              Quick
-            </Button>
-            <Button variant="ghost" size="sm">
-              Healthy
-            </Button>
-          </div>
-        </div>
-
+        <h2 className="text-2xl font-bold mb-4">Planned Meals</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRecipes.map((recipe) => (
+          {filteredMeals.map((meal) => (
             <Card
-              key={recipe.id}
+              key={meal.recipeId}
               className="overflow-hidden cursor-pointer hover:shadow-lg transition-all group"
-              onClick={() => setSelectedRecipe(recipe.id)}
+              onClick={() => fetchRecipeDetails(meal.recipeId)}
             >
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img
-                  src={recipe.image || "/placeholder.svg"}
-                  alt={recipe.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                {recipe.favorite && (
-                  <div className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center">
-                    <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                  </div>
-                )}
-                <div className="absolute top-3 left-3">
-                  <Badge className="bg-white/90 backdrop-blur-sm text-foreground hover:bg-white">
-                    {recipe.category}
-                  </Badge>
-                </div>
-              </div>
               <div className="p-4">
-                <h3 className="font-bold text-lg mb-3">{recipe.name}</h3>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {recipe.time} min
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    {recipe.servings}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Flame className="w-4 h-4" />
-                    {recipe.calories} cal
-                  </div>
+                <h3 className="font-bold text-lg mb-2">{meal.name}</h3>
+                <div className="text-sm text-muted-foreground">
+                  Date: {meal.date}
                 </div>
               </div>
             </Card>
@@ -206,89 +107,42 @@ export default function RecipesPage() {
       {/* Recipe Detail Dialog */}
       <Dialog open={selectedRecipe !== null} onOpenChange={() => setSelectedRecipe(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          {currentRecipe && (
+          {selectedRecipe && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-3xl font-bold">{currentRecipe.name}</DialogTitle>
+                <DialogTitle className="text-3xl font-bold">{selectedRecipe.name}</DialogTitle>
               </DialogHeader>
               <div className="space-y-6">
-                <img
-                  src={currentRecipe.image || "/placeholder.svg"}
-                  alt={currentRecipe.name}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-                <div className="flex gap-4">
-                  <Badge variant="secondary" className="text-sm">
-                    <Clock className="w-4 h-4 mr-1" />
-                    {currentRecipe.time} minutes
-                  </Badge>
-                  <Badge variant="secondary" className="text-sm">
-                    <Users className="w-4 h-4 mr-1" />
-                    {currentRecipe.servings} servings
-                  </Badge>
-                  <Badge variant="secondary" className="text-sm">
-                    <ChefHat className="w-4 h-4 mr-1" />
-                    {currentRecipe.difficulty}
-                  </Badge>
-                  <Badge variant="secondary" className="text-sm">
-                    <Flame className="w-4 h-4 mr-1" />
-                    {currentRecipe.calories} cal
-                  </Badge>
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-bold mb-3">Ingredients</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      <span>2 lbs chicken breast</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      <span>1 cup marinara sauce</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      <span>2 cups mozzarella cheese</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      <span>1/2 cup parmesan cheese</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      <span>1 cup breadcrumbs</span>
-                    </li>
-                  </ul>
+                {selectedRecipe.description && (
+                  <p className="text-muted-foreground">{selectedRecipe.description}</p>
+                )}
+                
+                <div className="flex gap-4 flex-wrap">
+                  {selectedRecipe.totalTime && (
+                    <Badge variant="secondary" className="text-sm">
+                      <Clock className="w-4 h-4 mr-1" />
+                      {selectedRecipe.totalTime}
+                    </Badge>
+                  )}
+                  {selectedRecipe.recipeYield && (
+                    <Badge variant="secondary" className="text-sm">
+                      <Users className="w-4 h-4 mr-1" />
+                      {selectedRecipe.recipeYield}
+                    </Badge>
+                  )}
                 </div>
 
                 <div>
                   <h3 className="text-xl font-bold mb-3">Instructions</h3>
                   <ol className="space-y-3">
-                    <li className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
-                        1
-                      </span>
-                      <span>Preheat oven to 375°F. Prepare chicken by pounding to even thickness.</span>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
-                        2
-                      </span>
-                      <span>Coat chicken in breadcrumbs and bake for 20 minutes.</span>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
-                        3
-                      </span>
-                      <span>Top with marinara sauce and cheeses, bake for 10 more minutes.</span>
-                    </li>
-                    <li className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
-                        4
-                      </span>
-                      <span>Let rest for 5 minutes before serving. Enjoy!</span>
-                    </li>
+                    {selectedRecipe.recipeInstructions?.map((step: any, idx: number) => (
+                      <li key={idx} className="flex gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+                          {idx + 1}
+                        </span>
+                        <span>{step.text}</span>
+                      </li>
+                    )) || <li>No instructions provided</li>}
                   </ol>
                 </div>
 
@@ -296,9 +150,6 @@ export default function RecipesPage() {
                   <Button className="flex-1" size="lg">
                     <ChefHat className="w-5 h-5 mr-2" />
                     Start Cook Mode
-                  </Button>
-                  <Button variant="outline" size="lg">
-                    <Heart className="w-5 h-5" />
                   </Button>
                 </div>
               </div>

@@ -41,6 +41,7 @@ fi
 
 echo "Installing app dependencies..."
 cd "$ROOT/v0-smart-display-app"
+pnpm add googleapis axios node-cache dotenv
 pnpm install --frozen-lockfile
 
 cd "$ROOT"

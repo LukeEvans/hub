@@ -3,7 +3,7 @@
 Raspberry Pi kiosk that boots into a Skylight-like calendar with Google Calendar, Apple Photos (shared album via icloudpd), weather, and Mealie meal-planning/cook mode. Frontend and backend run locally in one container; Mealie and icloudpd run alongside via Docker Compose.
 
 ## Stack
-- Node/Express serving static UI
+- Next.js 15+ (App Router)
 - Google Calendar via `googleapis`
 - Weather via OpenWeather OneCall
 - Apple Photos via `icloudpd` (shared album sync to local volume)
