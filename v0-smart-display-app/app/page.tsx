@@ -31,17 +31,17 @@ export default function DashboardPage() {
 
       {/* Main Dashboard Grid */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 overflow-hidden">
-        {/* Left Column: Rotating Photo (2/3 width on large screens) */}
-        <div className="lg:col-span-2 relative h-[500px]">
+        {/* Left Column: Rotating Photo (Now 1/3 width for portrait photos) */}
+        <div className="lg:col-span-1 relative h-[500px]">
           <PhotoWidget />
         </div>
 
-        {/* Right Column: Weather and Calendar */}
-        <div className="flex flex-col gap-8">
-          <div className="flex-1 min-h-[280px]">
+        {/* Right Column: Weather and Calendar (Now 2/3 width, side-by-side) */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="h-[500px]">
             <WeatherWidget />
           </div>
-          <div className="flex-1 min-h-[280px]">
+          <div className="h-[500px]">
             <CalendarWidget />
           </div>
         </div>
