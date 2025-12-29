@@ -140,30 +140,32 @@
   * {
     @apply border-border outline-ring/50;
   }
-  html,
+  html {
+    height: 100%;
+  }
   body {
     @apply bg-background text-foreground;
-    touch-action: pan-x pan-y;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     user-select: none;
     -webkit-user-select: none;
-    overscroll-behavior: contain;
     height: 100%;
     overflow: hidden;
   }
   main {
-    height: 100vh;
-    overflow-y: auto;
-    touch-action: auto;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 5rem;
+    overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
     scrollbar-width: none;
   }
   main::-webkit-scrollbar {
     display: none;
   }
-  :where(button, [role="button"], a) {
+  :where(button, [role="button"]) {
     touch-action: manipulation;
     min-height: 56px;
   }
