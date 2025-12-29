@@ -6,6 +6,8 @@ import "./globals.css"
 import { SidebarNavigation } from "@/components/sidebar-navigation"
 import { TouchScrollProvider } from "@/components/touch-scroll-provider"
 import { Screensaver } from "@/components/screensaver"
+import { VirtualKeyboardProvider } from "@/components/virtual-keyboard-context"
+import { VirtualKeyboard } from "@/components/virtual-keyboard"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -40,12 +42,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
-        <TouchScrollProvider />
-        <Screensaver />
-        <SidebarNavigation />
-        <main>
-          {children}
-        </main>
+        <VirtualKeyboardProvider>
+          <TouchScrollProvider />
+          <Screensaver />
+          <SidebarNavigation />
+          <main>
+            {children}
+          </main>
+          <VirtualKeyboard />
+        </VirtualKeyboardProvider>
         <Analytics />
       </body>
     </html>
