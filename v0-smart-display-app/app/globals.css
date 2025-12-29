@@ -142,5 +142,15 @@
   }
   body {
     @apply bg-background text-foreground;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: contain;
+  }
+  :where(button, [role="button"], a) {
+    touch-action: manipulation;
+    min-height: 56px;
+  }
+  :where(input, select, textarea) {
+    touch-action: manipulation;
   }
 }

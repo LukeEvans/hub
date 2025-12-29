@@ -88,14 +88,14 @@ export function SidebarNavigation() {
               key={item.href}
               href={item.href}
               className={cn(
-                "w-full aspect-square rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200",
+                "w-full aspect-square min-h-16 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200",
                 "hover:bg-sidebar-accent",
                 isActive && "bg-sidebar-primary text-sidebar-primary-foreground",
               )}
               title={item.label}
             >
-              <Icon className="w-6 h-6" />
-              <span className="text-[9px] font-medium">{item.label}</span>
+              <Icon className="w-7 h-7" />
+              <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           )
         })}
