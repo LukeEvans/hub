@@ -38,7 +38,7 @@ export default function WeatherPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Current Weather - Large Card */}
         <Card className="lg:col-span-2 p-8 bg-gradient-to-br from-[var(--widget-peach)] to-[var(--widget-yellow)]">
           <div className="flex items-start justify-between mb-6">
@@ -103,7 +103,7 @@ export default function WeatherPage() {
       </div>
 
       {/* Hourly Forecast */}
-      <div className="mt-6 max-w-7xl">
+      <div className="mt-6">
         <h2 className="text-2xl font-bold mb-4">Hourly Forecast</h2>
         <Card className="p-6">
           <div className="flex gap-4 overflow-x-auto pb-2">
@@ -123,7 +123,7 @@ export default function WeatherPage() {
       </div>
 
       {/* 7-Day Forecast */}
-      <div className="mt-6 max-w-7xl">
+      <div className="mt-6">
         <h2 className="text-2xl font-bold mb-4">7-Day Forecast</h2>
         <Card className="p-6">
           <div className="space-y-3">

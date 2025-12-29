@@ -30,7 +30,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Dashboard Grid - 2x2 for 4 widgets */}
-      <div className="grid grid-cols-2 gap-6 max-w-7xl">
+      <div className="grid grid-cols-2 gap-6">
         {/* Calendar Widget */}
         <Link href="/calendar">
           <Card className="p-6 h-80 hover:shadow-lg transition-shadow cursor-pointer bg-[var(--widget-blue)]">
@@ -127,7 +127,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Access Info Bar */}
-      <div className="mt-8 max-w-7xl">
+      <div className="mt-8">
         <div className="flex gap-4">
           <Card className="flex-1 p-4 bg-card">
             <div className="text-sm text-muted-foreground mb-1">Next Event</div>

@@ -102,7 +102,7 @@ export default function MusicPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Now Playing - Large Card */}
         <Card className="lg:col-span-2 p-8 bg-gradient-to-br from-[var(--widget-lavender)] to-[var(--widget-pink)]">
           <div className="flex gap-6 mb-6">
@@ -227,7 +227,7 @@ export default function MusicPage() {
       </div>
 
       {/* Playlists Section */}
-      <div className="mt-12 max-w-7xl">
+      <div className="mt-12">
         <h2 className="text-2xl font-bold mb-4">Your Playlists</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {playlists.map((playlist) => (
@@ -258,7 +258,7 @@ export default function MusicPage() {
       </div>
 
       {/* Recent Tracks */}
-      <div className="mt-12 max-w-7xl">
+      <div className="mt-12">
         <h2 className="text-2xl font-bold mb-4">Recently Played</h2>
         <Card className="p-6">
           <div className="space-y-3">

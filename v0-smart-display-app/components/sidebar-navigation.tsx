@@ -72,9 +72,9 @@ export function SidebarNavigation() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-20 border-r border-sidebar-border bg-sidebar flex flex-col items-center py-6 gap-6">
+    <aside className="fixed left-0 top-0 h-screen w-28 border-r border-sidebar-border bg-sidebar flex flex-col items-center py-6 gap-6">
       {/* Logo/Brand */}
-      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
+      <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl">
         H
       </div>
 
@@ -90,7 +90,7 @@ export function SidebarNavigation() {
               href={item.href}
               prefetch={false}
               className={cn(
-                "w-full aspect-square min-h-16 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200",
+                "w-full aspect-square min-h-20 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-200",
                 "hover:bg-sidebar-accent",
                 isActive && "bg-sidebar-primary text-sidebar-primary-foreground",
               )}
@@ -101,8 +101,8 @@ export function SidebarNavigation() {
                 router.push(item.href)
               }}
             >
-              <Icon className="w-7 h-7" />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <Icon className="w-8 h-8" />
+              <span className="text-xs font-medium">{item.label}</span>
             </Link>
           )
         })}
@@ -113,10 +113,10 @@ export function SidebarNavigation() {
         variant="ghost"
         size="icon"
         onClick={toggleDarkMode}
-        className="w-12 h-12 rounded-xl"
+        className="w-14 h-14 rounded-xl"
         title="Toggle dark mode"
       >
-        {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
       </Button>
     </aside>
   )

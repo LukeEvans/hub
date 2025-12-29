@@ -118,7 +118,7 @@ export default function RecipesPage() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8 max-w-4xl">
+      <div className="grid grid-cols-4 gap-4 mb-8">
         <Card className="p-4 text-center">
           <div className="text-3xl font-bold text-primary">{recipes.length}</div>
           <div className="text-sm text-muted-foreground">Total Recipes</div>
@@ -138,7 +138,7 @@ export default function RecipesPage() {
       </div>
 
       {/* Recipes Grid */}
-      <div className="max-w-7xl">
+      <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">All Recipes</h2>
           <div className="flex gap-2">

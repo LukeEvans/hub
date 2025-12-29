@@ -64,7 +64,7 @@ export default function HomeAssistantPage() {
       </div>
 
       {/* Quick Status Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8 max-w-7xl">
+      <div className="grid grid-cols-4 gap-4 mb-8">
         <Card className="p-4 bg-[var(--widget-blue)]">
           <div className="flex items-center gap-3 mb-2">
             <Lightbulb className="w-5 h-5 text-foreground/70" />
@@ -102,7 +102,7 @@ export default function HomeAssistantPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Controls */}
         <div className="lg:col-span-2 space-y-6">
           {/* Climate Control */}
