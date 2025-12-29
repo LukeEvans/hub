@@ -10,6 +10,7 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
 
   const handleGoogleLogin = async () => {
+    console.log("Login button clicked")
     setIsLoading(true)
     setError(null)
     try {

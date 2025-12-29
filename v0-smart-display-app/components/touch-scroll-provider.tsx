@@ -12,6 +12,12 @@ export function TouchScrollProvider() {
     let scrollStartTop = 0
 
     const handlePointerDown = (e: PointerEvent) => {
+      // Don't intercept if we're clicking a button, link, or input
+      const target = e.target as HTMLElement
+      if (target.closest('button, a, input, [role="button"]')) {
+        return
+      }
+
       isScrolling = true
       startY = e.clientY
       scrollStartTop = mainElement.scrollTop
