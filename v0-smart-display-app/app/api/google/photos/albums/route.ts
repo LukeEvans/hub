@@ -8,27 +8,67 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Refresh token if needed
-    const { token: accessToken } = await authClient.getAccessToken();
-
-    const response = await fetch('https://photoslibrary.googleapis.com/v1/albums', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || 'Failed to fetch albums');
-    }
-
-    const data = await response.json();
-    
     // Add a virtual "Smart Highlights" album option
     const albums = [
-      { id: 'smart-highlights', title: 'Smart Highlights (Recent)' },
-      ...(data.albums || [])
+      { id: 'smart-highlights', title: 'Smart Highlights (Recent)' }
     ];
+
+    try {
+      // Refresh token if needed
+      const { token: accessToken } = await authClient.getAccessToken();
+      
+      if (!accessToken) {
+        console.error('No access token available after refresh attempt');
+        return NextResponse.json({ albums }); // Return at least virtual albums
+      }
+
+      console.log('Fetching albums from Google Photos API...');
+      const response = await fetch('https://photoslibrary.googleapis.com/v1/albums?pageSize=50', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.albums) {
+          albums.push(...data.albums);
+        }
+        console.log(`Found ${data.albums?.length || 0} owned albums`);
+      } else {
+        const errorData = await response.json();
+        console.error('Google Photos API error (owned):', errorData);
+      }
+
+      // Also try to fetch shared albums
+      console.log('Fetching shared albums...');
+      const sharedResponse = await fetch('https://photoslibrary.googleapis.com/v1/sharedAlbums?pageSize=50', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (sharedResponse.ok) {
+        const sharedData = await sharedResponse.json();
+        if (sharedData.sharedAlbums) {
+          // Add a tag to distinguish shared albums
+          const taggedShared = sharedData.sharedAlbums.map((a: any) => ({
+            ...a,
+            title: `${a.title} (Shared)`
+          }));
+          albums.push(...taggedShared);
+        }
+        console.log(`Found ${sharedData.sharedAlbums?.length || 0} shared albums`);
+      } else {
+        const errorData = await sharedResponse.json();
+        console.error('Google Photos API error (shared):', errorData);
+      }
+    } catch (apiErr) {
+      console.error('Error during Google Photos API calls:', apiErr);
+      // Fall through to return whatever we have (at least smart-highlights)
+    }
+
+    return NextResponse.json({ albums });
 
     return NextResponse.json({ albums });
   } catch (err) {

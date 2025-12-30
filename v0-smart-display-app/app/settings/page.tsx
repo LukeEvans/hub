@@ -31,11 +31,18 @@ export default function SettingsPage() {
     // Fetch available albums
     setIsFetchingAlbums(true)
     fetch('/api/google/photos/albums')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch albums');
+        return res.json();
+      })
       .then(data => {
         if (data.albums) setAlbums(data.albums)
+        if (data.error) setError(data.error)
       })
-      .catch(err => console.error('Failed to fetch albums:', err))
+      .catch(err => {
+        console.error('Failed to fetch albums:', err)
+        setError('Failed to load Google Photos albums. Check connection and authentication.')
+      })
       .finally(() => setIsFetchingAlbums(false))
   }, [])
 

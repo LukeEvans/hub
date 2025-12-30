@@ -18,7 +18,7 @@ export async function GET() {
       scope: scopes,
       prompt: 'consent',
     });
-    console.log('Auth URL generated successfully');
+    console.log('Auth URL generated with redirect URI:', authClient.redirectUri);
     return NextResponse.json({ url });
   } catch (error) {
     console.error('Error generating Auth URL:', error);

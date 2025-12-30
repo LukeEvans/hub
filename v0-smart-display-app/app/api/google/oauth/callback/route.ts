@@ -10,8 +10,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    console.log('Exchanging code for tokens...');
     const { tokens } = await authClient.getToken(code);
+    console.log('Tokens received:', Object.keys(tokens));
+    if (!tokens.refresh_token) {
+      console.warn('No refresh token received. User might need to re-consent.');
+    }
     await saveGoogleToken(tokens);
+    console.log('Tokens saved successfully');
     return new NextResponse('Google auth completed. You can close this tab.');
   } catch (err) {
     console.error('OAuth callback error', err);
