@@ -67,6 +67,30 @@ GOOGLE_CALENDAR_IDS=your_family_calendar_id
 3. Click the link provided to log in with your Google account.
 4. Once completed, you'll see a success message and your tokens will be saved to `./data/google/token.json`.
 
+## Spotify Integration
+
+To connect your Spotify account, follow these steps:
+
+### 1. Create Spotify Developer App
+1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+2. Create a new app (e.g., "Smart Hub Display").
+3. Click on **Settings**.
+4. Add an **Authorized redirect URI**: `http://localhost:3000/api/spotify/oauth/callback` (or your Pi's IP/hostname).
+5. Copy your **Client ID** and **Client Secret**.
+
+### 2. Configure Environment Variables
+Update your `.env` file in the root directory:
+```env
+SPOTIFY_CLIENT_ID=your_client_id
+SPOTIFY_CLIENT_SECRET=your_client_secret
+```
+
+### 3. Authorize the App
+1. Start the application.
+2. Navigate to `http://localhost:3000/api/spotify/auth-url` (or your Pi's address).
+3. Click the link provided to log in with your Spotify account.
+4. Once completed, you'll see a success message and your tokens will be saved to `./data/spotify/token.json`.
+
 ## Raspberry Pi Deployment
 
 To speed up development on the Raspberry Pi, this project is configured to build on a faster machine (like your Mac) and push to the GitHub Container Registry (GHCR).

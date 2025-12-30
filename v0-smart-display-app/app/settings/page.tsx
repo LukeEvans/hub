@@ -21,9 +21,17 @@ export default function SettingsPage() {
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [pickerStatus, setPickerStatus] = useState<string | null>(null)
   const [selectedCount, setSelectedCount] = useState<number | null>(null)
+  const [spotifyStatus, setSpotifyStatus] = useState<any>(null)
+  const [isSpotifyLoading, setIsSpotifyLoading] = useState(false)
+  const [isSpotifyLoggingOut, setIsSpotifyLoggingOut] = useState(false)
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
+    // Fetch Spotify status
+    fetch('/api/spotify/status')
+      .then(res => res.json())
+      .then(data => setSpotifyStatus(data))
+      .catch(() => {})
     // Fetch current config
     fetch('/api/google/photos/config')
       .then(res => res.json())
@@ -97,6 +105,39 @@ export default function SettingsPage() {
       setError("Failed to disconnect Google account")
     } finally {
       setIsLoggingOut(false)
+    }
+  }
+
+  const handleSpotifyLogin = async () => {
+    setIsSpotifyLoading(true)
+    setError(null)
+    try {
+      const response = await fetch("/api/spotify/auth-url")
+      if (!response.ok) throw new Error("Failed to get auth URL")
+      const data = await response.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (err) {
+      console.error("Spotify login failed:", err)
+      setError("Failed to connect to Spotify")
+    } finally {
+      setIsSpotifyLoading(false)
+    }
+  }
+
+  const handleSpotifyLogout = async () => {
+    if (!confirm("Are you sure you want to disconnect your Spotify account?")) return
+    setIsSpotifyLoggingOut(true)
+    try {
+      await fetch("/api/spotify/logout", { method: "POST" })
+      setSpotifyStatus({ connected: false })
+      alert("Successfully disconnected from Spotify.")
+    } catch (err) {
+      console.error("Spotify logout failed:", err)
+      setError("Failed to disconnect Spotify")
+    } finally {
+      setIsSpotifyLoggingOut(false)
     }
   }
 
@@ -271,6 +312,44 @@ export default function SettingsPage() {
                   {isLoggingOut ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
                   Disconnect
                 </Button>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#1DB954] flex items-center justify-center text-white">
+                  <Music className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-bold text-lg">Spotify Account</p>
+                  <p className="text-sm text-muted-foreground">
+                    {spotifyStatus?.connected 
+                      ? `Connected as ${spotifyStatus.display_name || 'user'}` 
+                      : 'Required for Spotify tab'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                {!spotifyStatus?.connected ? (
+                  <Button 
+                    onClick={handleSpotifyLogin} 
+                    disabled={isSpotifyLoading}
+                    className="h-14 px-8 gap-3 text-lg font-semibold flex-1 bg-[#1DB954] hover:bg-[#1ed760] text-white border-none"
+                  >
+                    <LogIn className="w-5 h-5" />
+                    {isSpotifyLoading ? "Redirecting..." : "Connect Spotify"}
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleSpotifyLogout} 
+                    disabled={isSpotifyLoggingOut}
+                    variant="destructive"
+                    className="h-14 px-8 gap-3 text-lg font-semibold flex-1"
+                  >
+                    {isSpotifyLoggingOut ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
+                    Disconnect
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
