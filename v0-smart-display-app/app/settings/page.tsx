@@ -77,20 +77,26 @@ export default function SettingsPage() {
   }
 
   const handleAlbumChange = async (albumId: string) => {
+    console.log('Changing album to:', albumId)
     const album = albums.find(a => a.id === albumId)
     setSelectedAlbumId(albumId)
     try {
-      await fetch('/api/google/photos/config', {
+      const response = await fetch('/api/google/photos/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           selectedAlbumId: albumId, 
           selectedAlbumTitle: album?.title,
-          lastSyncTime // Keep existing sync time
+          lastSyncTime: lastSyncTime // Use the state value directly
         })
       })
+      if (!response.ok) {
+        throw new Error('Failed to save config')
+      }
+      console.log('Album config saved successfully')
     } catch (err) {
       console.error('Failed to save album config:', err)
+      setError('Failed to save album selection. Please try again.')
     }
   }
 
@@ -194,7 +200,7 @@ export default function SettingsPage() {
                   value={selectedAlbumId || ""} 
                   onChange={(e) => handleAlbumChange(e.target.value)}
                   disabled={isFetchingAlbums}
-                  className="w-full h-16 px-4 py-3 bg-background border-2 rounded-xl text-xl font-medium focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+                  className="w-full h-16 px-4 py-3 bg-background border-2 rounded-xl text-xl font-medium focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
                 >
                   <option value="" disabled>Select an album...</option>
                   {albums.map(album => (
