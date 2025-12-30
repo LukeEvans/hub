@@ -5,6 +5,7 @@ import { PhotoWidget } from "@/components/dashboard/photo-widget"
 import { WeatherWidget } from "@/components/dashboard/weather-widget"
 import { CalendarWidget } from "@/components/dashboard/calendar-widget"
 import { MenuWidget } from "@/components/dashboard/menu-widget"
+import { SportsWidget } from "@/components/dashboard/sports-widget"
 
 export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -47,9 +48,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Bottom Row: Weekly Menu */}
-      <div className="h-40">
-        <MenuWidget />
+      {/* Bottom Row: Nuggets Schedule and Weekly Menu */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 h-40">
+        <div className="md:col-span-1">
+          <SportsWidget />
+        </div>
+        <div className="md:col-span-3">
+          <MenuWidget />
+        </div>
       </div>
     </div>
   )

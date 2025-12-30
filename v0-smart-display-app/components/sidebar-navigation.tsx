@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Cloud, ImageIcon, Utensils, Music, HomeIcon, LayoutDashboard, Moon, Sun, Settings } from "lucide-react"
+import { Calendar, Cloud, ImageIcon, Utensils, Music, HomeIcon, LayoutDashboard, Moon, Sun, Settings, Trophy } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,12 @@ const navigationItems = [
     href: "/calendar",
     icon: Calendar,
     label: "Calendar",
+  },
+  {
+    name: "Sports",
+    href: "/sports",
+    icon: Trophy,
+    label: "Sports",
   },
   {
     name: "Weather",
