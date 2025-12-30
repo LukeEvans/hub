@@ -10,6 +10,14 @@ export function Screensaver() {
   const idleTime = 300000 // 5 minutes
 
   useEffect(() => {
+    const handleLaunchScreensaver = () => {
+      setIsVisible(true)
+    }
+    window.addEventListener('launch-screensaver', handleLaunchScreensaver)
+    return () => window.removeEventListener('launch-screensaver', handleLaunchScreensaver)
+  }, [])
+
+  useEffect(() => {
     async function fetchPhotos() {
       try {
         const res = await fetch('/api/photos')

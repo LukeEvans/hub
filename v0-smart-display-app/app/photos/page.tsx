@@ -1,6 +1,6 @@
 "use client"
 
-import { ImageIcon, Heart, Share2, Download, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { ImageIcon, Heart, Share2, Download, ChevronLeft, ChevronRight, Loader2, Play } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
@@ -11,6 +11,10 @@ export default function PhotosPage() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null)
   const { data, isLoading: loading } = useApi<any>('/api/photos')
   const photos = data?.images || []
+
+  const launchScreensaver = () => {
+    window.dispatchEvent(new CustomEvent('launch-screensaver'))
+  }
 
   if (loading) {
     return (
@@ -33,6 +37,13 @@ export default function PhotosPage() {
             <p className="text-muted-foreground text-lg">Local Photo Library</p>
           </div>
         </div>
+        <Button 
+          onClick={launchScreensaver}
+          className="flex items-center gap-2"
+        >
+          <Play className="w-4 h-4 fill-current" />
+          Slideshow
+        </Button>
       </div>
 
       {/* Recent Photos Section */}
@@ -42,7 +53,7 @@ export default function PhotosPage() {
           <p className="text-muted-foreground">No photos found in the photos directory.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {photos.map((photoUrl, index) => (
+            {photos.map((photoUrl: string, index: number) => (
               <Card
                 key={index}
                 className="overflow-hidden cursor-pointer hover:shadow-lg transition-all hover:scale-105 duration-200 group"
