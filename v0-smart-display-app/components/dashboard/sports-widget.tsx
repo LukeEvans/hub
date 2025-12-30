@@ -57,7 +57,16 @@ export function SportsWidget() {
   })
 
   const broadcast = nextEvent.competitions[0].broadcasts?.[0]?.names?.[0] || "Check local listings"
-  const opponentRecord = opponent.record?.[0]?.summary || "N/A"
+  
+  // Helper to get record summary
+  const getRecord = (competitor: any) => {
+    if (competitor.record) return competitor.record[0]?.summary
+    if (competitor.records) return competitor.records[0]?.summary
+    return "N/A"
+  }
+
+  const opponentRecord = getRecord(opponent)
+  const nuggetsRecord = nuggetsData.record?.items?.[0]?.summary || "N/A"
 
   return (
     <Card className="h-full p-4 bg-gradient-to-br from-[#0E2240] to-[#FEC524] text-white border-none overflow-hidden relative">
@@ -81,6 +90,7 @@ export function SportsWidget() {
             />
           </div>
           <span className="text-[10px] font-bold truncate w-full text-center">NUGGETS</span>
+          <span className="text-[8px] text-white/70">({nuggetsRecord})</span>
         </div>
 
         <div className="flex flex-col items-center gap-1">
