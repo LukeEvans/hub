@@ -36,7 +36,7 @@ export function WeatherWidget() {
 
   const current = weatherData?.current || {}
   const daily = weatherData?.daily?.slice(0, 7) || []
-  const hourly = weatherData?.hourly?.slice(0, 8) || []
+  const hourly = weatherData?.hourly?.slice(0, 7) || []
 
   const getWeatherIcon = (main: string) => {
     switch (main?.toLowerCase()) {
@@ -66,9 +66,9 @@ export function WeatherWidget() {
         <div className="flex-1 flex flex-col min-h-0">
           {/* Hourly */}
           <div className="flex-1 flex items-center min-h-0">
-            <div className="w-full flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            <div className="w-full flex justify-between items-center overflow-x-auto pb-4 scrollbar-hide">
               {hourly.map((hour: any, i: number) => (
-                <div key={i} className="flex flex-col items-center min-w-[40px] gap-1">
+                <div key={i} className="flex flex-col items-center min-w-[50px] gap-1">
                   <span className="text-[10px] text-foreground/70">
                     {new Date(hour.dt * 1000).toLocaleTimeString([], { hour: 'numeric', hour12: true })}
                   </span>
