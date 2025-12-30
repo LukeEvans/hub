@@ -52,13 +52,24 @@ export async function GET() {
     try {
       console.log('Testing Photos API...');
       const photoRes = await fetch('https://photoslibrary.googleapis.com/v1/albums?pageSize=1', {
-        headers: { Authorization: `Bearer ${accessToken}` }
+        headers: { 
+          Authorization: `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        }
       });
       results.photos.status = photoRes.status;
+      results.photos.statusText = photoRes.statusText;
+      const data = await photoRes.json();
+      
       if (!photoRes.ok) {
-        results.photos.error = await photoRes.json();
+        results.photos.error = data;
+        // Check for specific "api not enabled" clues
+        if (JSON.stringify(data).includes('not enabled') || JSON.stringify(data).includes('not used in project')) {
+          results.photos.hint = "API is not enabled in Google Cloud Console. Click the link I provided to enable it.";
+        }
       } else {
         results.photos.status = 'Success (200)';
+        results.photos.albumCount = data.albums?.length || 0;
       }
     } catch (err: any) {
       results.photos.status = 'Error';

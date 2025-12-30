@@ -8,6 +8,7 @@ export async function GET() {
     'https://www.googleapis.com/auth/calendar.readonly',
     'https://www.googleapis.com/auth/photoslibrary.readonly',
     'https://www.googleapis.com/auth/photoslibrary',
+    'https://www.googleapis.com/auth/photoslibrary.sharing',
     'openid',
     'email',
     'profile',

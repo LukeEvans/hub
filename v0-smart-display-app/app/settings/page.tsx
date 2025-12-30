@@ -320,9 +320,16 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 {diagnostics.photos.error && (
-                  <pre className="p-3 bg-black text-xs text-red-400 rounded-lg overflow-auto max-h-40">
-                    {JSON.stringify(diagnostics.photos.error, null, 2)}
-                  </pre>
+                  <div className="space-y-2">
+                    <pre className="p-3 bg-black text-xs text-red-400 rounded-lg overflow-auto max-h-40">
+                      {JSON.stringify(diagnostics.photos.error, null, 2)}
+                    </pre>
+                    {diagnostics.photos.hint && (
+                      <div className="p-3 bg-blue-500/20 text-blue-200 text-xs rounded-lg border border-blue-500/30">
+                        <strong>Hint:</strong> {diagnostics.photos.hint}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}
