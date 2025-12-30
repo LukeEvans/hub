@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import { getGoogleToken } from '@/lib/google-auth';
+import { getGoogleToken, authClient } from '@/lib/google-auth';
 import cache from '@/lib/cache';
 
 const CONFIG_PATH = path.join(process.cwd(), 'data', 'google-photos-config.json');
 const PICKER_MEDIA_PATH = path.join(process.cwd(), 'data', 'picker-media.json');
 const PHOTOS_DIR = path.join(process.cwd(), 'photos', 'google');
 
-async function downloadImage(url: string, destPath: string) {
-  const response = await fetch(url);
+async function downloadImage(url: string, destPath: string, accessToken?: string | null) {
+  const headers: Record<string, string> = {};
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+  const response = await fetch(url, { headers });
   if (!response.ok) throw new Error(`Failed to download image: ${response.statusText}`);
   const arrayBuffer = await response.arrayBuffer();
   await fs.writeFile(destPath, new Uint8Array(arrayBuffer));
@@ -22,6 +26,7 @@ export async function POST() {
     if (!token) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+    const { token: accessToken } = await authClient.getAccessToken();
 
     // 2. Load picker media items
     let pickerData;
@@ -77,7 +82,7 @@ export async function POST() {
         // Download with size parameter (optimized for display)
         const downloadUrl = `${baseUrl}=w2048-h1536`;
         try {
-          await downloadImage(downloadUrl, destPath);
+          await downloadImage(downloadUrl, destPath, accessToken);
           downloadedFiles.push(filename);
           console.log(`Downloaded ${filename}`);
         } catch (err) {
