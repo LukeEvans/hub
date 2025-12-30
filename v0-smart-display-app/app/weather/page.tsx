@@ -2,30 +2,12 @@
 
 import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
-import { useState, useEffect } from "react"
+import { useApi } from "@/lib/use-api"
 
 export default function WeatherPage() {
-  const [weatherData, setWeatherData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: weatherData, isLoading } = useApi<any>('/api/weather')
 
-  useEffect(() => {
-    async function fetchWeather() {
-      try {
-        const res = await fetch('/api/weather')
-        if (res.ok) {
-          const data = await res.json()
-          setWeatherData(data)
-        }
-      } catch (err) {
-        console.error('Failed to fetch weather', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchWeather()
-  }, [])
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />

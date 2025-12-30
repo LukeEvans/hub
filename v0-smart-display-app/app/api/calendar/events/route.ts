@@ -113,7 +113,11 @@ export async function GET(request: NextRequest) {
 
     const payload = { events };
     cache.set(cacheKey, payload, 120);
-    return NextResponse.json(payload);
+    return NextResponse.json(payload, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240'
+      }
+    });
   } catch (err) {
     console.error('Calendar error', err);
     return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });

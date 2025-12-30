@@ -2,42 +2,22 @@
 
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
-import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useApi } from "@/lib/use-api"
 
 export function CalendarWidget() {
-  const [events, setEvents] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading } = useApi<any>('/api/calendar/events')
+  
+  const events = data?.events ? data.events.filter((e: any) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const start = new Date(e.start)
+    return start >= today && start < tomorrow
+  }).sort((a: any, b: any) => new Date(a.start).getTime() - new Date(b.start).getTime()) : []
 
-  useEffect(() => {
-    async function fetchEvents() {
-      try {
-        const res = await fetch('/api/calendar/events')
-        if (res.ok) {
-          const data = await res.json()
-          // Filter for today's events and sort them
-          const today = new Date()
-          today.setHours(0, 0, 0, 0)
-          const tomorrow = new Date(today)
-          tomorrow.setDate(tomorrow.getDate() + 1)
-
-          const filtered = data.events.filter((e: any) => {
-            const start = new Date(e.start)
-            return start >= today && start < tomorrow
-          }).sort((a: any, b: any) => new Date(a.start).getTime() - new Date(b.start).getTime())
-
-          setEvents(filtered)
-        }
-      } catch (err) {
-        console.error('Failed to fetch events', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchEvents()
-  }, [])
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Card className="h-full flex items-center justify-center bg-[var(--widget-blue)]">
         <Loader2 className="w-8 h-8 animate-spin text-foreground/50" />

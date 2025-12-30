@@ -2,24 +2,12 @@
 
 import { useState, useEffect } from "react"
 
-export function PhotoWidget() {
-  const [photos, setPhotos] = useState<string[]>([])
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
+import { useApi } from "@/lib/use-api"
 
-  useEffect(() => {
-    async function fetchPhotos() {
-      try {
-        const res = await fetch('/api/photos')
-        if (res.ok) {
-          const data = await res.json()
-          setPhotos(data.images || [])
-        }
-      } catch (err) {
-        console.error('Failed to fetch photos for widget', err)
-      }
-    }
-    fetchPhotos()
-  }, [])
+export function PhotoWidget() {
+  const { data } = useApi<any>('/api/photos')
+  const photos = data?.images || []
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
 
   useEffect(() => {
     if (photos.length > 1) {

@@ -66,7 +66,11 @@ export async function GET() {
     
     const payload = resp.data;
     cache.set(cacheKey, payload, 300);
-    return NextResponse.json(payload);
+    return NextResponse.json(payload, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      }
+    });
   } catch (err: any) {
     console.error('Weather error', err.response?.data || err.message);
     return NextResponse.json(getMockWeather());

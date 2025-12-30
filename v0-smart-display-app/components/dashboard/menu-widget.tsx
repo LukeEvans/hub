@@ -2,31 +2,14 @@
 
 import { Utensils, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
-import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useApi } from "@/lib/use-api"
 
 export function MenuWidget() {
-  const [meals, setMeals] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading } = useApi<any>('/api/mealie/mealplan')
+  const meals = data?.mealPlan?.meals || []
 
-  useEffect(() => {
-    async function fetchMealPlan() {
-      try {
-        const res = await fetch('/api/mealie/mealplan')
-        if (res.ok) {
-          const data = await res.json()
-          setMeals(data.mealPlan?.meals || [])
-        }
-      } catch (err) {
-        console.error('Failed to fetch meal plan', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchMealPlan()
-  }, [])
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Card className="h-full flex items-center justify-center bg-[var(--widget-pink)]">
         <Loader2 className="w-8 h-8 animate-spin text-foreground/50" />

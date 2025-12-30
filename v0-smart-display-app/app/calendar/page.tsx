@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, startOfMonth, addMonths, subMonths, addDays as addDaysFn, subDays } from "date-fns"
+import { useApi } from "@/lib/use-api"
 
 interface CalendarEvent {
   id: string;
@@ -17,45 +18,20 @@ interface CalendarEvent {
 
 export default function CalendarPage() {
   const [view, setView] = useState("Week")
-  const [events, setEvents] = useState<CalendarEvent[]>([])
-  const [loading, setLoading] = useState(true)
-  const [currentTemp, setCurrentTemp] = useState<number | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
-  
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }) // Start week on Monday
 
-  useEffect(() => {
-    async function fetchCalendarData() {
-      try {
-        setLoading(true)
-        // Fetch a wide range around the current date
-        const start = startOfMonth(subMonths(currentDate, 1)).toISOString()
-        const end = startOfMonth(addMonths(currentDate, 2)).toISOString()
-        
-        const [eventsRes, weatherRes] = await Promise.all([
-          fetch(`/api/calendar/events?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`),
-          fetch('/api/weather')
-        ])
+  // Calculate range for SWR key
+  const start = startOfMonth(subMonths(currentDate, 1)).toISOString()
+  const end = startOfMonth(addMonths(currentDate, 2)).toISOString()
 
-        if (eventsRes.ok) {
-          const data = await eventsRes.json()
-          setEvents(data.events || [])
-        }
+  const { data: eventsData, isLoading: eventsLoading } = useApi<any>(
+    `/api/calendar/events?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`
+  )
+  const { data: weatherData } = useApi<any>('/api/weather')
 
-        if (weatherRes.ok) {
-          const weatherData = await weatherRes.json()
-          if (weatherData.current?.temp !== undefined) {
-            setCurrentTemp(Math.round(weatherData.current.temp))
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch calendar data', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchCalendarData()
-  }, [currentDate]) // Refetch when date changes
+  const events = eventsData?.events || []
+  const currentTemp = weatherData?.current?.temp !== undefined ? Math.round(weatherData.current.temp) : null
+  const loading = eventsLoading
 
   const currentTime = format(new Date(), "h:mm a")
   const currentMonthYear = format(currentDate, "MMMM yyyy")

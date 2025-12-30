@@ -84,7 +84,11 @@ export async function GET() {
     };
 
     cache.set(cacheKey, data, 14400); // 4 hours
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=14400, stale-while-revalidate=28800'
+      }
+    });
   } catch (error: any) {
     console.error('Error fetching sports data:', error.message);
     return NextResponse.json({ error: 'Failed to fetch sports data' }, { status: 500 });

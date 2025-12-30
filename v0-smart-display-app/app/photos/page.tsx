@@ -4,29 +4,13 @@ import { ImageIcon, Heart, Share2, Download, ChevronLeft, ChevronRight, Loader2 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useApi } from "@/lib/use-api"
 
 export default function PhotosPage() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null)
-  const [photos, setPhotos] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchPhotos() {
-      try {
-        const res = await fetch('/api/photos')
-        if (res.ok) {
-          const data = await res.json()
-          setPhotos(data.images || [])
-        }
-      } catch (err) {
-        console.error('Failed to fetch photos', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchPhotos()
-  }, [])
+  const { data, isLoading: loading } = useApi<any>('/api/photos')
+  const photos = data?.images || []
 
   if (loading) {
     return (

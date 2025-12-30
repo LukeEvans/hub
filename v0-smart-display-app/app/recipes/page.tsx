@@ -6,42 +6,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useApi } from "@/lib/use-api"
 
 export default function RecipesPage() {
-  const [selectedRecipe, setSelectedRecipe] = useState<any>(null)
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [meals, setMeals] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  
+  const { data: mealPlanData, isLoading: loading } = useApi<any>('/api/mealie/mealplan')
+  const { data: selectedRecipe } = useApi<any>(
+    selectedRecipeId ? `/api/mealie/recipe/${selectedRecipeId}` : null
+  )
 
-  useEffect(() => {
-    async function fetchMealPlan() {
-      try {
-        const res = await fetch('/api/mealie/mealplan')
-        if (res.ok) {
-          const data = await res.json()
-          setMeals(data.mealPlan?.meals || [])
-        }
-      } catch (err) {
-        console.error('Failed to fetch meal plan', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchMealPlan()
-  }, [])
-
-  const fetchRecipeDetails = async (recipeId: string) => {
-    try {
-      const res = await fetch(`/api/mealie/recipe/${recipeId}`)
-      if (res.ok) {
-        const data = await res.json()
-        setSelectedRecipe(data)
-      }
-    } catch (err) {
-      console.error('Failed to fetch recipe details', err)
-    }
-  }
+  const meals = mealPlanData?.mealPlan?.meals || []
 
   const filteredMeals = meals.filter((meal) => 
     meal.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -91,7 +68,7 @@ export default function RecipesPage() {
             <Card
               key={meal.recipeId}
               className="overflow-hidden cursor-pointer hover:shadow-lg transition-all group"
-              onClick={() => fetchRecipeDetails(meal.recipeId)}
+              onClick={() => setSelectedRecipeId(meal.recipeId)}
             >
               <div className="p-4">
                 <h3 className="font-bold text-lg mb-2">{meal.name}</h3>
@@ -105,7 +82,7 @@ export default function RecipesPage() {
       </div>
 
       {/* Recipe Detail Dialog */}
-      <Dialog open={selectedRecipe !== null} onOpenChange={() => setSelectedRecipe(null)}>
+      <Dialog open={selectedRecipeId !== null} onOpenChange={() => setSelectedRecipeId(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedRecipe && (
             <>

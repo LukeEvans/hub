@@ -1,32 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Card } from "@/components/ui/card"
 import { Trophy, Tv, Users } from "lucide-react"
+import { Card } from "@/components/ui/card"
 import Link from "next/link"
+import { useApi } from "@/lib/use-api"
 
 export function SportsWidget() {
-  const [nuggetsData, setNuggetsData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading } = useApi<any>("/api/sports")
+  const nuggetsData = data?.nba
 
-  useEffect(() => {
-    async function fetchSports() {
-      try {
-        const res = await fetch("/api/sports")
-        if (res.ok) {
-          const data = await res.json()
-          setNuggetsData(data.nba)
-        }
-      } catch (err) {
-        console.error("Failed to fetch sports data", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchSports()
-  }, [])
-
-  if (loading || !nuggetsData) {
+  if (isLoading || !nuggetsData) {
     return (
       <Card className="h-full bg-muted animate-pulse flex items-center justify-center">
         <Trophy className="w-8 h-8 text-muted-foreground/50" />

@@ -2,30 +2,13 @@
 
 import { Trophy, Tv, Users, Calendar as CalendarIcon, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
-import { useState, useEffect, useRef } from "react"
+import { useRef, useEffect } from "react"
 import { isToday, isYesterday, parseISO } from "date-fns"
+import { useApi } from "@/lib/use-api"
 
 export default function SportsPage() {
-  const [sportsData, setSportsData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: sportsData, isLoading: loading } = useApi<any>('/api/sports')
   const gameRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
-
-  useEffect(() => {
-    async function fetchSports() {
-      try {
-        const res = await fetch('/api/sports')
-        if (res.ok) {
-          const data = await res.json()
-          setSportsData(data)
-        }
-      } catch (err) {
-        console.error('Failed to fetch sports data', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchSports()
-  }, [])
 
   useEffect(() => {
     if (!loading && sportsData) {
