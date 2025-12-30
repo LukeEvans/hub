@@ -6,7 +6,8 @@ const PORT = process.env.PORT || 3000;
 const SPOTIFY_TOKEN_PATH = process.env.SPOTIFY_TOKEN_PATH || './data/spotify/token.json';
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-const SPOTIFY_REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || `http://localhost:${PORT}/api/spotify/oauth/callback`;
+
+const isConfigured = SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_ID !== 'your-spotify-client-id';
 
 export interface SpotifyToken {
   access_token: string;
@@ -54,6 +55,7 @@ export async function refreshSpotifyToken(refreshToken: string): Promise<Spotify
 }
 
 export async function getSpotifyToken(): Promise<SpotifyToken | null> {
+  if (!isConfigured) return null;
   try {
     const absolutePath = path.resolve(process.cwd(), SPOTIFY_TOKEN_PATH);
     const data = await fs.readFile(absolutePath, 'utf-8');

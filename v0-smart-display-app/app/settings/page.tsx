@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink } from "lucide-react"
+import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music } from "lucide-react"
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -24,6 +25,8 @@ export default function SettingsPage() {
   const [spotifyStatus, setSpotifyStatus] = useState<any>(null)
   const [isSpotifyLoading, setIsSpotifyLoading] = useState(false)
   const [isSpotifyLoggingOut, setIsSpotifyLoggingOut] = useState(false)
+  const [spotifyConfig, setSpotifyConfig] = useState<any>({ primaryPlaylist: '', secondaryPlaylists: [] })
+  const [isSavingSpotify, setIsSavingSpotify] = useState(false)
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -32,6 +35,13 @@ export default function SettingsPage() {
       .then(res => res.json())
       .then(data => setSpotifyStatus(data))
       .catch(() => {})
+    
+    // Fetch Spotify config
+    fetch('/api/spotify/config')
+      .then(res => res.json())
+      .then(data => setSpotifyConfig(data))
+      .catch(() => {})
+
     // Fetch current config
     fetch('/api/google/photos/config')
       .then(res => res.json())
@@ -138,6 +148,25 @@ export default function SettingsPage() {
       setError("Failed to disconnect Spotify")
     } finally {
       setIsSpotifyLoggingOut(false)
+    }
+  }
+
+  const handleSaveSpotifyConfig = async () => {
+    setIsSavingSpotify(true)
+    try {
+      const response = await fetch("/api/spotify/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(spotifyConfig),
+      })
+      if (response.ok) {
+        alert("Spotify configuration saved!")
+      }
+    } catch (err) {
+      console.error("Failed to save Spotify config:", err)
+      setError("Failed to save Spotify config")
+    } finally {
+      setIsSavingSpotify(false)
     }
   }
 
@@ -351,6 +380,50 @@ export default function SettingsPage() {
                   </Button>
                 )}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Spotify Iframe Settings</CardTitle>
+            <CardDescription>
+              Configure the Spotify playlists to display in the Music tab. Use the full Spotify URL (e.g., https://open.spotify.com/playlist/...).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Primary Playlist URL</label>
+              <Input 
+                value={spotifyConfig.primaryPlaylist}
+                onChange={(e) => setSpotifyConfig({ ...spotifyConfig, primaryPlaylist: e.target.value })}
+                placeholder="https://open.spotify.com/playlist/..."
+                className="h-12"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Secondary Playlist URLs (one per line)</label>
+              <textarea 
+                className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={spotifyConfig.secondaryPlaylists?.join('\n')}
+                onChange={(e) => setSpotifyConfig({ 
+                  ...spotifyConfig, 
+                  secondaryPlaylists: e.target.value.split('\n').filter(url => url.trim() !== '') 
+                })}
+                placeholder="https://open.spotify.com/playlist/..."
+              />
+            </div>
+            <Button 
+              onClick={handleSaveSpotifyConfig}
+              disabled={isSavingSpotify}
+              className="w-full h-12 gap-2"
+            >
+              {isSavingSpotify ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Save Spotify Configuration
+            </Button>
+            <div className="pt-2 text-xs text-muted-foreground flex items-center gap-2 bg-muted/30 p-3 rounded-lg border">
+              <span className="text-lg">💡</span>
+              <p>Since Spotify has paused new API registrations, we use iframes. To control your Alexa, use the <strong>Launch Web Player</strong> button on the Music page.</p>
             </div>
           </CardContent>
         </Card>

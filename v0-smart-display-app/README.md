@@ -69,27 +69,28 @@ GOOGLE_CALENDAR_IDS=your_family_calendar_id
 
 ## Spotify Integration
 
-To connect your Spotify account, follow these steps:
+Spotify has temporarily paused new developer app registrations. As a workaround, this app uses **Spotify Embed Iframes**.
 
-### 1. Create Spotify Developer App
-1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
-2. Create a new app (e.g., "Smart Hub Display").
-3. Click on **Settings**.
-4. Add an **Authorized redirect URI**: `http://localhost:3000/api/spotify/oauth/callback` (or your Pi's IP/hostname).
-5. Copy your **Client ID** and **Client Secret**.
+### 1. Configure Playlists
+1. Open [Spotify](https://open.spotify.com) in your browser.
+2. Find a playlist you want to display (e.g., your "Family Favorites").
+3. Copy the URL from the address bar (e.g., `https://open.spotify.com/playlist/...`).
+4. In the **Settings** tab of this app, paste the URL into the **Primary Playlist URL** field.
+5. You can add more playlists in the **Secondary Playlists** field (one per line).
 
-### 2. Configure Environment Variables
-Update your `.env` file in the root directory:
-```env
-SPOTIFY_CLIENT_ID=your_client_id
-SPOTIFY_CLIENT_SECRET=your_client_secret
-```
+### 2. Control Your Alexa
+Since iframes cannot directly control external devices, use the **Launch Web Player** button on the Music page.
+1. Click the button to open the full Spotify Web Player in a new tab.
+2. Log in to your account if prompted.
+3. Click the "Connect to a device" icon in the bottom right corner.
+4. Select your **Alexa** speaker.
+5. You can now use the Hub's Music tab to play/pause/skip within the active playlist, and the audio will continue playing on your Alexa.
 
-### 3. Authorize the App
-1. Start the application.
-2. Navigate to `http://localhost:3000/api/spotify/auth-url` (or your Pi's address).
-3. Click the link provided to log in with your Spotify account.
-4. Once completed, you'll see a success message and your tokens will be saved to `./data/spotify/token.json`.
+### 3. Full Track Playback
+To ensure the iframe plays full tracks instead of 30-second previews:
+1. Open the Hub's browser.
+2. Navigate to [spotify.com](https://spotify.com) and log in.
+3. The iframe will now recognize your session and play full tracks.
 
 ## Raspberry Pi Deployment
 
