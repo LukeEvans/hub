@@ -98,8 +98,10 @@ export function SidebarNavigation() {
               prefetch={false}
               className={cn(
                 "w-full aspect-square min-h-20 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-200",
-                "hover:bg-sidebar-accent active:bg-sidebar-primary active:text-sidebar-primary-foreground active:scale-95",
-                isActive && "bg-sidebar-primary text-sidebar-primary-foreground",
+                "active:bg-sidebar-primary active:text-sidebar-primary-foreground active:scale-95",
+                isActive 
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+                  : "hover:bg-sidebar-accent",
               )}
               aria-label={item.label}
               draggable={false}
