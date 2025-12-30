@@ -272,7 +272,7 @@ export default function CalendarPage() {
                   </div>
                   <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
                     {[...day.events.allDay, ...day.events.timed].slice(0, 4).map(event => (
-                      <div key={event.id} className="text-[10px] px-1 py-0.5 bg-primary/10 rounded truncate border-l-2 border-primary">
+                      <div key={event.id} className="text-[10px] px-1 py-0.5 bg-primary/10 rounded truncate border-l-2 border-primary shrink-0">
                         {event.summary}
                       </div>
                     ))}
@@ -368,10 +368,12 @@ export default function CalendarPage() {
                                 height: `calc(${height}% - 2px)` // Small gap
                               }}
                             >
-                              <Card className="h-full p-2 bg-[var(--widget-blue)] overflow-hidden cursor-pointer hover:shadow-md transition-shadow border-none shadow-sm flex flex-col">
-                                <div className="font-semibold text-[10px] sm:text-xs text-foreground leading-tight truncate">{event.summary}</div>
-                                {height > 5 && (
-                                  <div className="text-[8px] sm:text-[10px] text-foreground/70">
+                              <Card className="h-full p-1 sm:p-2 bg-[var(--widget-blue)] overflow-hidden cursor-pointer hover:shadow-md transition-shadow border-none shadow-sm flex flex-col">
+                                <div className="font-semibold text-[9px] sm:text-xs text-foreground leading-tight break-words line-clamp-2">
+                                  {event.summary}
+                                </div>
+                                {height > 8 && (
+                                  <div className="text-[8px] sm:text-[10px] text-foreground/70 mt-auto shrink-0">
                                     {format(startDate, 'h:mm a')}
                                   </div>
                                 )}
