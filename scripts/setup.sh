@@ -54,8 +54,10 @@ if command -v systemctl >/dev/null 2>&1; then
   sed \
     -e "s|^User=.*|User=$(whoami)|" \
     -e "s|^WorkingDirectory=.*|WorkingDirectory=${ROOT}|" \
+    -e "s|^ExecStart=.*|ExecStart=${ROOT}/scripts/start-kiosk.sh|" \
     "$ROOT/scripts/kiosk.service" > "$TMP_FILE"
   sudo mv "$TMP_FILE" /etc/systemd/system/kiosk.service
+  sudo chmod +x "$ROOT/scripts/start-kiosk.sh"
   sudo systemctl daemon-reload
   sudo systemctl enable --now kiosk.service
   echo "kiosk.service installed and started."
@@ -67,8 +69,8 @@ if command -v raspi-config >/dev/null 2>&1; then
   echo "Configuring boot to desktop autologin..."
   sudo raspi-config nonint do_boot_behaviour B4
   
-  echo "Configuring default audio to HDMI 1 (card 1)..."
-  cat <<EOF > ~/.asoundrc
+  echo "Configuring system-wide audio to HDMI 1 (card 1)..."
+  sudo tee /etc/asound.conf <<EOF
 pcm.!default {
     type plug
     slave {
@@ -81,6 +83,10 @@ ctl.!default {
     card 1
 }
 EOF
+  
+  echo "Unmuting audio and setting volume to 100%..."
+  amixer -c 1 sset PCM 100% unmute || true
+  sudo usermod -aG audio "$(whoami)"
 fi
 
 if [ -f /etc/profile.d/sshpw.sh ]; then
