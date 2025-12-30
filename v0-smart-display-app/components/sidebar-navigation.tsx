@@ -44,12 +44,12 @@ const navigationItems = [
     icon: Utensils,
     label: "Mealie",
   },
-  {
+  /* {
     name: "Music",
     href: "/music",
     icon: Music,
     label: "Spotify",
-  },
+  }, */
   {
     name: "Smart Home",
     href: "/home",

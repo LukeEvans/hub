@@ -344,6 +344,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-[#1DB954] flex items-center justify-center text-white">
@@ -381,9 +382,11 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
+            */}
           </CardContent>
         </Card>
 
+        {/* 
         <Card>
           <CardHeader>
             <CardTitle>Spotify Iframe Settings</CardTitle>
@@ -427,6 +430,7 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+        */}
 
         <Card>
           <CardHeader>
