@@ -17,8 +17,8 @@ export async function GET() {
     const url = authClient.generateAuthUrl({
       access_type: 'offline',
       scope: scopes,
-      prompt: 'consent',
-      include_granted_scopes: true, // Crucial for adding new scopes to existing tokens
+      prompt: 'consent select_account', // Force consent AND account selection
+      include_granted_scopes: false, // Don't include previously granted scopes, start fresh
     });
     console.log('Auth URL generated with scopes:', scopes.join(', '));
     return NextResponse.json({ url });

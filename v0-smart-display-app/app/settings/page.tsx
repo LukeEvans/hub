@@ -18,6 +18,7 @@ export default function SettingsPage() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [isFetchingAlbums, setIsFetchingAlbums] = useState(false)
   const [syncCount, setSyncCount] = useState<number | null>(null)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   useEffect(() => {
     // Fetch current config
@@ -74,6 +75,30 @@ export default function SettingsPage() {
       setError(err instanceof Error ? err.message : "Failed to connect to server")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleGoogleLogout = async () => {
+    if (!confirm("Are you sure you want to disconnect your Google account? This will clear all synced photos.")) return
+    
+    setIsLoggingOut(true)
+    setError(null)
+    try {
+      const response = await fetch("/api/google/logout", { method: "POST" })
+      if (!response.ok) {
+        throw new Error("Failed to logout")
+      }
+      // Clear local states
+      setAlbums([])
+      setSelectedAlbumId(null)
+      setLastSyncTime(null)
+      setSyncCount(null)
+      alert("Successfully disconnected from Google. You can now log in fresh.")
+    } catch (err) {
+      console.error("Logout failed:", err)
+      setError("Failed to disconnect Google account")
+    } finally {
+      setIsLoggingOut(false)
     }
   }
 
@@ -176,14 +201,25 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground">Required for Calendar and Photos</p>
                 </div>
               </div>
-              <Button 
-                onClick={handleGoogleLogin} 
-                disabled={isLoading}
-                className="w-full sm:w-auto h-14 px-8 gap-3 text-lg font-semibold"
-              >
-                <LogIn className="w-5 h-5" />
-                {isLoading ? "Redirecting..." : "Login with Google"}
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <Button 
+                  onClick={handleGoogleLogin} 
+                  disabled={isLoading || isLoggingOut}
+                  className="h-14 px-8 gap-3 text-lg font-semibold flex-1"
+                >
+                  <LogIn className="w-5 h-5" />
+                  {isLoading ? "Redirecting..." : "Login"}
+                </Button>
+                <Button 
+                  onClick={handleGoogleLogout} 
+                  disabled={isLoading || isLoggingOut}
+                  variant="destructive"
+                  className="h-14 px-8 gap-3 text-lg font-semibold flex-1"
+                >
+                  {isLoggingOut ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
+                  Disconnect
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
