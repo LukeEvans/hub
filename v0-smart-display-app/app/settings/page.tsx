@@ -19,6 +19,8 @@ export default function SettingsPage() {
   const [isFetchingAlbums, setIsFetchingAlbums] = useState(false)
   const [syncCount, setSyncCount] = useState<number | null>(null)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [diagnostics, setDiagnostics] = useState<any>(null)
+  const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false)
 
   useEffect(() => {
     // Fetch current config
@@ -99,6 +101,21 @@ export default function SettingsPage() {
       setError("Failed to disconnect Google account")
     } finally {
       setIsLoggingOut(false)
+    }
+  }
+
+  const runDiagnostics = async () => {
+    setIsRunningDiagnostics(true)
+    setDiagnostics(null)
+    try {
+      const res = await fetch('/api/google/diagnostics')
+      const data = await res.json()
+      setDiagnostics(data)
+    } catch (err) {
+      console.error('Diagnostics failed:', err)
+      setError('Failed to run diagnostics')
+    } finally {
+      setIsRunningDiagnostics(false)
     }
   }
 
@@ -211,6 +228,15 @@ export default function SettingsPage() {
                   {isLoading ? "Redirecting..." : "Login"}
                 </Button>
                 <Button 
+                  onClick={runDiagnostics}
+                  disabled={isLoading || isLoggingOut || isRunningDiagnostics}
+                  variant="secondary"
+                  className="h-14 px-8 gap-3 text-lg font-semibold flex-1"
+                >
+                  {isRunningDiagnostics ? <Loader2 className="w-5 h-5 animate-spin" /> : <Settings className="w-5 h-5" />}
+                  Test
+                </Button>
+                <Button 
                   onClick={handleGoogleLogout} 
                   disabled={isLoading || isLoggingOut}
                   variant="destructive"
@@ -275,6 +301,31 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
+
+            {diagnostics && (
+              <div className="p-6 border-2 rounded-xl bg-muted/20 space-y-3">
+                <p className="font-bold">Connection Diagnostics</p>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="p-3 bg-background rounded-lg border">
+                    <p className="text-muted-foreground">Calendar API</p>
+                    <p className={`font-mono ${diagnostics.calendar.status === 200 ? 'text-green-500' : 'text-red-500'}`}>
+                      {diagnostics.calendar.status === 200 ? 'SUCCESS' : `FAILED (${diagnostics.calendar.status})`}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-background rounded-lg border">
+                    <p className="text-muted-foreground">Photos API</p>
+                    <p className={`font-mono ${diagnostics.photos.status === 'Success (200)' ? 'text-green-500' : 'text-red-500'}`}>
+                      {diagnostics.photos.status === 'Success (200)' ? 'SUCCESS' : `FAILED (${diagnostics.photos.status})`}
+                    </p>
+                  </div>
+                </div>
+                {diagnostics.photos.error && (
+                  <pre className="p-3 bg-black text-xs text-red-400 rounded-lg overflow-auto max-h-40">
+                    {JSON.stringify(diagnostics.photos.error, null, 2)}
+                  </pre>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl bg-muted/30 gap-4">
               <div className="flex items-center gap-4">
