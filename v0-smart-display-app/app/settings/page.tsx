@@ -157,22 +157,22 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#4285F4] flex items-center justify-center text-white font-bold">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-[#4285F4] flex items-center justify-center text-white text-xl font-bold">
                   G
                 </div>
                 <div>
-                  <p className="font-medium">Google Account</p>
+                  <p className="font-bold text-lg">Google Account</p>
                   <p className="text-sm text-muted-foreground">Required for Calendar and Photos</p>
                 </div>
               </div>
               <Button 
                 onClick={handleGoogleLogin} 
                 disabled={isLoading}
-                className="gap-2"
+                className="w-full sm:w-auto h-14 px-8 gap-3 text-lg font-semibold"
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-5 h-5" />
                 {isLoading ? "Redirecting..." : "Login with Google"}
               </Button>
             </div>
@@ -187,32 +187,37 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Select Album</label>
-              <div className="flex gap-4">
+            <div className="space-y-4">
+              <label className="text-lg font-semibold">Select Album</label>
+              <div className="flex flex-col gap-4">
                 <select 
                   value={selectedAlbumId || ""} 
                   onChange={(e) => handleAlbumChange(e.target.value)}
                   disabled={isFetchingAlbums}
-                  className="flex-1 h-10 px-3 py-2 bg-background border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full h-16 px-4 py-3 bg-background border-2 rounded-xl text-xl font-medium focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
                 >
                   <option value="" disabled>Select an album...</option>
                   {albums.map(album => (
                     <option key={album.id} value={album.id}>{album.title}</option>
                   ))}
                 </select>
-                {isFetchingAlbums && <Loader2 className="w-6 h-6 animate-spin mt-2" />}
+                {isFetchingAlbums && (
+                  <div className="flex items-center gap-2 text-muted-foreground animate-pulse">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Loading albums...</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <ImageIcon className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl bg-muted/30 gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <ImageIcon className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Local Cache Status</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-bold text-lg">Local Cache Status</p>
+                  <p className="text-sm text-muted-foreground">
                     {lastSyncTime ? `Last synced: ${new Date(lastSyncTime).toLocaleString()}` : 'Never synced'}
                   </p>
                 </div>
@@ -221,12 +226,12 @@ export default function SettingsPage() {
                 onClick={handleSync} 
                 disabled={isSyncing || !selectedAlbumId}
                 variant="outline"
-                className="gap-2"
+                className="w-full sm:w-auto h-14 px-8 gap-3 text-lg font-semibold border-2"
               >
                 {isSyncing ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-5 h-5 animate-spin" />
                 ) : (
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw className="w-5 h-5" />
                 )}
                 {isSyncing ? "Syncing..." : "Sync Now"}
               </Button>
@@ -242,14 +247,14 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <Volume2 className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl bg-muted/30 gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Volume2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Speaker Test</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-bold text-lg">Speaker Test</p>
+                  <p className="text-sm text-muted-foreground">
                     Play a high-quality audio track to check internal speakers.
                   </p>
                 </div>
@@ -257,16 +262,16 @@ export default function SettingsPage() {
               <Button 
                 onClick={handlePlaySound} 
                 variant={isPlaying ? "destructive" : "outline"}
-                className="gap-2"
+                className="w-full sm:w-auto h-14 px-8 gap-3 text-lg font-semibold border-2"
               >
                 {isPlaying ? (
                   <>
-                    <Square className="w-4 h-4 fill-current" />
+                    <Square className="w-5 h-5 fill-current" />
                     Stop Sound
                   </>
                 ) : (
                   <>
-                    <Play className="w-4 h-4 fill-current" />
+                    <Play className="w-5 h-5 fill-current" />
                     Play Sound
                   </>
                 )}
