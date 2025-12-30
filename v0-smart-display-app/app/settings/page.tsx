@@ -195,22 +195,43 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <label className="text-lg font-semibold">Select Album</label>
-              <div className="flex flex-col gap-4">
-                <select 
-                  value={selectedAlbumId || ""} 
-                  onChange={(e) => handleAlbumChange(e.target.value)}
-                  disabled={isFetchingAlbums}
-                  className="w-full h-16 px-4 py-3 bg-background border-2 rounded-xl text-xl font-medium focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-                >
-                  <option value="" disabled>Select an album...</option>
-                  {albums.map(album => (
-                    <option key={album.id} value={album.id}>{album.title}</option>
-                  ))}
-                </select>
-                {isFetchingAlbums && (
-                  <div className="flex items-center gap-2 text-muted-foreground animate-pulse">
-                    <Loader2 className="w-5 h-5 animate-spin" />
+              <div className="grid grid-cols-1 gap-3">
+                {isFetchingAlbums ? (
+                  <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-xl text-muted-foreground animate-pulse">
+                    <Loader2 className="w-6 h-6 animate-spin mr-2" />
                     <span>Loading albums...</span>
+                  </div>
+                ) : albums.length === 0 ? (
+                  <div className="p-8 border-2 border-dashed rounded-xl text-center text-muted-foreground">
+                    No albums found. Try logging in again.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto p-1">
+                    {albums.map(album => (
+                      <button
+                        key={album.id}
+                        onClick={() => handleAlbumChange(album.id)}
+                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left ${
+                          selectedAlbumId === album.id
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-muted hover:border-primary/50 bg-background"
+                        }`}
+                      >
+                        <div className="flex flex-col overflow-hidden">
+                          <span className={`font-bold truncate ${selectedAlbumId === album.id ? "text-primary" : ""}`}>
+                            {album.title}
+                          </span>
+                          {album.productUrl && (
+                            <span className="text-xs text-muted-foreground">Google Photos Album</span>
+                          )}
+                        </div>
+                        {selectedAlbumId === album.id && (
+                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
