@@ -36,20 +36,32 @@ export async function POST() {
     let items = [];
     console.log('--- Google Photos Sync Start ---');
     console.log('Target Album ID:', selectedAlbumId);
+    console.log('Using Access Token (first 10 chars):', accessToken?.substring(0, 10));
     
     if (selectedAlbumId === 'smart-highlights') {
       // Fetch from library (recent)
-      console.log('Fetching recent media items from library...');
-      const res = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems?pageSize=50', {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      console.log('Fetching recent media items using search endpoint...');
+      const res = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems:search', {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ pageSize: 50 }), // Empty body search returns recent items
       });
-      const data = await res.json();
       
-      if (data.error) {
-        console.error('Google API Error (Library):', JSON.stringify(data.error, null, 2));
-        throw new Error(data.error.message || 'Failed to fetch library items');
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('Google API Error (Library Search):', JSON.stringify({
+          status: res.status,
+          statusText: res.statusText,
+          error: errorData,
+          authHeader: res.headers.get('www-authenticate')
+        }, null, 2));
+        throw new Error(errorData.error?.message || `Failed to fetch library items (${res.status})`);
       }
 
+      const data = await res.json();
       items = data.mediaItems || [];
       console.log(`Fetched ${items.length} items from main library`);
 

@@ -54,7 +54,12 @@ export async function GET() {
         }
       } else {
         const errorData = await response.json();
-        console.error('Google Photos API error (owned):', JSON.stringify(errorData, null, 2));
+        console.error('Google Photos API error (owned):', JSON.stringify({
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData,
+          authHeader: response.headers.get('www-authenticate')
+        }, null, 2));
       }
 
       // Also try to fetch shared albums
@@ -80,7 +85,12 @@ export async function GET() {
         }
       } else {
         const errorData = await sharedResponse.json();
-        console.error('Google Photos API error (shared):', JSON.stringify(errorData, null, 2));
+        console.error('Google Photos API error (shared):', JSON.stringify({
+          status: sharedResponse.status,
+          statusText: sharedResponse.statusText,
+          error: errorData,
+          authHeader: sharedResponse.headers.get('www-authenticate')
+        }, null, 2));
       }
     } catch (apiErr) {
       console.error('Error during Google Photos API calls:', apiErr);
