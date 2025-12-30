@@ -41,24 +41,41 @@ export async function POST() {
     if (selectedAlbumId === 'smart-highlights') {
       // Fetch from library (recent)
       console.log('Fetching recent media items using search endpoint...');
-      const res = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems:search', {
-        method: 'POST',
-        headers: { 
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ pageSize: 50 }), // Empty body search returns recent items
-      });
       
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error('Google API Error (Library Search):', JSON.stringify({
-          status: res.status,
-          statusText: res.statusText,
-          error: errorData,
-          authHeader: res.headers.get('www-authenticate')
+      // Try new 2025 endpoint first, then fallback to library endpoint
+      const endpoints = [
+        'https://photos.googleapis.com/v1/mediaItems:search',
+        'https://photoslibrary.googleapis.com/v1/mediaItems:search'
+      ];
+      
+      let res;
+      for (const endpoint of endpoints) {
+        console.log(`Trying endpoint: ${endpoint}`);
+        res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ pageSize: 50 }),
+        });
+        
+        if (res.ok) {
+          console.log(`Success with endpoint: ${endpoint}`);
+          break;
+        } else {
+          const errorData = await res.json();
+          console.warn(`Endpoint ${endpoint} failed:`, errorData.error?.message);
+        }
+      }
+      
+      if (!res || !res.ok) {
+        const errorData = await res?.json() || { error: { message: 'All endpoints failed' } };
+        console.error('Google API Error (All Library Search endpoints failed):', JSON.stringify({
+          status: res?.status,
+          error: errorData
         }, null, 2));
-        throw new Error(errorData.error?.message || `Failed to fetch library items (${res.status})`);
+        throw new Error(errorData.error?.message || `Failed to fetch library items (${res?.status})`);
       }
 
       const data = await res.json();

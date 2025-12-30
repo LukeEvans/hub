@@ -15,7 +15,8 @@ export async function GET(request: NextRequest) {
     console.log('Tokens received for scopes:', tokens.scope);
     
     const hasPhotosScope = tokens.scope?.includes('photoslibrary.readonly') || 
-                          tokens.scope?.includes('photoslibrary');
+                          tokens.scope?.includes('photoslibrary') ||
+                          tokens.scope?.includes('photos.readonly');
 
     if (!hasPhotosScope) {
       console.error('CRITICAL: Photos scope was NOT granted by the user!');
