@@ -3,9 +3,11 @@
 import { Utensils, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useApi } from "@/lib/use-api"
 
 export function MenuWidget() {
+  const router = useRouter()
   const { data, isLoading } = useApi<any>('/api/mealie/mealplan')
   const meals = data?.mealPlan?.meals || []
 
@@ -21,7 +23,14 @@ export function MenuWidget() {
   const sortedMeals = [...meals].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
   return (
-    <Link href="/recipes" className="block h-full">
+    <Link 
+      href="/recipes" 
+      className="block h-full"
+      onClick={(e) => {
+        e.preventDefault()
+        router.push('/recipes')
+      }}
+    >
       <Card className="h-full p-4 bg-[var(--widget-pink)] hover:shadow-lg transition-all border-none flex flex-col">
         <div className="flex items-center gap-2 mb-3">
           <Utensils className="w-5 h-5 text-foreground/70" />

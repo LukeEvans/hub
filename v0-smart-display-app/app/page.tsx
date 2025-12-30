@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { PhotoWidget } from "@/components/dashboard/photo-widget"
 import { WeatherWidget } from "@/components/dashboard/weather-widget"
 import { CalendarWidget } from "@/components/dashboard/calendar-widget"
@@ -8,6 +10,7 @@ import { MenuWidget } from "@/components/dashboard/menu-widget"
 import { SportsWidget } from "@/components/dashboard/sports-widget"
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [currentTime, setCurrentTime] = useState(new Date())
 
   useEffect(() => {
@@ -33,9 +36,16 @@ export default function DashboardPage() {
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 overflow-hidden">
         {/* Left Column: Rotating Photo (Now 1/3 width for portrait photos) */}
-        <div className="lg:col-span-1 relative h-[500px]">
+        <Link 
+          href="/photos" 
+          className="lg:col-span-1 relative h-[500px] block transition-opacity hover:opacity-90"
+          onClick={(e) => {
+            e.preventDefault()
+            router.push('/photos')
+          }}
+        >
           <PhotoWidget />
-        </div>
+        </Link>
 
         {/* Right Column: Weather and Calendar (Now 2/3 width, side-by-side) */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">

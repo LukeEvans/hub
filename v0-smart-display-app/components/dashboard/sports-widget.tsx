@@ -3,9 +3,11 @@
 import { Trophy, Tv, Users } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useApi } from "@/lib/use-api"
 
 export function SportsWidget() {
+  const router = useRouter()
   const { data, isLoading } = useApi<any>("/api/sports")
   const nuggetsData = data?.nba
 
@@ -52,7 +54,14 @@ export function SportsWidget() {
   const nuggetsRecord = nuggetsData.record?.items?.[0]?.summary || "N/A"
 
   return (
-    <Link href="/sports" className="block h-full">
+    <Link 
+      href="/sports" 
+      className="block h-full"
+      onClick={(e) => {
+        e.preventDefault()
+        router.push('/sports')
+      }}
+    >
       <Card className="h-full p-4 bg-gradient-to-br from-[#0E2240] to-[#FEC524] text-white border-none overflow-hidden relative cursor-pointer hover:opacity-90 transition-opacity">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">

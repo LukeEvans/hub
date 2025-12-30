@@ -3,9 +3,11 @@
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useApi } from "@/lib/use-api"
 
 export function CalendarWidget() {
+  const router = useRouter()
   const { data, isLoading } = useApi<any>('/api/calendar/events')
   
   const events = data?.events ? data.events.filter((e: any) => {
@@ -26,7 +28,14 @@ export function CalendarWidget() {
   }
 
   return (
-    <Link href="/calendar" className="block h-full">
+    <Link 
+      href="/calendar" 
+      className="block h-full"
+      onClick={(e) => {
+        e.preventDefault()
+        router.push('/calendar')
+      }}
+    >
       <Card className="h-full p-4 bg-[var(--widget-blue)] hover:shadow-lg transition-all border-none overflow-hidden flex flex-col">
         <div className="flex items-center gap-2 mb-3">
           <CalendarIcon className="w-5 h-5 text-foreground/70" />

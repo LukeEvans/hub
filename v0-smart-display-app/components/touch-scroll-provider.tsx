@@ -25,25 +25,33 @@ export function TouchScrollProvider() {
 
     const handlePointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement
-      if (target.closest('button, a, input, [role="button"]')) {
+      if (target.closest('button, a, input, [role="button"], [role="link"]')) {
         return
       }
 
       const scrollable = getScrollableParent(target)
       if (!scrollable) return
 
-      isScrolling = true
       activeScrollElement = scrollable
       startY = e.clientY
       scrollStartTop = scrollable.scrollTop
-      scrollable.setPointerCapture(e.pointerId)
+      isScrolling = false
     }
 
     const handlePointerMove = (e: PointerEvent) => {
-      if (!isScrolling || !activeScrollElement) return
+      if (!activeScrollElement) return
       
       const deltaY = startY - e.clientY
-      activeScrollElement.scrollTop = scrollStartTop + deltaY
+      
+      // If we haven't started scrolling yet, check if we've moved enough to start
+      if (!isScrolling && Math.abs(deltaY) > 10) {
+        isScrolling = true
+        activeScrollElement.setPointerCapture(e.pointerId)
+      }
+
+      if (isScrolling) {
+        activeScrollElement.scrollTop = scrollStartTop + deltaY
+      }
     }
 
     const handlePointerUp = (e: PointerEvent) => {

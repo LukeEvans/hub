@@ -3,9 +3,11 @@
 import { Cloud, Sun, CloudRain, Wind, Droplets, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useApi } from "@/lib/use-api"
 
 export function WeatherWidget() {
+  const router = useRouter()
   const { data: weatherData, isLoading } = useApi<any>('/api/weather')
 
   if (isLoading) {
@@ -29,7 +31,14 @@ export function WeatherWidget() {
   }
 
   return (
-    <Link href="/weather" className="block h-full">
+    <Link 
+      href="/weather" 
+      className="block h-full"
+      onClick={(e) => {
+        e.preventDefault()
+        router.push('/weather')
+      }}
+    >
       <Card className="h-full p-4 bg-gradient-to-br from-[var(--widget-peach)] to-[var(--widget-yellow)] hover:shadow-lg transition-all border-none flex flex-col">
         <div className="flex justify-between items-start mb-4 shrink-0">
           <div>
