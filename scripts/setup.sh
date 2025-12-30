@@ -66,6 +66,21 @@ fi
 if command -v raspi-config >/dev/null 2>&1; then
   echo "Configuring boot to desktop autologin..."
   sudo raspi-config nonint do_boot_behaviour B4
+  
+  echo "Configuring default audio to HDMI 1 (card 1)..."
+  cat <<EOF > ~/.asoundrc
+pcm.!default {
+    type plug
+    slave {
+        pcm "hw:1,0"
+    }
+}
+
+ctl.!default {
+    type hw
+    card 1
+}
+EOF
 fi
 
 if [ -f /etc/profile.d/sshpw.sh ]; then
