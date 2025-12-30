@@ -30,7 +30,9 @@ export function CalendarWidget() {
   return (
     <Link 
       href="/calendar" 
+      prefetch={false}
       className="block h-full"
+      draggable={false}
       onClick={(e) => {
         e.preventDefault()
         router.push('/calendar')
@@ -46,7 +48,7 @@ export function CalendarWidget() {
           {events.length === 0 ? (
             <div className="text-sm text-foreground/60 italic py-4">No events today</div>
           ) : (
-            events.map((event, i) => {
+            events.map((event: any, i: number) => {
               const start = new Date(event.start)
               const time = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
               const isAllDay = event.start.length <= 10 // Date string format YYYY-MM-DD

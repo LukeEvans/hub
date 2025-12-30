@@ -33,7 +33,9 @@ export function WeatherWidget() {
   return (
     <Link 
       href="/weather" 
+      prefetch={false}
       className="block h-full"
+      draggable={false}
       onClick={(e) => {
         e.preventDefault()
         router.push('/weather')

@@ -38,7 +38,9 @@ export default function DashboardPage() {
         {/* Left Column: Rotating Photo (Now 1/3 width for portrait photos) */}
         <Link 
           href="/photos" 
+          prefetch={false}
           className="lg:col-span-1 relative h-[500px] block transition-opacity hover:opacity-90"
+          draggable={false}
           onClick={(e) => {
             e.preventDefault()
             router.push('/photos')

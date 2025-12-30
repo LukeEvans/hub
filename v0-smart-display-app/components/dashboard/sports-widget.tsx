@@ -56,7 +56,9 @@ export function SportsWidget() {
   return (
     <Link 
       href="/sports" 
+      prefetch={false}
       className="block h-full"
+      draggable={false}
       onClick={(e) => {
         e.preventDefault()
         router.push('/sports')
@@ -80,6 +82,7 @@ export function SportsWidget() {
                 src={nuggetsData.logos[0].href} 
                 alt="Nuggets" 
                 className="object-contain w-full h-full"
+                draggable={false}
               />
             </div>
             <span className="text-[10px] font-bold truncate w-full text-center">NUGGETS</span>
@@ -100,6 +103,7 @@ export function SportsWidget() {
                 src={opponent.team.logos[0].href} 
                 alt={opponent.team.displayName} 
                 className="object-contain w-full h-full"
+                draggable={false}
               />
             </div>
             <span className="text-[10px] font-bold truncate w-full text-center uppercase">

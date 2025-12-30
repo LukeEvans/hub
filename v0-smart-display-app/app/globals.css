@@ -151,6 +151,8 @@
     @apply bg-background text-foreground;
     user-select: none;
     -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
   }
   main {
     position: absolute;

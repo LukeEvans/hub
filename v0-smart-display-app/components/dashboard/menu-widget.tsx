@@ -25,7 +25,9 @@ export function MenuWidget() {
   return (
     <Link 
       href="/recipes" 
+      prefetch={false}
       className="block h-full"
+      draggable={false}
       onClick={(e) => {
         e.preventDefault()
         router.push('/recipes')
@@ -41,7 +43,7 @@ export function MenuWidget() {
           {sortedMeals.length === 0 ? (
             <div className="text-sm text-foreground/60 italic py-2">No meals planned</div>
           ) : (
-            sortedMeals.map((meal, i) => {
+            sortedMeals.map((meal: any, i: number) => {
               const date = new Date(meal.date)
               const dayName = date.toLocaleDateString([], { weekday: 'short' })
               const isToday = new Date().toDateString() === date.toDateString()

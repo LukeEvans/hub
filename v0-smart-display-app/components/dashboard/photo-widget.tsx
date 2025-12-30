@@ -32,6 +32,7 @@ export function PhotoWidget() {
         src={photos[currentPhotoIndex]}
         alt="Rotating Photo"
         className="max-w-full max-h-full object-contain transition-opacity duration-1000"
+        draggable={false}
       />
     </div>
   )
