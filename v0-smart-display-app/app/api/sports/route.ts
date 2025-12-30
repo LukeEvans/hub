@@ -16,29 +16,27 @@ const LEAGUES = {
 
 async function fetchTeamData(league: string, sport: string, teamId: string) {
   const teamUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${teamId}`;
-  const teamResponse = await axios.get(teamUrl);
-  
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const seasonYear = now.getMonth() >= 8 ? currentYear + 1 : currentYear;
+  const scheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${teamId}/schedule?season=${seasonYear}`;
+  const altUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${teamId}/schedule`;
+
   try {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    // NBA/NHL/NFL seasons often cross years or are named by the year they end/primary year.
-    // We'll try a few common patterns to get the full season.
-    const seasonYear = now.getMonth() >= 8 ? currentYear + 1 : currentYear;
-    
-    // Attempt 1: Standard schedule endpoint with season year
-    const scheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${teamId}/schedule?season=${seasonYear}`;
-    let scheduleResponse = await axios.get(scheduleUrl);
-    
+    const [teamResponse, scheduleResponse, altResponse] = await Promise.all([
+      axios.get(teamUrl, { timeout: 5000 }),
+      axios.get(scheduleUrl, { timeout: 5000 }).catch(() => ({ data: { events: [] } })),
+      axios.get(altUrl, { timeout: 5000 }).catch(() => ({ data: { events: [] } }))
+    ]);
+
     let events = scheduleResponse.data.events || scheduleResponse.data.team?.schedule || [];
 
-    // Attempt 2: If Attempt 1 was empty, try without the season parameter
+    // If primary schedule is empty, try the alt schedule
     if (events.length === 0) {
-      const altUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${teamId}/schedule`;
-      const altResponse = await axios.get(altUrl);
       events = altResponse.data.events || altResponse.data.team?.schedule || [];
     }
 
-    // Attempt 3: If still empty, try the team endpoint's nextEvent
+    // If still empty, try the team endpoint's nextEvent
     if (events.length === 0) {
       events = teamResponse.data.team.nextEvent || [];
     }
@@ -57,16 +55,22 @@ async function fetchTeamData(league: string, sport: string, teamId: string) {
       fullSchedule: uniqueEvents
     };
   } catch (e) {
-    console.error(`Error fetching schedule for ${teamId}:`, e);
-    return {
-      ...teamResponse.data.team,
-      fullSchedule: teamResponse.data.team.nextEvent || []
-    };
+    console.error(`Error fetching data for ${teamId}:`, e);
+    // Fallback: try just the team info if it didn't fail
+    try {
+      const teamResponse = await axios.get(teamUrl, { timeout: 5000 });
+      return {
+        ...teamResponse.data.team,
+        fullSchedule: teamResponse.data.team.nextEvent || []
+      };
+    } catch (fallbackError) {
+      return { id: teamId, fullSchedule: [] };
+    }
   }
 }
 
 export async function GET() {
-  const cacheKey = 'sports-data-v5';
+  const cacheKey = 'sports-data-v6';
   const cached = cache.get(cacheKey);
   if (cached) return NextResponse.json(cached);
 

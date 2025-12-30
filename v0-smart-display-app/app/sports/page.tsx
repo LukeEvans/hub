@@ -40,7 +40,7 @@ export default function SportsPage() {
             }
           }
         })
-      }, 500)
+      }, 100)
       return () => clearTimeout(timer)
     }
   }, [loading, sportsData])
