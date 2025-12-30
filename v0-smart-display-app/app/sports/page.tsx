@@ -53,7 +53,7 @@ export default function SportsPage() {
             const refKey = `${teamId}-${scrollTargetIndex}`
             const element = gameRefs.current[refKey]
             if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              element.scrollIntoView({ behavior: 'auto', block: 'start' })
             }
           }
         })
@@ -120,7 +120,7 @@ export default function SportsPage() {
                 </div>
               </div>
 
-              <div className="space-y-4 overflow-y-auto pr-2 max-h-[calc(100vh-250px)] scrollbar-hide scroll-smooth">
+              <div className="space-y-4 overflow-y-auto pr-2 max-h-[calc(100vh-250px)] scrollbar-hide">
                 {schedule.length > 0 ? (
                   schedule.map((event: any, idx: number) => {
                     const comp = event.competitions[0]

@@ -16,19 +16,48 @@ const LEAGUES = {
 
 async function fetchTeamData(league: string, sport: string, teamId: string) {
   const teamUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${teamId}`;
-  // The team endpoint gives us nextEvent and basic team info including record
   const teamResponse = await axios.get(teamUrl);
   
-  // Try to fetch full schedule if available, otherwise fallback to nextEvent
-  // Some sports/leagues support a dedicated schedule endpoint
   try {
-    const scheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${teamId}/schedule`;
-    const scheduleResponse = await axios.get(scheduleUrl);
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    // NBA/NHL/NFL seasons often cross years or are named by the year they end/primary year.
+    // We'll try a few common patterns to get the full season.
+    const seasonYear = now.getMonth() >= 8 ? currentYear + 1 : currentYear;
+    
+    // Attempt 1: Standard schedule endpoint with season year
+    const scheduleUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${teamId}/schedule?season=${seasonYear}`;
+    let scheduleResponse = await axios.get(scheduleUrl);
+    
+    let events = scheduleResponse.data.events || scheduleResponse.data.team?.schedule || [];
+
+    // Attempt 2: If Attempt 1 was empty, try without the season parameter
+    if (events.length === 0) {
+      const altUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${teamId}/schedule`;
+      const altResponse = await axios.get(altUrl);
+      events = altResponse.data.events || altResponse.data.team?.schedule || [];
+    }
+
+    // Attempt 3: If still empty, try the team endpoint's nextEvent
+    if (events.length === 0) {
+      events = teamResponse.data.team.nextEvent || [];
+    }
+
+    // Deduplicate and sort by date
+    const seen = new Set();
+    const uniqueEvents = events.filter((event: any) => {
+      const id = event.id;
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    }).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     return {
       ...teamResponse.data.team,
-      fullSchedule: scheduleResponse.data.events || teamResponse.data.team.nextEvent || []
+      fullSchedule: uniqueEvents
     };
   } catch (e) {
+    console.error(`Error fetching schedule for ${teamId}:`, e);
     return {
       ...teamResponse.data.team,
       fullSchedule: teamResponse.data.team.nextEvent || []
@@ -37,7 +66,7 @@ async function fetchTeamData(league: string, sport: string, teamId: string) {
 }
 
 export async function GET() {
-  const cacheKey = 'sports-data-v2';
+  const cacheKey = 'sports-data-v5';
   const cached = cache.get(cacheKey);
   if (cached) return NextResponse.json(cached);
 
