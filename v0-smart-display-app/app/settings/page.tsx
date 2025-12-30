@@ -308,18 +308,50 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="p-3 bg-background rounded-lg border">
                     <p className="text-muted-foreground">Calendar API</p>
-                    <p className={`font-mono ${diagnostics.calendar.status === 200 ? 'text-green-500' : 'text-red-500'}`}>
-                      {diagnostics.calendar.status === 200 ? 'SUCCESS' : `FAILED (${diagnostics.calendar.status})`}
+                    <p className={`font-mono ${diagnostics.calendar?.status === 200 ? 'text-green-500' : 'text-red-500'}`}>
+                      {diagnostics.calendar?.status === 200 ? 'SUCCESS' : `FAILED (${diagnostics.calendar?.status})`}
                     </p>
                   </div>
                   <div className="p-3 bg-background rounded-lg border">
                     <p className="text-muted-foreground">Photos API</p>
-                    <p className={`font-mono ${diagnostics.photos.status === 'Success (200)' ? 'text-green-500' : 'text-red-500'}`}>
-                      {diagnostics.photos.status === 'Success (200)' ? 'SUCCESS' : `FAILED (${diagnostics.photos.status})`}
+                    <p className={`font-mono ${diagnostics.photos?.status === 'Success (200)' ? 'text-green-500' : 'text-red-500'}`}>
+                      {diagnostics.photos?.status === 'Success (200)' ? 'SUCCESS' : `FAILED (${diagnostics.photos?.status})`}
                     </p>
                   </div>
                 </div>
-                {diagnostics.photos.error && (
+                {diagnostics.token && (
+                  <div className="p-3 bg-background rounded-lg border">
+                    <p className="text-muted-foreground mb-2">Token Scopes</p>
+                    <div className="flex flex-wrap gap-1">
+                      {diagnostics.token.scopes?.length > 0 ? (
+                        diagnostics.token.scopes.map((scope: string, i: number) => {
+                          const isPhotosScope = scope.includes('photoslibrary');
+                          const isCalendarScope = scope.includes('calendar');
+                          return (
+                            <span 
+                              key={i} 
+                              className={`px-2 py-0.5 rounded text-xs font-mono ${
+                                isPhotosScope ? 'bg-green-500/20 text-green-400' :
+                                isCalendarScope ? 'bg-blue-500/20 text-blue-400' :
+                                'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              {scope.split('/').pop()}
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <span className="text-red-400 text-xs">No scopes found in token!</span>
+                      )}
+                    </div>
+                    {!diagnostics.token.scopes?.some((s: string) => s.includes('photoslibrary')) && (
+                      <p className="text-red-400 text-xs mt-2">
+                        ⚠️ Missing photos scope! Click Disconnect, then Login again and check all permission boxes.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {diagnostics.photos?.error && (
                   <div className="space-y-2">
                     <pre className="p-3 bg-black text-xs text-red-400 rounded-lg overflow-auto max-h-40">
                       {JSON.stringify(diagnostics.photos.error, null, 2)}
