@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogIn, Settings, Image as ImageIcon, RefreshCw, Check, Loader2 } from "lucide-react"
+import { LogIn, Settings, Image as ImageIcon, RefreshCw, Check, Loader2, Volume2, Square, Play } from "lucide-react"
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
   
   // Google Photos states
   const [albums, setAlbums] = useState<any[]>([])
@@ -36,6 +38,14 @@ export default function SettingsPage() {
       .catch(err => console.error('Failed to fetch albums:', err))
       .finally(() => setIsFetchingAlbums(false))
   }, [])
+
+  useEffect(() => {
+    return () => {
+      if (audio) {
+        audio.pause()
+      }
+    }
+  }, [audio])
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)
@@ -95,6 +105,27 @@ export default function SettingsPage() {
     } finally {
       setIsSyncing(false)
     }
+  }
+
+  const handlePlaySound = () => {
+    if (isPlaying) {
+      audio?.pause()
+      setIsPlaying(false)
+      setAudio(null)
+      return
+    }
+
+    const newAudio = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+    newAudio.onended = () => {
+      setIsPlaying(false)
+      setAudio(null)
+    }
+    newAudio.play().catch(err => {
+      console.error("Failed to play sound:", err)
+      setError("Failed to play sound. Please check your browser's audio permissions.")
+    })
+    setAudio(newAudio)
+    setIsPlaying(true)
   }
 
   return (
@@ -191,6 +222,47 @@ export default function SettingsPage() {
                   <RefreshCw className="w-4 h-4" />
                 )}
                 {isSyncing ? "Syncing..." : "Sync Now"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Hardware Test</CardTitle>
+            <CardDescription>
+              Test your device's hardware components.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Volume2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Speaker Test</p>
+                  <p className="text-xs text-muted-foreground">
+                    Play a high-quality audio track to check internal speakers.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                onClick={handlePlaySound} 
+                variant={isPlaying ? "destructive" : "outline"}
+                className="gap-2"
+              >
+                {isPlaying ? (
+                  <>
+                    <Square className="w-4 h-4 fill-current" />
+                    Stop Sound
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-current" />
+                    Play Sound
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
