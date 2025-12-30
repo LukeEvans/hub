@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogIn, Settings, Image as ImageIcon, RefreshCw, Check, Loader2, Volume2, Square, Play } from "lucide-react"
+import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink } from "lucide-react"
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -11,43 +11,40 @@ export default function SettingsPage() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
   
-  // Google Photos states
-  const [albums, setAlbums] = useState<any[]>([])
-  const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null)
+  // Google Photos Picker states
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
-  const [isFetchingAlbums, setIsFetchingAlbums] = useState(false)
   const [syncCount, setSyncCount] = useState<number | null>(null)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [diagnostics, setDiagnostics] = useState<any>(null)
   const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false)
+  const [isPickerOpen, setIsPickerOpen] = useState(false)
+  const [pickerStatus, setPickerStatus] = useState<string | null>(null)
+  const [selectedCount, setSelectedCount] = useState<number | null>(null)
+  const pollingRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     // Fetch current config
     fetch('/api/google/photos/config')
       .then(res => res.json())
       .then(data => {
-        setSelectedAlbumId(data.selectedAlbumId)
         setLastSyncTime(data.lastSyncTime)
       })
       .catch(err => console.error('Failed to fetch Google Photos config:', err))
 
-    // Fetch available albums
-    setIsFetchingAlbums(true)
-    fetch('/api/google/photos/albums')
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch albums');
-        return res.json();
-      })
+    // Check if we have picker media saved
+    fetch('/api/google/photos/picker/status')
+      .then(res => res.json())
       .then(data => {
-        if (data.albums) setAlbums(data.albums)
-        if (data.error) setError(data.error)
+        if (data.count) {
+          setSelectedCount(data.count)
+        }
       })
-      .catch(err => {
-        console.error('Failed to fetch albums:', err)
-        setError('Failed to load Google Photos albums. Check connection and authentication.')
-      })
-      .finally(() => setIsFetchingAlbums(false))
+      .catch(() => {})
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current)
+    }
   }, [])
 
   useEffect(() => {
@@ -91,10 +88,9 @@ export default function SettingsPage() {
         throw new Error("Failed to logout")
       }
       // Clear local states
-      setAlbums([])
-      setSelectedAlbumId(null)
       setLastSyncTime(null)
       setSyncCount(null)
+      setSelectedCount(null)
       alert("Successfully disconnected from Google. You can now log in fresh.")
     } catch (err) {
       console.error("Logout failed:", err)
@@ -119,32 +115,62 @@ export default function SettingsPage() {
     }
   }
 
-  const handleAlbumChange = async (albumId: string) => {
-    console.log('Changing album to:', albumId)
-    const album = albums.find(a => a.id === albumId)
-    setSelectedAlbumId(albumId)
+  const handlePickPhotos = async () => {
+    setIsPickerOpen(true)
+    setPickerStatus('Creating session...')
+    setError(null)
+    
     try {
-      const response = await fetch('/api/google/photos/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          selectedAlbumId: albumId, 
-          selectedAlbumTitle: album?.title,
-          lastSyncTime: lastSyncTime // Use the state value directly
-        })
-      })
+      // Create a picker session
+      const response = await fetch('/api/google/photos/picker', { method: 'POST' })
+      const data = await response.json()
+      
       if (!response.ok) {
-        throw new Error('Failed to save config')
+        throw new Error(data.error || 'Failed to create picker session')
       }
-      console.log('Album config saved successfully')
+
+      // Open the picker URL in a new window
+      const pickerUrl = data.pickerUri + '/autoclose'
+      setPickerStatus('Opening Google Photos...')
+      window.open(pickerUrl, '_blank', 'width=800,height=600')
+      
+      setPickerStatus('Waiting for selection...')
+      
+      // Start polling for completion
+      pollingRef.current = setInterval(async () => {
+        try {
+          const statusRes = await fetch('/api/google/photos/picker/status')
+          const statusData = await statusRes.json()
+          
+          if (statusData.status === 'complete') {
+            if (pollingRef.current) clearInterval(pollingRef.current)
+            setSelectedCount(statusData.count)
+            setPickerStatus(null)
+            setIsPickerOpen(false)
+          }
+        } catch (err) {
+          console.error('Polling error:', err)
+        }
+      }, 2000)
+      
+      // Stop polling after 5 minutes
+      setTimeout(() => {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current)
+          setPickerStatus(null)
+          setIsPickerOpen(false)
+        }
+      }, 5 * 60 * 1000)
+      
     } catch (err) {
-      console.error('Failed to save album config:', err)
-      setError('Failed to save album selection. Please try again.')
+      console.error('Picker failed:', err)
+      setError(err instanceof Error ? err.message : 'Failed to open photo picker')
+      setPickerStatus(null)
+      setIsPickerOpen(false)
     }
   }
 
   const handleSync = async () => {
-    if (!selectedAlbumId) return
     setIsSyncing(true)
     setError(null)
     setSyncCount(null)
@@ -252,54 +278,41 @@ export default function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Google Photos Smart Cache</CardTitle>
+            <CardTitle>Google Photos</CardTitle>
             <CardDescription>
-              Select a smart album to download and cache locally for fast display.
+              Pick photos from your Google Photos library to display on your smart display.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <label className="text-lg font-semibold">Select Album</label>
-              <div className="grid grid-cols-1 gap-3">
-                {isFetchingAlbums ? (
-                  <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-xl text-muted-foreground animate-pulse">
-                    <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                    <span>Loading albums...</span>
-                  </div>
-                ) : albums.length === 0 ? (
-                  <div className="p-8 border-2 border-dashed rounded-xl text-center text-muted-foreground">
-                    No albums found. Try logging in again.
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto p-1">
-                    {albums.map(album => (
-                      <button
-                        key={album.id}
-                        onClick={() => handleAlbumChange(album.id)}
-                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left ${
-                          selectedAlbumId === album.id
-                            ? "border-primary bg-primary/10 shadow-sm"
-                            : "border-muted hover:border-primary/50 bg-background"
-                        }`}
-                      >
-                        <div className="flex flex-col overflow-hidden">
-                          <span className={`font-bold truncate ${selectedAlbumId === album.id ? "text-primary" : ""}`}>
-                            {album.title}
-                          </span>
-                          {album.productUrl && (
-                            <span className="text-xs text-muted-foreground">Google Photos Album</span>
-                          )}
-                        </div>
-                        {selectedAlbumId === album.id && (
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                            <Check className="w-4 h-4 text-white" />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <ImageIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-bold text-lg">Photo Selection</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedCount !== null 
+                      ? `${selectedCount} photos selected`
+                      : 'No photos selected yet'}
+                  </p>
+                  {pickerStatus && (
+                    <p className="text-sm text-primary animate-pulse">{pickerStatus}</p>
+                  )}
+                </div>
               </div>
+              <Button 
+                onClick={handlePickPhotos}
+                disabled={isPickerOpen}
+                className="w-full sm:w-auto h-14 px-8 gap-3 text-lg font-semibold"
+              >
+                {isPickerOpen ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-5 h-5" />
+                )}
+                {isPickerOpen ? "Picking..." : "Pick Photos"}
+              </Button>
             </div>
 
             {diagnostics && (
@@ -326,7 +339,7 @@ export default function SettingsPage() {
                       <div className="flex flex-wrap gap-1">
                         {diagnostics.token.actualScopes?.length > 0 ? (
                           diagnostics.token.actualScopes.map((scope: string, i: number) => {
-                            const isPhotosScope = scope.includes('photoslibrary');
+                            const isPhotosScope = scope.includes('photospicker') || scope.includes('photoslibrary');
                             const isCalendarScope = scope.includes('calendar');
                             return (
                               <span 
@@ -345,9 +358,9 @@ export default function SettingsPage() {
                           <span className="text-red-400 text-xs">Could not verify token scopes!</span>
                         )}
                       </div>
-                      {diagnostics.token.actualScopes && !diagnostics.token.actualScopes.some((s: string) => s.includes('photoslibrary')) && (
+                      {diagnostics.token.actualScopes && !diagnostics.token.actualScopes.some((s: string) => s.includes('photospicker')) && (
                         <p className="text-red-400 text-xs mt-2">
-                          ⚠️ Access token missing photos scope! Click Disconnect, then Login again.
+                          ⚠️ Access token missing photos picker scope! Click Disconnect, then Login again.
                         </p>
                       )}
                     </div>
@@ -384,7 +397,7 @@ export default function SettingsPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl bg-muted/30 gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <ImageIcon className="w-6 h-6" />
+                  <RefreshCw className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="font-bold text-lg">Local Cache Status</p>
@@ -400,7 +413,7 @@ export default function SettingsPage() {
               </div>
               <Button 
                 onClick={handleSync} 
-                disabled={isSyncing || !selectedAlbumId}
+                disabled={isSyncing || selectedCount === null || selectedCount === 0}
                 variant="outline"
                 className="w-full sm:w-auto h-14 px-8 gap-3 text-lg font-semibold border-2"
               >

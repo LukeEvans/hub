@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import { getGoogleToken, authClient } from '@/lib/google-auth';
+import { getGoogleToken } from '@/lib/google-auth';
 import cache from '@/lib/cache';
 
 const CONFIG_PATH = path.join(process.cwd(), 'data', 'google-photos-config.json');
+const PICKER_MEDIA_PATH = path.join(process.cwd(), 'data', 'picker-media.json');
 const PHOTOS_DIR = path.join(process.cwd(), 'photos', 'google');
 
 async function downloadImage(url: string, destPath: string) {
@@ -16,120 +17,27 @@ async function downloadImage(url: string, destPath: string) {
 
 export async function POST() {
   try {
-    // 1. Get config
-    let selectedAlbumId = null;
-    try {
-      const configData = await fs.readFile(CONFIG_PATH, 'utf-8');
-      selectedAlbumId = JSON.parse(configData).selectedAlbumId;
-    } catch (err) {
-      return NextResponse.json({ error: 'No album selected' }, { status: 400 });
-    }
-
-    // 2. Get token
+    // 1. Get token
     const token = await getGoogleToken();
     if (!token) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
-    const { token: accessToken } = await authClient.getAccessToken();
 
-    // 3. Fetch media items
-    let items = [];
-    console.log('--- Google Photos Sync Start ---');
-    console.log('Target Album ID:', selectedAlbumId);
-    console.log('Using Access Token (first 10 chars):', accessToken?.substring(0, 10));
-    
-    if (selectedAlbumId === 'smart-highlights') {
-      // Fetch from library (recent)
-      console.log('Fetching recent media items using search endpoint...');
-      
-      // Try new 2025 endpoint first, then fallback to library endpoint
-      const endpoints = [
-        'https://photos.googleapis.com/v1/mediaItems:search',
-        'https://photoslibrary.googleapis.com/v1/mediaItems:search'
-      ];
-      
-      let res;
-      for (const endpoint of endpoints) {
-        console.log(`Trying endpoint: ${endpoint}`);
-        res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ pageSize: 50 }),
-        });
-        
-        if (res.ok) {
-          console.log(`Success with endpoint: ${endpoint}`);
-          break;
-        } else {
-          const errorData = await res.json();
-          console.warn(`Endpoint ${endpoint} failed:`, errorData.error?.message);
-        }
-      }
-      
-      if (!res || !res.ok) {
-        const errorData = await res?.json() || { error: { message: 'All endpoints failed' } };
-        console.error('Google API Error (All Library Search endpoints failed):', JSON.stringify({
-          status: res?.status,
-          error: errorData
-        }, null, 2));
-        throw new Error(errorData.error?.message || `Failed to fetch library items (${res?.status})`);
-      }
-
-      const data = await res.json();
-      items = data.mediaItems || [];
-      console.log(`Fetched ${items.length} items from main library`);
-
-      // Fallback: If library is empty, try fetching Favorites
-      if (items.length === 0) {
-        console.log('Library empty, attempting to fetch Favorites as fallback...');
-        const favRes = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems:search', {
-          method: 'POST',
-          headers: { 
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ 
-            filters: { featureFilter: { includedFeatures: ['FAVORITES'] } },
-            pageSize: 50 
-          }),
-        });
-        const favData = await favRes.json();
-        
-        if (favData.error) {
-          console.error('Google API Error (Favorites):', JSON.stringify(favData.error, null, 2));
-        }
-        
-        items = favData.mediaItems || [];
-        console.log(`Fetched ${items.length} items from Favorites fallback`);
-      }
-    } else {
-      // Fetch from specific album
-      console.log(`Fetching media items from album: ${selectedAlbumId}`);
-      const res = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems:search', {
-        method: 'POST',
-        headers: { 
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ albumId: selectedAlbumId, pageSize: 100 }),
-      });
-      const data = await res.json();
-      
-      if (data.error) {
-        console.error(`Google API Error (Album ${selectedAlbumId}):`, JSON.stringify(data.error, null, 2));
-        throw new Error(data.error.message || 'Failed to fetch album items');
-      }
-      
-      items = data.mediaItems || [];
-      console.log(`Fetched ${items.length} items from album ${selectedAlbumId}`);
+    // 2. Load picker media items
+    let pickerData;
+    try {
+      const data = await fs.readFile(PICKER_MEDIA_PATH, 'utf-8');
+      pickerData = JSON.parse(data);
+    } catch {
+      return NextResponse.json({ error: 'No photos selected. Use the Pick Photos button first.' }, { status: 400 });
     }
 
+    const items = pickerData.items || [];
+    console.log('--- Google Photos Sync Start ---');
+    console.log(`Syncing ${items.length} picker-selected items`);
+
     if (items.length === 0) {
-      console.warn('WARNING: No media items found in the selected source.');
-      console.log('NOTE: Since early 2025, Google Photos API may only return items created by this app unless specific scopes are granted and the library is populated.');
+      return NextResponse.json({ error: 'No photos in selection. Pick some photos first.' }, { status: 400 });
     }
 
     // 4. Prepare directory
@@ -180,8 +88,14 @@ export async function POST() {
     cache.del('photos-list');
 
     // 8. Update config with last sync time
-    const config = JSON.parse(await fs.readFile(CONFIG_PATH, 'utf-8'));
+    let config: any = {};
+    try {
+      config = JSON.parse(await fs.readFile(CONFIG_PATH, 'utf-8'));
+    } catch {
+      // Config doesn't exist yet, create it
+    }
     config.lastSyncTime = new Date().toISOString();
+    await fs.mkdir(path.dirname(CONFIG_PATH), { recursive: true });
     await fs.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2));
 
     return NextResponse.json({ 

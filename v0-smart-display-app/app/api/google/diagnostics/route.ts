@@ -65,14 +65,16 @@ export async function GET() {
       results.calendar.error = err.message;
     }
 
-    // 2. Test Photos API
+    // 2. Test Photos Picker API (create a session to verify access)
     try {
-      console.log('Testing Photos API...');
-      const photoRes = await fetch('https://photoslibrary.googleapis.com/v1/albums?pageSize=1', {
+      console.log('Testing Photos Picker API...');
+      const photoRes = await fetch('https://photospicker.googleapis.com/v1/sessions', {
+        method: 'POST',
         headers: { 
           Authorization: `Bearer ${accessToken}`,
-          'Accept': 'application/json'
-        }
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
       });
       results.photos.status = photoRes.status;
       results.photos.statusText = photoRes.statusText;
@@ -80,13 +82,12 @@ export async function GET() {
       
       if (!photoRes.ok) {
         results.photos.error = data;
-        // Check for specific "api not enabled" clues
         if (JSON.stringify(data).includes('not enabled') || JSON.stringify(data).includes('not used in project')) {
-          results.photos.hint = "API is not enabled in Google Cloud Console. Click the link I provided to enable it.";
+          results.photos.hint = "Photos Picker API is not enabled. Enable it in Google Cloud Console.";
         }
       } else {
         results.photos.status = 'Success (200)';
-        results.photos.albumCount = data.albums?.length || 0;
+        results.photos.sessionId = data.id;
       }
     } catch (err: any) {
       results.photos.status = 'Error';
