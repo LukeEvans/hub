@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const dateString = currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
 
   return (
-    <div className="min-h-screen p-8 bg-background flex flex-col gap-8">
+    <div className="min-h-screen p-8 bg-background flex flex-col gap-4">
       {/* Header with real-time clock and date */}
       <div className="flex justify-between items-end border-b pb-6">
         <div>
@@ -30,7 +30,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Dashboard Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 overflow-hidden">
         {/* Left Column: Rotating Photo (Now 1/3 width for portrait photos) */}
         <div className="lg:col-span-1 relative h-[500px]">
           <PhotoWidget />
@@ -48,7 +48,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row: Weekly Menu */}
-      <div className="h-48">
+      <div className="h-40">
         <MenuWidget />
       </div>
     </div>
