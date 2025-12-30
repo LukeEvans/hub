@@ -6,8 +6,6 @@ export async function GET() {
   
   const scopes = [
     'https://www.googleapis.com/auth/calendar.readonly',
-    'https://www.googleapis.com/auth/photos.readonly',
-    'https://www.googleapis.com/auth/photos.readonly.appmanaged',
     'https://www.googleapis.com/auth/photoslibrary.readonly',
     'https://www.googleapis.com/auth/photoslibrary',
     'openid',
