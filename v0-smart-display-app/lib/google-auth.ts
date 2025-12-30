@@ -17,6 +17,7 @@ export async function getGoogleToken() {
     const token = JSON.parse(data);
     console.log('Token loaded from:', GOOGLE_TOKEN_PATH);
     console.log('Token has refresh_token:', !!token.refresh_token);
+    console.log('Token has scopes:', token.scope);
     authClient.setCredentials(token);
     return token;
   } catch (err) {

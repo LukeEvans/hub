@@ -17,9 +17,21 @@ export async function GET() {
       // Refresh token if needed
       const { token: accessToken } = await authClient.getAccessToken();
       
+      // Log current credentials to see what scopes we actually have
+      const credentials = authClient.credentials;
+      console.log('Current token scopes:', credentials.scope);
+
       if (!accessToken) {
         console.error('No access token available after refresh attempt');
         return NextResponse.json({ albums }); // Return at least virtual albums
+      }
+
+      if (!credentials.scope?.includes('photoslibrary.readonly')) {
+        console.error('ERROR: Token does not have photoslibrary.readonly scope');
+        return NextResponse.json({ 
+          albums, 
+          error: 'Insufficient permissions. Please log in again and check the Google Photos box.' 
+        });
       }
 
       console.log('Fetching albums from Google Photos API...');

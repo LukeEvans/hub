@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isFetchingAlbums, setIsFetchingAlbums] = useState(false)
+  const [syncCount, setSyncCount] = useState<number | null>(null)
 
   useEffect(() => {
     // Fetch current config
@@ -104,11 +105,13 @@ export default function SettingsPage() {
     if (!selectedAlbumId) return
     setIsSyncing(true)
     setError(null)
+    setSyncCount(null)
     try {
       const response = await fetch('/api/google/photos/sync', { method: 'POST' })
       const data = await response.json()
       if (response.ok) {
         setLastSyncTime(data.lastSyncTime)
+        setSyncCount(data.count)
       } else {
         throw new Error(data.error || 'Sync failed')
       }
@@ -245,7 +248,12 @@ export default function SettingsPage() {
                 <div>
                   <p className="font-bold text-lg">Local Cache Status</p>
                   <p className="text-sm text-muted-foreground">
-                    {lastSyncTime ? `Last synced: ${new Date(lastSyncTime).toLocaleString()}` : 'Never synced'}
+                    {lastSyncTime ? (
+                      <>
+                        Last synced: {new Date(lastSyncTime).toLocaleString()}
+                        {syncCount !== null && ` (${syncCount} images)`}
+                      </>
+                    ) : 'Never synced'}
                   </p>
                 </div>
               </div>

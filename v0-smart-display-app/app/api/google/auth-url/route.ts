@@ -17,8 +17,9 @@ export async function GET() {
       access_type: 'offline',
       scope: scopes,
       prompt: 'consent',
+      include_granted_scopes: true, // Crucial for adding new scopes to existing tokens
     });
-    console.log('Auth URL generated with redirect URI:', authClient.redirectUri);
+    console.log('Auth URL generated with scopes:', scopes.join(', '));
     return NextResponse.json({ url });
   } catch (error) {
     console.error('Error generating Auth URL:', error);
