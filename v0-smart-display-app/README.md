@@ -135,3 +135,32 @@ If you need to build directly on the Pi (slower), you can still run:
 ```bash
 docker compose up -d --build app
 ```
+
+## Home Assistant Integration
+
+Connect your Home Assistant instance to control lights, climate, locks, and more directly from the Smart Home tab.
+
+### 1. Create a Long-Lived Access Token
+1. Log in to your **Home Assistant** instance.
+2. Click on your **profile name** in the bottom left sidebar.
+3. Scroll to the bottom and find the **Long-Lived Access Tokens** section.
+4. Click **Create Token** and give it a name (e.g., "Smart Hub").
+5. Copy the generated token.
+
+### 2. Configure Environment Variables
+Update your `.env` file in the root directory:
+```env
+HOME_ASSISTANT_URL=http://your-ha-ip:8123
+HOME_ASSISTANT_TOKEN=your_long_lived_access_token
+HOME_ASSISTANT_CACHE_TTL=5
+```
+
+### 3. Features
+- **Lights:** Control all `light.*` entities.
+- **Climate:** Control thermostats including temperature and HVAC mode.
+- **Security:** Monitor and control `lock.*` and `camera.*` entities.
+- **Rooms:** Automatically organized based on your Home Assistant Areas.
+- **Quick Actions:** Execute common services like "All Lights Off".
+
+### 4. Customizing Controls
+The dashboard automatically detects supported entities. To refine which devices appear, ensure they are correctly categorized in Home Assistant and assigned to Areas.
