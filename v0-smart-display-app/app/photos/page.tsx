@@ -34,7 +34,7 @@ export default function PhotosPage() {
           </div>
           <div>
             <h1 className="text-4xl font-bold">Family Photos</h1>
-            <p className="text-muted-foreground text-lg">Local Photo Library</p>
+            <p className="text-muted-foreground text-lg">Google Smart Cache</p>
           </div>
         </div>
         <Button 
