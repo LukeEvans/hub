@@ -35,6 +35,9 @@ export async function POST() {
     const items = pickerData.items || [];
     console.log('--- Google Photos Sync Start ---');
     console.log(`Syncing ${items.length} picker-selected items`);
+    if (items.length > 0) {
+      console.log('First item structure:', JSON.stringify(items[0], null, 2));
+    }
 
     if (items.length === 0) {
       return NextResponse.json({ error: 'No photos in selection. Pick some photos first.' }, { status: 400 });
@@ -46,14 +49,24 @@ export async function POST() {
     // 5. Download items
     const downloadedFiles = [];
     for (const item of items) {
-      // Some items might not have mimeType in the list view, or might be videos
-      const isImage = item.mimeType?.startsWith('image/') || item.mediaMetadata?.photo;
-      if (!isImage) {
-        console.log(`Skipping non-image item ${item.id} (mime: ${item.mimeType})`);
+      // Picker API may have mediaFile nested, or fields at top level
+      const mediaFile = item.mediaFile || item;
+      const mimeType = mediaFile.mimeType || item.mimeType;
+      const baseUrl = mediaFile.baseUrl || item.baseUrl;
+      const itemId = item.id || item.mediaItemId;
+
+      // Skip only if we KNOW it's a video
+      if (mimeType?.startsWith('video/')) {
+        console.log(`Skipping video item ${itemId}`);
         continue;
       }
 
-      const filename = `${item.id}.jpg`;
+      if (!baseUrl) {
+        console.log(`Skipping item ${itemId} - no baseUrl`);
+        continue;
+      }
+
+      const filename = `${itemId}.jpg`;
       const destPath = path.join(PHOTOS_DIR, filename);
       
       // Check if already exists to skip download
@@ -62,13 +75,13 @@ export async function POST() {
         downloadedFiles.push(filename);
       } catch {
         // Download with size parameter (optimized for display)
-        const downloadUrl = `${item.baseUrl}=w2048-h1536`;
+        const downloadUrl = `${baseUrl}=w2048-h1536`;
         try {
           await downloadImage(downloadUrl, destPath);
           downloadedFiles.push(filename);
           console.log(`Downloaded ${filename}`);
         } catch (err) {
-          console.error(`Failed to download ${item.id}:`, err);
+          console.error(`Failed to download ${itemId}:`, err);
         }
       }
     }
