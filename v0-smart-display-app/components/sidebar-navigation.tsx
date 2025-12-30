@@ -54,7 +54,7 @@ const navigationItems = [
     name: "Smart Home",
     href: "/home",
     icon: HomeIcon,
-    label: "Home",
+    label: "Smart Home",
   },
   {
     name: "Settings",
@@ -85,11 +85,6 @@ export function SidebarNavigation() {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-28 border-r border-sidebar-border bg-sidebar flex flex-col items-center py-6 gap-6">
-      {/* Logo/Brand */}
-      <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl">
-        H
-      </div>
-
       {/* Navigation Items */}
       <nav className="flex-1 flex flex-col items-center gap-3 w-full px-3">
         {navigationItems.map((item) => {
