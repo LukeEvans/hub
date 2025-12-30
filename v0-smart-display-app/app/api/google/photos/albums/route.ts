@@ -19,6 +19,7 @@ export async function GET() {
       
       // Log current credentials to see what scopes we actually have
       const credentials = authClient.credentials;
+      console.log('--- Google Photos Albums Fetch ---');
       console.log('Current token scopes:', credentials.scope);
 
       if (!accessToken) {
@@ -26,15 +27,16 @@ export async function GET() {
         return NextResponse.json({ albums }); // Return at least virtual albums
       }
 
-      if (!credentials.scope?.includes('photoslibrary.readonly')) {
-        console.error('ERROR: Token does not have photoslibrary.readonly scope');
+      if (!credentials.scope?.includes('https://www.googleapis.com/auth/photoslibrary.readonly') && 
+          !credentials.scope?.includes('https://www.googleapis.com/auth/photoslibrary')) {
+        console.error('ERROR: Token does not have required photoslibrary scopes. Found:', credentials.scope);
         return NextResponse.json({ 
           albums, 
           error: 'Insufficient permissions. Please log in again and check the Google Photos box.' 
         });
       }
 
-      console.log('Fetching albums from Google Photos API...');
+      console.log('Fetching owned albums from Google Photos API...');
       const response = await fetch('https://photoslibrary.googleapis.com/v1/albums?pageSize=50', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -43,13 +45,16 @@ export async function GET() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Google Photos Albums Raw Response:', JSON.stringify(data, null, 2));
         if (data.albums) {
           albums.push(...data.albums);
+          console.log(`Successfully added ${data.albums.length} owned albums`);
+        } else {
+          console.log('No owned albums found in Google Photos');
         }
-        console.log(`Found ${data.albums?.length || 0} owned albums`);
       } else {
         const errorData = await response.json();
-        console.error('Google Photos API error (owned):', errorData);
+        console.error('Google Photos API error (owned):', JSON.stringify(errorData, null, 2));
       }
 
       // Also try to fetch shared albums
@@ -69,18 +74,18 @@ export async function GET() {
             title: `${a.title} (Shared)`
           }));
           albums.push(...taggedShared);
+          console.log(`Successfully added ${taggedShared.length} shared albums`);
+        } else {
+          console.log('No shared albums found in Google Photos');
         }
-        console.log(`Found ${sharedData.sharedAlbums?.length || 0} shared albums`);
       } else {
         const errorData = await sharedResponse.json();
-        console.error('Google Photos API error (shared):', errorData);
+        console.error('Google Photos API error (shared):', JSON.stringify(errorData, null, 2));
       }
     } catch (apiErr) {
       console.error('Error during Google Photos API calls:', apiErr);
       // Fall through to return whatever we have (at least smart-highlights)
     }
-
-    return NextResponse.json({ albums });
 
     return NextResponse.json({ albums });
   } catch (err) {

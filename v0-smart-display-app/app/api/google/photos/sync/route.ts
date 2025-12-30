@@ -10,8 +10,8 @@ const PHOTOS_DIR = path.join(process.cwd(), 'photos', 'google');
 async function downloadImage(url: string, destPath: string) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to download image: ${response.statusText}`);
-  const buffer = Buffer.from(await response.arrayBuffer());
-  await fs.writeFile(destPath, buffer);
+  const arrayBuffer = await response.arrayBuffer();
+  await fs.writeFile(destPath, new Uint8Array(arrayBuffer));
 }
 
 export async function POST() {
@@ -34,28 +34,72 @@ export async function POST() {
 
     // 3. Fetch media items
     let items = [];
-    console.log('Syncing for album:', selectedAlbumId);
+    console.log('--- Google Photos Sync Start ---');
+    console.log('Target Album ID:', selectedAlbumId);
+    
     if (selectedAlbumId === 'smart-highlights') {
       // Fetch from library (recent)
+      console.log('Fetching recent media items from library...');
       const res = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems?pageSize=50', {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const data = await res.json();
+      
+      if (data.error) {
+        console.error('Google API Error (Library):', JSON.stringify(data.error, null, 2));
+        throw new Error(data.error.message || 'Failed to fetch library items');
+      }
+
       items = data.mediaItems || [];
-      console.log(`Fetched ${items.length} items from library`);
+      console.log(`Fetched ${items.length} items from main library`);
+
+      // Fallback: If library is empty, try fetching Favorites
+      if (items.length === 0) {
+        console.log('Library empty, attempting to fetch Favorites as fallback...');
+        const favRes = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems:search', {
+          method: 'POST',
+          headers: { 
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            filters: { featureFilter: { includedFeatures: ['FAVORITES'] } },
+            pageSize: 50 
+          }),
+        });
+        const favData = await favRes.json();
+        
+        if (favData.error) {
+          console.error('Google API Error (Favorites):', JSON.stringify(favData.error, null, 2));
+        }
+        
+        items = favData.mediaItems || [];
+        console.log(`Fetched ${items.length} items from Favorites fallback`);
+      }
     } else {
       // Fetch from specific album
+      console.log(`Fetching media items from album: ${selectedAlbumId}`);
       const res = await fetch('https://photoslibrary.googleapis.com/v1/mediaItems:search', {
         method: 'POST',
         headers: { 
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ albumId: selectedAlbumId, pageSize: 50 }),
+        body: JSON.stringify({ albumId: selectedAlbumId, pageSize: 100 }),
       });
       const data = await res.json();
+      
+      if (data.error) {
+        console.error(`Google API Error (Album ${selectedAlbumId}):`, JSON.stringify(data.error, null, 2));
+        throw new Error(data.error.message || 'Failed to fetch album items');
+      }
+      
       items = data.mediaItems || [];
       console.log(`Fetched ${items.length} items from album ${selectedAlbumId}`);
+    }
+
+    if (items.length === 0) {
+      console.warn('WARNING: No media items found in the selected source.');
     }
 
     // 4. Prepare directory
