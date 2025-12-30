@@ -66,3 +66,47 @@ GOOGLE_CALENDAR_IDS=your_family_calendar_id
 2. Navigate to `http://localhost:3000/api/google/auth-url` (or your Pi's address).
 3. Click the link provided to log in with your Google account.
 4. Once completed, you'll see a success message and your tokens will be saved to `./data/google/token.json`.
+
+## Raspberry Pi Deployment
+
+To speed up development on the Raspberry Pi, this project is configured to build on a faster machine (like your Mac) and push to the GitHub Container Registry (GHCR).
+
+### 1. Initial Setup
+
+1. **GitHub Token:** Create a [Personal Access Token (classic)](https://github.com/settings/tokens/new) with `write:packages`, `read:packages`, and `delete:packages` scopes.
+2. **Login on Mac:**
+   ```bash
+   echo "YOUR_TOKEN" | docker login ghcr.io -u LukeEvans --password-stdin
+   ```
+3. **Login on Pi:**
+   ```bash
+   echo "YOUR_TOKEN" | docker login ghcr.io -u LukeEvans --password-stdin
+   ```
+
+### 2. Update Pi Alias
+
+On your Raspberry Pi, update your `bounce` alias in `~/.zshrc` or `~/.bashrc`:
+
+```bash
+alias bounce='docker compose pull app && docker compose up -d app && sudo systemctl restart kiosk.service'
+```
+
+### 3. Deploy from Mac
+
+Simply run the deploy script from the root of the repository on your Mac:
+
+```bash
+./scripts/deploy
+```
+
+This script will:
+1. Build the ARM64 image on your Mac.
+2. Push the image to GHCR.
+3. SSH into the Pi to pull the new image and restart the services.
+
+### Fallback: Building on Pi
+
+If you need to build directly on the Pi (slower), you can still run:
+```bash
+docker compose up -d --build app
+```

@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   app:
+    image: ghcr.io/lukeevans/family-hub:latest
     build:
       context: ./v0-smart-display-app
       dockerfile: Dockerfile
