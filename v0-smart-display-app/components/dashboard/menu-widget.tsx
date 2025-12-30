@@ -26,7 +26,7 @@ export function MenuWidget() {
     <Link 
       href="/recipes" 
       prefetch={false}
-      className="block h-full"
+      className="block h-full active:scale-[0.98] transition-transform"
       draggable={false}
       onClick={(e) => {
         e.preventDefault()

@@ -57,7 +57,7 @@ export function SportsWidget() {
     <Link 
       href="/sports" 
       prefetch={true}
-      className="block h-full"
+      className="block h-full active:scale-[0.98] transition-transform"
       draggable={false}
       onClick={(e) => {
         e.preventDefault()

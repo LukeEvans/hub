@@ -34,7 +34,7 @@ export function WeatherWidget() {
     <Link 
       href="/weather" 
       prefetch={false}
-      className="block h-full"
+      className="block h-full active:scale-[0.98] transition-transform"
       draggable={false}
       onClick={(e) => {
         e.preventDefault()
