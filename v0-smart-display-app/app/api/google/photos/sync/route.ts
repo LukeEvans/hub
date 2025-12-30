@@ -100,6 +100,7 @@ export async function POST() {
 
     if (items.length === 0) {
       console.warn('WARNING: No media items found in the selected source.');
+      console.log('NOTE: Since early 2025, Google Photos API may only return items created by this app unless specific scopes are granted and the library is populated.');
     }
 
     // 4. Prepare directory

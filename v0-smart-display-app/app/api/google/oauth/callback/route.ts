@@ -14,7 +14,10 @@ export async function GET(request: NextRequest) {
     const { tokens } = await authClient.getToken(code);
     console.log('Tokens received for scopes:', tokens.scope);
     
-    if (!tokens.scope?.includes('photoslibrary.readonly')) {
+    const hasPhotosScope = tokens.scope?.includes('photoslibrary.readonly') || 
+                          tokens.scope?.includes('photoslibrary');
+
+    if (!hasPhotosScope) {
       console.error('CRITICAL: Photos scope was NOT granted by the user!');
     }
 
@@ -25,7 +28,7 @@ export async function GET(request: NextRequest) {
     console.log('Tokens saved successfully');
     
     // Return a more helpful message if scope is missing
-    if (!tokens.scope?.includes('photoslibrary.readonly')) {
+    if (!hasPhotosScope) {
       return new NextResponse('Auth completed, but PHOTOS ACCESS WAS DENIED. Please log in again and make sure to CHECK THE BOX for Google Photos access.');
     }
 
