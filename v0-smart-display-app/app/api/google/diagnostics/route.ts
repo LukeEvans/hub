@@ -25,10 +25,27 @@ export async function GET() {
     }
 
     results.token.exists = true;
-    results.token.scopes = token.scope?.split(' ') || [];
+    results.token.storedScopes = token.scope?.split(' ') || [];
     results.token.expiry = token.expiry_date ? new Date(token.expiry_date).toISOString() : 'Unknown';
+    results.token.hasRefreshToken = !!token.refresh_token;
 
     const { token: accessToken } = await authClient.getAccessToken();
+
+    // Verify actual access token scopes via Google's tokeninfo endpoint
+    try {
+      const tokenInfoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`);
+      if (tokenInfoRes.ok) {
+        const tokenInfo = await tokenInfoRes.json();
+        results.token.actualScopes = tokenInfo.scope?.split(' ') || [];
+        results.token.email = tokenInfo.email;
+        results.token.expiresIn = tokenInfo.expires_in;
+      } else {
+        const errData = await tokenInfoRes.json();
+        results.token.tokenInfoError = errData;
+      }
+    } catch (err: any) {
+      results.token.tokenInfoError = err.message;
+    }
 
     // 1. Test Calendar API
     try {

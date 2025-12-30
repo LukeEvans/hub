@@ -320,34 +320,49 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 {diagnostics.token && (
-                  <div className="p-3 bg-background rounded-lg border">
-                    <p className="text-muted-foreground mb-2">Token Scopes</p>
-                    <div className="flex flex-wrap gap-1">
-                      {diagnostics.token.scopes?.length > 0 ? (
-                        diagnostics.token.scopes.map((scope: string, i: number) => {
-                          const isPhotosScope = scope.includes('photoslibrary');
-                          const isCalendarScope = scope.includes('calendar');
-                          return (
-                            <span 
-                              key={i} 
-                              className={`px-2 py-0.5 rounded text-xs font-mono ${
-                                isPhotosScope ? 'bg-green-500/20 text-green-400' :
-                                isCalendarScope ? 'bg-blue-500/20 text-blue-400' :
-                                'bg-muted text-muted-foreground'
-                              }`}
-                            >
-                              {scope.split('/').pop()}
-                            </span>
-                          );
-                        })
-                      ) : (
-                        <span className="text-red-400 text-xs">No scopes found in token!</span>
+                  <div className="p-3 bg-background rounded-lg border space-y-3">
+                    <div>
+                      <p className="text-muted-foreground mb-2">Actual Access Token Scopes <span className="text-xs">(from Google)</span></p>
+                      <div className="flex flex-wrap gap-1">
+                        {diagnostics.token.actualScopes?.length > 0 ? (
+                          diagnostics.token.actualScopes.map((scope: string, i: number) => {
+                            const isPhotosScope = scope.includes('photoslibrary');
+                            const isCalendarScope = scope.includes('calendar');
+                            return (
+                              <span 
+                                key={i} 
+                                className={`px-2 py-0.5 rounded text-xs font-mono ${
+                                  isPhotosScope ? 'bg-green-500/20 text-green-400' :
+                                  isCalendarScope ? 'bg-blue-500/20 text-blue-400' :
+                                  'bg-muted text-muted-foreground'
+                                }`}
+                              >
+                                {scope.split('/').pop()}
+                              </span>
+                            );
+                          })
+                        ) : (
+                          <span className="text-red-400 text-xs">Could not verify token scopes!</span>
+                        )}
+                      </div>
+                      {diagnostics.token.actualScopes && !diagnostics.token.actualScopes.some((s: string) => s.includes('photoslibrary')) && (
+                        <p className="text-red-400 text-xs mt-2">
+                          ⚠️ Access token missing photos scope! Click Disconnect, then Login again.
+                        </p>
                       )}
                     </div>
-                    {!diagnostics.token.scopes?.some((s: string) => s.includes('photoslibrary')) && (
-                      <p className="text-red-400 text-xs mt-2">
-                        ⚠️ Missing photos scope! Click Disconnect, then Login again and check all permission boxes.
-                      </p>
+                    <div>
+                      <p className="text-muted-foreground mb-2 text-xs">Stored Token Scopes <span className="opacity-50">(may be stale)</span></p>
+                      <div className="flex flex-wrap gap-1">
+                        {diagnostics.token.storedScopes?.map((scope: string, i: number) => (
+                          <span key={i} className="px-2 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground">
+                            {scope.split('/').pop()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    {diagnostics.token.tokenInfoError && (
+                      <p className="text-red-400 text-xs">Token verification error: {JSON.stringify(diagnostics.token.tokenInfoError)}</p>
                     )}
                   </div>
                 )}
