@@ -56,7 +56,7 @@ export function SportsWidget() {
   return (
     <Link 
       href="/sports" 
-      prefetch={false}
+      prefetch={true}
       className="block h-full"
       draggable={false}
       onClick={(e) => {

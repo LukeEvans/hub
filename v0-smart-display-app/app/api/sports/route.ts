@@ -69,8 +69,50 @@ async function fetchTeamData(league: string, sport: string, teamId: string) {
   }
 }
 
+function pruneTeamData(team: any) {
+  return {
+    id: team.id,
+    name: team.name,
+    displayName: team.displayName,
+    logos: team.logos?.map((l: any) => ({ href: l.href })),
+    record: team.record,
+    nextEvent: team.nextEvent,
+    fullSchedule: team.fullSchedule?.map((event: any) => ({
+      id: event.id,
+      date: event.date,
+      competitions: [{
+        id: event.competitions[0].id,
+        date: event.competitions[0].date,
+        status: {
+          type: {
+            name: event.competitions[0].status.type.name
+          }
+        },
+        broadcasts: event.competitions[0].broadcasts,
+        venue: {
+          fullName: event.competitions[0].venue?.fullName,
+          address: event.competitions[0].venue?.address
+        },
+        competitors: event.competitions[0].competitors.map((c: any) => ({
+          id: c.id,
+          homeAway: c.homeAway,
+          score: c.score,
+          records: c.records,
+          record: c.record,
+          team: {
+            id: c.team.id,
+            displayName: c.team.displayName,
+            shortDisplayName: c.team.shortDisplayName,
+            logos: c.team.logos?.map((l: any) => ({ href: l.href }))
+          }
+        }))
+      }]
+    }))
+  };
+}
+
 export async function GET() {
-  const cacheKey = 'sports-data-v6';
+  const cacheKey = 'sports-data-v7';
   const cached = cache.get(cacheKey);
   if (cached) return NextResponse.json(cached);
 
@@ -82,9 +124,9 @@ export async function GET() {
     ]);
 
     const data = {
-      nba,
-      nfl,
-      nhl
+      nba: pruneTeamData(nba),
+      nfl: pruneTeamData(nfl),
+      nhl: pruneTeamData(nhl)
     };
 
     cache.set(cacheKey, data, 14400); // 4 hours

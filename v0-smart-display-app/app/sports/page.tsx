@@ -7,7 +7,10 @@ import { isToday, isYesterday, parseISO } from "date-fns"
 import { useApi } from "@/lib/use-api"
 
 export default function SportsPage() {
-  const { data: sportsData, isLoading: loading } = useApi<any>('/api/sports')
+  const { data: sportsData, isLoading: loading } = useApi<any>('/api/sports', {
+    revalidateOnFocus: false,
+    revalidateIfStale: false
+  })
   const gameRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
 
   useEffect(() => {
