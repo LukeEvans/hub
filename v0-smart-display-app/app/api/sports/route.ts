@@ -54,7 +54,7 @@ export async function GET() {
       nhl
     };
 
-    cache.set(cacheKey, data, 900); // 15 minutes
+    cache.set(cacheKey, data, 14400); // 4 hours
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('Error fetching sports data:', error.message);
