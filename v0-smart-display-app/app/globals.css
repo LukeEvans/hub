@@ -194,11 +194,18 @@
     display: none;
   }
 
-  @keyframes ken-burns {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.1); }
+  @keyframes ken-burns-left {
+    0% { transform: scale(1.1) translateX(-5%); }
+    100% { transform: scale(1.1) translateX(5%); }
   }
-  .animate-ken-burns {
-    animation: ken-burns 10s ease-out forwards;
+  @keyframes ken-burns-right {
+    0% { transform: scale(1.1) translateX(5%); }
+    100% { transform: scale(1.1) translateX(-5%); }
+  }
+  .animate-ken-burns-left {
+    animation: ken-burns-left 10s ease-in-out forwards;
+  }
+  .animate-ken-burns-right {
+    animation: ken-burns-right 10s ease-in-out forwards;
   }
 }

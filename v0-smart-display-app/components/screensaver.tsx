@@ -67,13 +67,15 @@ export function Screensaver() {
         const isPrev = index === prevPhotoIndex
         if (!isCurrent && !isPrev) return null
 
+        const animationClass = index % 2 === 0 ? "animate-ken-burns-left" : "animate-ken-burns-right"
+
         return (
           <img
             key={photo}
             src={photo}
             alt="Screensaver"
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-2000 ${
-              isCurrent ? "opacity-100 animate-ken-burns" : "opacity-0"
+              isCurrent ? `opacity-100 ${animationClass}` : "opacity-0"
             }`}
           />
         )
