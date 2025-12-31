@@ -210,4 +210,34 @@
   .animate-ken-burns-right {
     animation: ken-burns-right 10s ease-in-out forwards;
   }
+
+  @keyframes collage-enter {
+    from {
+      opacity: 0;
+      transform: scale(0.8) rotate(var(--rotation, 0deg));
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) rotate(var(--rotation, 0deg));
+    }
+  }
+
+  @keyframes collage-exit {
+    from {
+      opacity: 1;
+      transform: scale(1) rotate(var(--rotation, 0deg));
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95) rotate(var(--rotation, 0deg));
+    }
+  }
+
+  .animate-collage-enter {
+    animation: collage-enter 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .animate-collage-exit {
+    animation: collage-exit 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
 }
