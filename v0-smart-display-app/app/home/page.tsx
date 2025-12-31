@@ -16,6 +16,7 @@ export default function HomeAssistantPage() {
   const entities = data?.entities || []
   const areas = data?.areas || []
   const areaEntitiesMap = data?.areaEntities || {}
+  const isConfigured = data?.isConfigured !== false
 
   const getEntityState = (entityId: string) => {
     if (optimisticStates[entityId] !== undefined) return optimisticStates[entityId]
@@ -98,6 +99,11 @@ export default function HomeAssistantPage() {
             <p className="text-muted-foreground text-lg">Home Assistant Dashboard</p>
           </div>
         </div>
+        {!isConfigured && (
+          <div className="mt-4 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-200 text-sm">
+            <strong>Home Assistant not configured:</strong> Check your .env file on the Pi for HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN.
+          </div>
+        )}
       </div>
 
       {/* Quick Status Cards */}

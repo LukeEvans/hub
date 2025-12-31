@@ -35,6 +35,10 @@ class HomeAssistantClient {
     this.baseUrl = process.env.HOME_ASSISTANT_URL || '';
     this.token = process.env.HOME_ASSISTANT_TOKEN || '';
 
+    console.log('Initializing HomeAssistantClient:');
+    console.log(`- Base URL: ${this.baseUrl || 'MISSING'}`);
+    console.log(`- Token: ${this.token ? 'PRESENT (starts with ' + this.token.substring(0, 10) + '...)' : 'MISSING'}`);
+
     if (this.baseUrl && this.token) {
       this.client = axios.create({
         baseURL: `${this.baseUrl.replace(/\/$/, '')}/api`,
@@ -59,23 +63,22 @@ class HomeAssistantClient {
   public async getAreas(): Promise<HAArea[]> {
     if (!this.client) throw new Error('Home Assistant not configured');
     try {
-      // Use HA template to get area information
       const template = `
         [
-          {% for area in areas() %}
+          {% for area_id in areas() %}
             {
-              "area_id": "{{ area }}",
-              "name": "{{ area_name(area) }}",
+              "area_id": "{{ area_id }}",
+              "name": "{{ area_name(area_id) }}",
               "picture": null
             }{% if not loop.last %},{% endif %}
           {% endfor %}
         ]
       `;
       const response = await this.client.post('/template', { template });
-      // HA returns the template as a string if it's JSON, we might need to parse it
-      return typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
-    } catch (e) {
-      console.error('Error fetching HA areas:', e);
+      const data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+      return Array.isArray(data) ? data : [];
+    } catch (e: any) {
+      console.error('Error fetching HA areas:', e.message);
       return [];
     }
   }
@@ -85,15 +88,16 @@ class HomeAssistantClient {
     try {
       const template = `
         {
-          {% for area in areas() %}
-            "{{ area }}": {{ area_entities(area) | to_json }}{% if not loop.last %},{% endif %}
+          {% for area_id in areas() %}
+            "{{ area_id }}": {{ area_entities(area_id) | to_json }}{% if not loop.last %},{% endif %}
           {% endfor %}
         }
       `;
       const response = await this.client.post('/template', { template });
-      return typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
-    } catch (e) {
-      console.error('Error fetching HA area entities:', e);
+      const data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+      return data && typeof data === 'object' ? data : {};
+    } catch (e: any) {
+      console.error('Error fetching HA area entities:', e.message);
       return {};
     }
   }
