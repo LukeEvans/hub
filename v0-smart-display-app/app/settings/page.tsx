@@ -27,9 +27,28 @@ export default function SettingsPage() {
   const [isSpotifyLoggingOut, setIsSpotifyLoggingOut] = useState(false)
   const [spotifyConfig, setSpotifyConfig] = useState<any>({ primaryPlaylist: '', secondaryPlaylists: [] })
   const [isSavingSpotify, setIsSavingSpotify] = useState(false)
+
+  // Home Assistant states
+  const [haEntities, setHaEntities] = useState<any[]>([])
+  const [haConfig, setHaConfig] = useState<any>({ selectedEntities: [], entityNames: {} })
+  const [isHaLoading, setIsHaLoading] = useState(false)
+  const [isSavingHa, setIsSavingHa] = useState(false)
+  const [haSearch, setHaSearch] = useState("")
+
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
+    // Fetch HA config and all entities
+    setIsHaLoading(true)
+    Promise.all([
+      fetch('/api/homeassistant/config').then(res => res.json()),
+      fetch('/api/homeassistant/states?all=true').then(res => res.json())
+    ]).then(([config, states]) => {
+      setHaConfig(config)
+      setHaEntities(states.entities || [])
+    }).catch(err => console.error('Failed to fetch HA data:', err))
+      .finally(() => setIsHaLoading(false))
+
     // Fetch Spotify status
     fetch('/api/spotify/status')
       .then(res => res.json())
@@ -281,6 +300,40 @@ export default function SettingsPage() {
     setAudio(newAudio)
     setIsPlaying(true)
   }
+
+  const handleSaveHaConfig = async () => {
+    setIsSavingHa(true)
+    try {
+      const response = await fetch("/api/homeassistant/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(haConfig),
+      })
+      if (response.ok) {
+        alert("Home Assistant configuration saved!")
+      }
+    } catch (err) {
+      console.error("Failed to save HA config:", err)
+      setError("Failed to save Home Assistant config")
+    } finally {
+      setIsSavingHa(false)
+    }
+  }
+
+  const toggleHaEntity = (entityId: string) => {
+    setHaConfig((prev: any) => {
+      const selected = prev.selectedEntities || []
+      const newSelected = selected.includes(entityId)
+        ? selected.filter((id: string) => id !== entityId)
+        : [...selected, entityId]
+      return { ...prev, selectedEntities: newSelected }
+    })
+  }
+
+  const filteredHaEntities = haEntities.filter(e => 
+    e.entity_id.toLowerCase().includes(haSearch.toLowerCase()) ||
+    (e.attributes.friendly_name || "").toLowerCase().includes(haSearch.toLowerCase())
+  )
 
   return (
     <div className="flex-1 p-8">
@@ -581,6 +634,82 @@ export default function SettingsPage() {
                 {isSyncing ? "Syncing..." : "Sync Now"}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Home Assistant Entities</CardTitle>
+            <CardDescription>
+              Select which devices should appear on your Smart Home dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Search entities (e.g. light, living room)..." 
+                value={haSearch}
+                onChange={(e) => setHaSearch(e.target.value)}
+                className="h-12"
+              />
+              <Button 
+                onClick={handleSaveHaConfig}
+                disabled={isSavingHa}
+                className="h-12 px-6 gap-2"
+              >
+                {isSavingHa ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                Save Selection
+              </Button>
+            </div>
+            
+            <div className="border rounded-xl overflow-hidden">
+              <div className="max-h-[400px] overflow-y-auto">
+                {isHaLoading ? (
+                  <div className="p-8 flex justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredHaEntities.length === 0 && (
+                      <div className="p-8 text-center text-muted-foreground italic">
+                        No entities found matching "{haSearch}"
+                      </div>
+                    )}
+                    {filteredHaEntities.map((entity) => (
+                      <div 
+                        key={entity.entity_id}
+                        className={`flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+                          haConfig.selectedEntities?.includes(entity.entity_id) ? 'bg-primary/5' : ''
+                        }`}
+                        onClick={() => toggleHaEntity(entity.entity_id)}
+                      >
+                        <div className="flex-1 min-w-0 pr-4">
+                          <p className="font-semibold truncate">
+                            {entity.attributes.friendly_name || entity.entity_id}
+                          </p>
+                          <p className="text-xs text-muted-foreground font-mono truncate">
+                            {entity.entity_id}
+                          </p>
+                        </div>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          haConfig.selectedEntities?.includes(entity.entity_id) 
+                            ? 'bg-primary border-primary' 
+                            : 'border-muted-foreground/30'
+                        }`}>
+                          {haConfig.selectedEntities?.includes(entity.entity_id) && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              Tip: Start by selecting just your most-used lights, climate controls, and locks.
+            </p>
           </CardContent>
         </Card>
 

@@ -1,8 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { haClient } from '@/lib/homeassistant';
 import cache from '@/lib/cache';
+import fs from 'fs/promises';
+import path from 'path';
+
+const CONFIG_PATH = path.join(process.cwd(), 'data', 'ha-config.json');
+
+async function getHAConfig() {
+  try {
+    const data = await fs.readFile(CONFIG_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return { selectedEntities: [], entityNames: {} };
+  }
+}
 
 function getMockStates() {
+  // ... (keep existing mock states)
   return [
     {
       entity_id: 'light.living_room',
@@ -36,8 +50,11 @@ function getMockStates() {
   ];
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const includeAll = searchParams.get('all') === 'true';
+
     const isConfigured = haClient.isConfigured();
     if (!isConfigured) {
       console.warn('Home Assistant NOT configured. URL or Token missing in environment.');
@@ -49,7 +66,7 @@ export async function GET() {
       });
     }
 
-    const cacheKey = 'ha:states';
+    const cacheKey = includeAll ? 'ha:states:all' : 'ha:states:curated';
     const cached = cache.get(cacheKey);
     if (cached) {
       return NextResponse.json({ ...cached as object, isConfigured: true });
@@ -78,7 +95,34 @@ export async function GET() {
       console.error('Failed to fetch HA area entities:', e.message);
     }
 
-    const payload = { entities, areas, areaEntities };
+    const config = await getHAConfig();
+    
+    // Apply filtering if not requesting all entities
+    let filteredEntities = entities;
+    if (!includeAll && config.selectedEntities && config.selectedEntities.length > 0) {
+      filteredEntities = entities.filter((e: any) => 
+        config.selectedEntities.includes(e.entity_id)
+      ).map((e: any) => {
+        // Apply custom name if exists
+        if (config.entityNames && config.entityNames[e.entity_id]) {
+          return {
+            ...e,
+            attributes: {
+              ...e.attributes,
+              friendly_name: config.entityNames[e.entity_id]
+            }
+          };
+        }
+        return e;
+      });
+    }
+
+    const payload = { 
+      entities: filteredEntities, 
+      areas, 
+      areaEntities,
+      allEntities: includeAll ? entities : undefined 
+    };
     const ttl = parseInt(process.env.HOME_ASSISTANT_CACHE_TTL || '5');
     cache.set(cacheKey, payload, ttl);
 

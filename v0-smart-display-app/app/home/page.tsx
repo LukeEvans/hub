@@ -1,6 +1,6 @@
 "use client"
 
-import { HomeIcon, Lightbulb, Thermometer, Lock, Camera, Zap, Wind, Tv, DoorClosed, Speaker, Power, Loader2 } from "lucide-react"
+import { HomeIcon, Lightbulb, Thermometer, Lock, Camera, Zap, Wind, Tv, DoorClosed, Speaker, Power, Loader2, Settings as SettingsIcon } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider"
 import { useApi } from "@/lib/use-api"
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
+import Link from "next/link"
 
 export default function HomeAssistantPage() {
   const { data, isLoading, mutate } = useApi<any>('/api/homeassistant/states')
@@ -102,6 +103,22 @@ export default function HomeAssistantPage() {
         {!isConfigured && (
           <div className="mt-4 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-200 text-sm">
             <strong>Home Assistant not configured:</strong> Check your .env file on the Pi for HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN.
+          </div>
+        )}
+        {isConfigured && entities.length === 0 && (
+          <div className="mt-4 p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4 text-blue-200">
+              <SettingsIcon className="w-8 h-8" />
+              <div>
+                <p className="font-bold">No entities selected</p>
+                <p className="text-sm opacity-80">Go to Settings to pick which devices you want to see here.</p>
+              </div>
+            </div>
+            <Link href="/settings">
+              <Button variant="secondary" className="gap-2">
+                Configure Dashboard
+              </Button>
+            </Link>
           </div>
         )}
       </div>
