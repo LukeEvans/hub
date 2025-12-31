@@ -18,7 +18,8 @@ export async function POST(request: Request) {
     const result = await haClient.callService(domain, service, serviceData || {});
     
     // Invalidate states cache so next fetch gets updated data
-    cache.del('ha:states');
+    cache.del('ha:states:curated');
+    cache.del('ha:states:all');
 
     return NextResponse.json(result);
   } catch (err: any) {
