@@ -50,16 +50,20 @@ function PhotoSlot({ photos, index, activePhotos, onPhotoChange }: PhotoSlotProp
   }, [photos, currentPhoto, getUniquePhoto, index, onPhotoChange])
 
   useEffect(() => {
-    const initialDelay = index * 2500
+    let interval: NodeJS.Timeout
+    const initialDelay = index * 5000 // Increased stagger delay to 5s per slot
+    
     const timer = setTimeout(() => {
-      const interval = setInterval(() => {
+      // Set the interval to 45-60 seconds for a more relaxed feel
+      interval = setInterval(() => {
         changePhoto()
-      }, 15000 + Math.random() * 5000)
-      
-      return () => clearInterval(interval)
+      }, 45000 + Math.random() * 15000)
     }, initialDelay)
 
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      if (interval) clearInterval(interval)
+    }
   }, [index, changePhoto])
 
   if (!currentPhoto) return null
