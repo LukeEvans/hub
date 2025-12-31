@@ -99,22 +99,27 @@ export async function GET(request: NextRequest) {
     
     // Apply filtering if not requesting all entities
     let filteredEntities = entities;
-    if (!includeAll && config.selectedEntities && config.selectedEntities.length > 0) {
-      filteredEntities = entities.filter((e: any) => 
-        config.selectedEntities.includes(e.entity_id)
-      ).map((e: any) => {
-        // Apply custom name if exists
-        if (config.entityNames && config.entityNames[e.entity_id]) {
-          return {
-            ...e,
-            attributes: {
-              ...e.attributes,
-              friendly_name: config.entityNames[e.entity_id]
-            }
-          };
-        }
-        return e;
-      });
+    if (!includeAll) {
+      // If we have a curated list, use it. 
+      // If we have an empty curated list, return empty (show prompt).
+      // If config has never been saved (undefined/null), we show everything initially.
+      if (config.selectedEntities) {
+        filteredEntities = entities.filter((e: any) => 
+          config.selectedEntities.includes(e.entity_id)
+        ).map((e: any) => {
+          // Apply custom name if exists
+          if (config.entityNames && config.entityNames[e.entity_id]) {
+            return {
+              ...e,
+              attributes: {
+                ...e.attributes,
+                friendly_name: config.entityNames[e.entity_id]
+              }
+            };
+          }
+          return e;
+        });
+      }
     }
 
     const payload = { 

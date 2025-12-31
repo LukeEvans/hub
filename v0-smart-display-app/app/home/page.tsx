@@ -1,6 +1,6 @@
 "use client"
 
-import { HomeIcon, Lightbulb, Thermometer, Lock, Camera, Zap, Wind, Tv, DoorClosed, Speaker, Power, Loader2, Settings as SettingsIcon } from "lucide-react"
+import { HomeIcon, Lightbulb, Thermometer, Lock, Camera, Zap, Wind, Tv, DoorClosed, Speaker, Power, Loader2, Settings as SettingsIcon, RefreshCw } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -92,14 +92,25 @@ export default function HomeAssistantPage() {
     <div className="min-h-screen p-8 bg-background">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--widget-blue)] to-[var(--widget-mint)] flex items-center justify-center">
-            <HomeIcon className="w-7 h-7 text-white" />
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--widget-blue)] to-[var(--widget-mint)] flex items-center justify-center">
+              <HomeIcon className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">Smart Home</h1>
+              <p className="text-muted-foreground text-lg">Home Assistant Dashboard</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-4xl font-bold">Smart Home</h1>
-            <p className="text-muted-foreground text-lg">Home Assistant Dashboard</p>
-          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => mutate()} 
+            className="w-12 h-12 rounded-xl"
+            disabled={isLoading}
+          >
+            <RefreshCw className={`w-6 h-6 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
         {!isConfigured && (
           <div className="mt-4 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-200 text-sm">

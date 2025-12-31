@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music } from "lucide-react"
+import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music, Check, Search } from "lucide-react"
+import { useSWRConfig } from "swr"
 
 export default function SettingsPage() {
+  const { mutate } = useSWRConfig()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -310,11 +312,16 @@ export default function SettingsPage() {
         body: JSON.stringify(haConfig),
       })
       if (response.ok) {
-        alert("Home Assistant configuration saved!")
+        // Trigger a revalidation of the curated states so the Home page updates
+        mutate('/api/homeassistant/states')
+        toast.success("Home Assistant configuration saved!")
+      } else {
+        throw new Error("Failed to save configuration")
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save HA config:", err)
-      setError("Failed to save Home Assistant config")
+      setError(err.message || "Failed to save Home Assistant config")
+      toast.error(err.message || "Failed to save HA config")
     } finally {
       setIsSavingHa(false)
     }
@@ -646,12 +653,15 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-2">
-              <Input 
-                placeholder="Search entities (e.g. light, living room)..." 
-                value={haSearch}
-                onChange={(e) => setHaSearch(e.target.value)}
-                className="h-12"
-              />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search entities (e.g. light, living room)..." 
+                  value={haSearch}
+                  onChange={(e) => setHaSearch(e.target.value)}
+                  className="h-12 pl-10"
+                />
+              </div>
               <Button 
                 onClick={handleSaveHaConfig}
                 disabled={isSavingHa}
@@ -662,46 +672,53 @@ export default function SettingsPage() {
               </Button>
             </div>
             
-            <div className="border rounded-xl overflow-hidden">
+            <div className="border rounded-xl overflow-hidden bg-muted/10">
               <div className="max-h-[400px] overflow-y-auto">
                 {isHaLoading ? (
-                  <div className="p-8 flex justify-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                  <div className="p-12 flex flex-col items-center gap-4">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Loading entities from Home Assistant...</p>
                   </div>
                 ) : (
-                  <div className="divide-y">
+                  <div className="divide-y border-t">
                     {filteredHaEntities.length === 0 && (
-                      <div className="p-8 text-center text-muted-foreground italic">
+                      <div className="p-12 text-center text-muted-foreground italic">
                         No entities found matching "{haSearch}"
                       </div>
                     )}
-                    {filteredHaEntities.map((entity) => (
-                      <div 
-                        key={entity.entity_id}
-                        className={`flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
-                          haConfig.selectedEntities?.includes(entity.entity_id) ? 'bg-primary/5' : ''
-                        }`}
-                        onClick={() => toggleHaEntity(entity.entity_id)}
-                      >
-                        <div className="flex-1 min-w-0 pr-4">
-                          <p className="font-semibold truncate">
-                            {entity.attributes.friendly_name || entity.entity_id}
-                          </p>
-                          <p className="text-xs text-muted-foreground font-mono truncate">
-                            {entity.entity_id}
-                          </p>
+                    {filteredHaEntities.map((entity) => {
+                      const isSelected = haConfig.selectedEntities?.includes(entity.entity_id)
+                      return (
+                        <div 
+                          key={entity.entity_id}
+                          className={`flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+                            isSelected ? 'bg-primary/10' : ''
+                          }`}
+                          onClick={() => toggleHaEntity(entity.entity_id)}
+                        >
+                          <div className="flex-1 min-w-0 pr-4">
+                            <div className="flex items-center gap-2">
+                              <p className={`font-semibold truncate ${isSelected ? 'text-primary' : ''}`}>
+                                {entity.attributes.friendly_name || entity.entity_id}
+                              </p>
+                              {isSelected && <Check className="w-4 h-4 text-primary" />}
+                            </div>
+                            <p className="text-xs text-muted-foreground font-mono truncate">
+                              {entity.entity_id}
+                            </p>
+                          </div>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                            isSelected 
+                              ? 'bg-primary border-primary' 
+                              : 'border-muted-foreground/30'
+                          }`}>
+                            {isSelected && (
+                              <div className="w-2 h-2 rounded-full bg-white" />
+                            )}
+                          </div>
                         </div>
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          haConfig.selectedEntities?.includes(entity.entity_id) 
-                            ? 'bg-primary border-primary' 
-                            : 'border-muted-foreground/30'
-                        }`}>
-                          {haConfig.selectedEntities?.includes(entity.entity_id) && (
-                            <div className="w-2 h-2 rounded-full bg-white" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>
