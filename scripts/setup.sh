@@ -21,12 +21,17 @@ else
   echo "Docker already installed; skipping."
 fi
 
-if ! command -v npm >/dev/null 2>&1; then
-  echo "Installing Node.js/npm (requires sudo)..."
-  sudo apt-get update
-  sudo apt-get install -y nodejs npm
+if ! command -v node >/dev/null 2>&1 || ! node -v | grep -Eq '^v2[0-9]'; then
+  echo "Installing Node.js 20 (requires sudo)..."
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  sudo apt-get install -y nodejs
 else
-  echo "Node.js/npm already installed; skipping."
+  echo "Node.js 20+ already installed; skipping."
+fi
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "Installing pnpm (requires sudo)..."
+  sudo npm install -g pnpm
 fi
 
 if [[ ! -f .env && -f env.example ]]; then
@@ -35,8 +40,9 @@ if [[ ! -f .env && -f env.example ]]; then
 fi
 
 echo "Installing app dependencies..."
-cd "$ROOT/app"
-npm install
+cd "$ROOT/v0-smart-display-app"
+pnpm add googleapis axios node-cache dotenv
+pnpm install --frozen-lockfile
 
 cd "$ROOT"
 echo "Building and starting containers..."
@@ -48,8 +54,10 @@ if command -v systemctl >/dev/null 2>&1; then
   sed \
     -e "s|^User=.*|User=$(whoami)|" \
     -e "s|^WorkingDirectory=.*|WorkingDirectory=${ROOT}|" \
+    -e "s|^ExecStart=.*|ExecStart=${ROOT}/scripts/start-kiosk.sh|" \
     "$ROOT/scripts/kiosk.service" > "$TMP_FILE"
   sudo mv "$TMP_FILE" /etc/systemd/system/kiosk.service
+  sudo chmod +x "$ROOT/scripts/start-kiosk.sh"
   sudo systemctl daemon-reload
   sudo systemctl enable --now kiosk.service
   echo "kiosk.service installed and started."
@@ -60,6 +68,25 @@ fi
 if command -v raspi-config >/dev/null 2>&1; then
   echo "Configuring boot to desktop autologin..."
   sudo raspi-config nonint do_boot_behaviour B4
+  
+  echo "Configuring system-wide audio to HDMI 1 (card 1)..."
+  sudo tee /etc/asound.conf <<EOF
+pcm.!default {
+    type plug
+    slave {
+        pcm "hw:1,0"
+    }
+}
+
+ctl.!default {
+    type hw
+    card 1
+}
+EOF
+  
+  echo "Unmuting audio and setting volume to 100%..."
+  amixer -c 1 sset PCM 100% unmute || true
+  sudo usermod -aG audio "$(whoami)"
 fi
 
 if [ -f /etc/profile.d/sshpw.sh ]; then

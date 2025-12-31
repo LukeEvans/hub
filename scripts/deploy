@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+IMAGE="ghcr.io/lukeevans/family-hub:latest"
+PI_HOST="pi@hub.local"
+PI_DIR="~/hub"
+
+echo "🚀 Building for ARM64 and pushing to registry..."
+docker buildx build --platform linux/arm64 -t $IMAGE --push ./v0-smart-display-app
+
+echo "📡 Triggering deployment on Pi ($PI_HOST)..."
+ssh $PI_HOST "cd $PI_DIR && docker compose pull app && docker compose up -d app && sudo systemctl restart kiosk.service"
+
+echo "✅ Deployment complete!"
+

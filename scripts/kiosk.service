@@ -7,7 +7,7 @@ Wants=network-online.target
 User=pi
 Environment=DISPLAY=:0
 WorkingDirectory=/home/pi/hub
-ExecStart=/usr/bin/chromium --noerrdialogs --disable-infobars --kiosk --app=http://localhost --touch-events --enable-pinch --enable-viewport --enable-threaded-scrolling --enable-smooth-scrolling --overscroll-history-navigation=0 --check-for-update-interval=31536000
+ExecStart=/home/pi/hub/scripts/start-kiosk.sh
 Restart=always
 
 [Install]

@@ -2,28 +2,14 @@ version: "3.9"
 
 services:
   app:
-    build: ./app
+    image: ghcr.io/lukeevans/family-hub:latest
+    build:
+      context: ./v0-smart-display-app
+      dockerfile: Dockerfile
     ports:
       - "80:3000"
-    env_file:
-      - ./env.example
+    env_file: .env
     volumes:
+      - ./data:/app/data
       - ./data/photos:/app/photos
-      - ./data/google:/app/data/google
-    depends_on:
-      - mealie
     restart: unless-stopped
-
-  mealie:
-    image: ghcr.io/mealie-recipes/mealie:latest
-    ports:
-      - "9000:9000"
-    environment:
-      ALLOW_SIGNUP: "false"
-      PUID: "1000"
-      PGID: "1000"
-      BASE_URL: "http://localhost:9000"
-    volumes:
-      - ./data/mealie:/app/data
-    restart: unless-stopped
-
