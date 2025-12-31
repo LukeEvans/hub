@@ -14,57 +14,75 @@ function PhotoSlot({ photos, index, activePhotos, onPhotoChange }: PhotoSlotProp
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [aspectRatio, setAspectRatio] = useState<string>("aspect-[3/4]")
 
-  const getUniquePhoto = useCallback(() => {
-    if (photos.length === 0) return ""
-    
-    // Filter out photos that are currently active in other slots
-    const availablePhotos = photos.filter(p => !activePhotos.includes(p))
-    
-    // If we run out of unique photos (e.g. pool is smaller than grid), 
-    // fall back to the full pool but try to avoid obvious adjacent duplicates
-    const pool = availablePhotos.length > 0 ? availablePhotos : photos
-    return pool[Math.floor(Math.random() * pool.length)]
-  }, [photos, activePhotos])
+  // Use refs to keep the latest values available to the timer without restarting it
+  const photosRef = useRef(photos)
+  const activePhotosRef = useRef(activePhotos)
+  const onPhotoChangeRef = useRef(onPhotoChange)
 
-  const changePhoto = useCallback(() => {
+  // Keep refs up to date
+  useEffect(() => {
+    photosRef.current = photos
+    activePhotosRef.current = activePhotos
+    onPhotoChangeRef.current = onPhotoChange
+  }, [photos, activePhotos, onPhotoChange])
+
+  const performChange = useCallback(() => {
+    const currentPhotos = photosRef.current
+    const currentActive = activePhotosRef.current
+    
+    if (currentPhotos.length === 0) return
+
     setIsTransitioning(true)
     
+    // 600ms exit animation
     setTimeout(() => {
-      const nextPhoto = getUniquePhoto()
-      setCurrentPhoto(nextPhoto)
-      onPhotoChange(index, nextPhoto)
+      // Find a photo not currently in use
+      const available = currentPhotos.filter(p => !currentActive.includes(p))
+      const pool = available.length > 0 ? available : currentPhotos
+      const nextPhoto = pool[Math.floor(Math.random() * pool.length)]
       
+      setCurrentPhoto(nextPhoto)
+      onPhotoChangeRef.current(index, nextPhoto)
+      
+      // Randomly vary the aspect ratio slightly for masonry effect
       const ratios = ["aspect-[3/4]", "aspect-[2/3]", "aspect-[4/5]", "aspect-[3/5]"]
       setAspectRatio(ratios[Math.floor(Math.random() * ratios.length)])
       
       setIsTransitioning(false)
     }, 600)
-  }, [index, getUniquePhoto, onPhotoChange])
+  }, [index])
 
+  // Initial photo setup - run only once
   useEffect(() => {
     if (photos.length > 0 && !currentPhoto) {
-      const initialPhoto = getUniquePhoto()
+      const available = photos.filter(p => !activePhotos.includes(p))
+      const pool = available.length > 0 ? available : photos
+      const initialPhoto = pool[Math.floor(Math.random() * pool.length)]
       setCurrentPhoto(initialPhoto)
       onPhotoChange(index, initialPhoto)
     }
-  }, [photos, currentPhoto, getUniquePhoto, index, onPhotoChange])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index])
 
+  // Stable recursive timer logic
   useEffect(() => {
-    let interval: NodeJS.Timeout
-    const initialDelay = index * 5000 // Increased stagger delay to 5s per slot
-    
-    const timer = setTimeout(() => {
-      // Set the interval to 45-60 seconds for a more relaxed feel
-      interval = setInterval(() => {
-        changePhoto()
-      }, 45000 + Math.random() * 15000)
-    }, initialDelay)
+    let timeoutId: NodeJS.Timeout
+
+    const scheduleNext = (delay: number) => {
+      timeoutId = setTimeout(() => {
+        performChange()
+        // Schedule next change after 45-60s
+        scheduleNext(45000 + Math.random() * 15000)
+      }, delay)
+    }
+
+    // Initial stagger delay (5s per index)
+    scheduleNext(index * 5000 + 5000)
 
     return () => {
-      clearTimeout(timer)
-      if (interval) clearInterval(interval)
+      if (timeoutId) clearTimeout(timeoutId)
     }
-  }, [index, changePhoto])
+  }, [index, performChange])
 
   if (!currentPhoto) return null
 
@@ -102,17 +120,20 @@ export function PhotoCollage({ photos }: { photos: string[] }) {
   return (
     <div className="fixed inset-0 bg-black p-4 overflow-hidden">
       <div className="flex h-full -mx-2">
+        {/* Column 1 */}
         <div className="flex-1 flex flex-col justify-center">
           <PhotoSlot photos={photos} index={0} activePhotos={activePhotos} onPhotoChange={handlePhotoChange} />
           <PhotoSlot photos={photos} index={1} activePhotos={activePhotos} onPhotoChange={handlePhotoChange} />
         </div>
         
+        {/* Column 2 */}
         <div className="flex-1 flex flex-col justify-center">
           <PhotoSlot photos={photos} index={2} activePhotos={activePhotos} onPhotoChange={handlePhotoChange} />
           <PhotoSlot photos={photos} index={3} activePhotos={activePhotos} onPhotoChange={handlePhotoChange} />
           <PhotoSlot photos={photos} index={6} activePhotos={activePhotos} onPhotoChange={handlePhotoChange} />
         </div>
 
+        {/* Column 3 */}
         <div className="flex-1 flex flex-col justify-center">
           <PhotoSlot photos={photos} index={4} activePhotos={activePhotos} onPhotoChange={handlePhotoChange} />
           <PhotoSlot photos={photos} index={5} activePhotos={activePhotos} onPhotoChange={handlePhotoChange} />
