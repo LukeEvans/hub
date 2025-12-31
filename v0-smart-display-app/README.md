@@ -164,3 +164,31 @@ HOME_ASSISTANT_CACHE_TTL=5
 
 ### 4. Customizing Controls
 The dashboard automatically detects supported entities. To refine which devices appear, ensure they are correctly categorized in Home Assistant and assigned to Areas.
+
+## Mealie Integration
+
+Mealie is a self-hosted recipe manager and meal planner. This app displays your weekly meal plan on the dashboard.
+
+### 1. Initial Setup
+Mealie is automatically installed and started when you run the `scripts/setup.sh` script.
+
+1. Open Mealie in your browser: `http://localhost:9000`
+2. Create your admin account.
+
+### 2. Generate API Token
+1. In the Mealie UI, click on **Settings** in the sidebar.
+2. Go to the **API Tokens** section.
+3. Click **Create New Token**, give it a name (e.g., "Smart Hub"), and click **Create**.
+4. Copy the generated token.
+
+### 3. Configure Environment Variables
+Update your `.env` file in the root directory:
+```env
+MEALIE_BASE_URL=http://mealie:9000
+MEALIE_API_TOKEN=your_generated_api_token
+```
+
+### 4. Features
+- **Weekly Menu:** Displays planned meals for the current week on the main dashboard.
+- **Recipe Details:** Click on a meal to view ingredients and instructions.
+- **Cook Mode:** Direct access to Mealie's cook mode from the hub.

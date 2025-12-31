@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
+import { MenuWidget } from "@/components/dashboard/menu-widget"
 import { useApi } from "@/lib/use-api"
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
@@ -359,6 +360,9 @@ export default function HomeAssistantPage() {
               Connected via Home Assistant
             </div>
           </Card>
+
+          {/* Weekly Menu */}
+          <MenuWidget />
         </div>
       </div>
     </div>

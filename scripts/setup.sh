@@ -48,6 +48,26 @@ cd "$ROOT"
 echo "Building and starting containers..."
 docker compose up -d --build
 
+echo "Waiting for Mealie to be ready..."
+until curl -s http://localhost:9000/api/app/about > /dev/null; do
+  echo "Mealie is starting... (this may take a minute)"
+  sleep 10
+done
+
+echo ""
+echo "--------------------------------------------------------"
+echo "MEALIE SETUP REQUIRED"
+echo "--------------------------------------------------------"
+echo "1. Open Mealie in your browser: http://localhost:9000"
+echo "2. Create your admin account"
+echo "3. Go to Settings -> API Tokens"
+echo "4. Create a new token and copy it"
+echo "5. Add it to your .env file: MEALIE_API_TOKEN=your_token_here"
+echo "6. Restart the app: docker compose restart app"
+echo "--------------------------------------------------------"
+echo ""
+read -p "Press Enter once you have Mealie open to continue with system setup..."
+
 if command -v systemctl >/dev/null 2>&1; then
   echo "Installing kiosk systemd service (requires sudo)..."
   TMP_FILE="$(mktemp)"
