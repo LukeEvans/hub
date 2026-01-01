@@ -30,6 +30,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     const audio = new Audio("/timer-alert.mp3")
     audio.loop = true
     audio.preload = "auto"
+    // Set a very low volume to "unlock" without being loud on first click
+    audio.volume = 1.0 
     audioRef.current = audio
     
     return () => {
@@ -50,7 +52,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           }
           return prev
         })
-      }).catch(e => console.log("Audio unlock attempted:", e))
+      }).catch(e => {
+        console.log("Audio unlock attempted:", e)
+        // If it failed, we can try again on the next interaction
+      })
     }
 
     const newTimer: Timer = {
@@ -65,14 +70,20 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   const testSound = useCallback(() => {
     if (audioRef.current) {
-      audioRef.current.play().catch(e => {
+      audioRef.current.play().then(() => {
+        setTimeout(() => {
+          setTimers(prev => {
+            if (!prev.some(t => t.isComplete)) {
+              audioRef.current?.pause()
+              audioRef.current!.currentTime = 0
+            }
+            return prev
+          })
+        }, 2000)
+      }).catch(e => {
         console.error("Test sound failed:", e)
         toast.error("Audio playback blocked. Please interact with the page first.")
       })
-      setTimeout(() => {
-        audioRef.current?.pause()
-        audioRef.current!.currentTime = 0
-      }, 2000)
     }
   }, [])
 
