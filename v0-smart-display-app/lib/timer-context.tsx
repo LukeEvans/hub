@@ -27,24 +27,30 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   
   // Initialize audio
   useEffect(() => {
-    audioRef.current = new Audio("/timer-alert.mp3")
-    audioRef.current.loop = true
+    const audio = new Audio("/timer-alert.mp3")
+    audio.loop = true
+    audio.preload = "auto"
+    audioRef.current = audio
     
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
-      }
+      audio.pause()
+      audioRef.current = null
     }
   }, [])
 
   const addTimer = useCallback((durationInSeconds: number, label?: string) => {
-    // Unlock audio on user interaction
-    if (audioRef.current && audioRef.current.paused) {
+    // Force unlock audio on user interaction by playing/pausing a silent moment
+    if (audioRef.current) {
       audioRef.current.play().then(() => {
-        audioRef.current?.pause()
-        audioRef.current!.currentTime = 0
-      }).catch(e => console.log("Initial audio unlock failed (expected on first run):", e))
+        // Only pause if there are no already completed timers
+        setTimers(prev => {
+          if (!prev.some(t => t.isComplete)) {
+            audioRef.current?.pause()
+            audioRef.current!.currentTime = 0
+          }
+          return prev
+        })
+      }).catch(e => console.log("Audio unlock attempted:", e))
     }
 
     const newTimer: Timer = {
@@ -71,27 +77,30 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const removeTimer = useCallback((id: string) => {
-    setTimers((prev) => {
-      const timerToRemove = prev.find(t => t.id === id)
-      if (timerToRemove?.isComplete) {
-        // Stop audio if this was the only completed timer playing
-        const otherCompleted = prev.filter(t => t.id !== id && t.isComplete)
-        if (otherCompleted.length === 0 && audioRef.current) {
-          audioRef.current.pause()
-          audioRef.current.currentTime = 0
-        }
-      }
-      return prev.filter((t) => t.id !== id)
-    })
+    setTimers((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
   const clearCompleted = useCallback(() => {
     setTimers((prev) => prev.filter((t) => !t.isComplete))
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-    }
   }, [])
+
+  // Handle audio playback based on timer states
+  useEffect(() => {
+    const hasActiveCompleted = timers.some(t => t.isComplete)
+    
+    if (hasActiveCompleted) {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(e => {
+          console.error("Audio playback failed (likely autoplay block):", e)
+        })
+      }
+    } else {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+      }
+    }
+  }, [timers])
 
   // Check timers every second
   useEffect(() => {
@@ -107,13 +116,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           }
           return timer
         })
-
-        // If any timer is complete and not yet playing sound, start playing
-        const hasActiveCompleted = nextTimers.some(t => t.isComplete)
-        if (hasActiveCompleted && audioRef.current && audioRef.current.paused) {
-          audioRef.current.play().catch(e => console.error("Audio playback failed:", e))
-        }
-
         return nextTimers
       })
 
