@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     await fs.mkdir(photosDir, { recursive: true });
 
     const savedFiles = [];
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];

@@ -1,15 +1,17 @@
 "use client"
 
-import { ImageIcon, Heart, Share2, Download, ChevronLeft, ChevronRight, Loader2, Play, Upload } from "lucide-react"
+import { ImageIcon, Heart, Share2, Download, ChevronLeft, ChevronRight, Loader2, Play, Upload, CheckCircle2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { useState, useRef } from "react"
 import { useApi } from "@/lib/use-api"
+import { toast } from "sonner"
 
 export default function PhotosPage() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { data, isLoading: loading, mutate } = useApi<any>('/api/photos')
   const photos = data?.images || []
@@ -23,6 +25,8 @@ export default function PhotosPage() {
     if (!files || files.length === 0) return
 
     setIsUploading(true)
+    setUploadProgress(`Uploading ${files.length} file(s)...`)
+    
     const formData = new FormData()
     for (let i = 0; i < files.length; i++) {
       formData.append('files', files[i])
@@ -40,15 +44,20 @@ export default function PhotosPage() {
 
       if (response.ok) {
         console.log(`Upload successful, saved ${data.count} files`);
+        toast.success(`Successfully uploaded ${data.count} photo(s)`, {
+          icon: <CheckCircle2 className="w-5 h-5 text-green-500" />,
+          duration: 5000,
+        })
         mutate() // Refresh the photo list
       } else {
-        alert(data.error || 'Failed to upload photos')
+        toast.error(data.error || 'Failed to upload photos')
       }
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload photos')
+      toast.error('Failed to upload photos. Please check your connection.')
     } finally {
       setIsUploading(false)
+      setUploadProgress(null)
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -104,7 +113,7 @@ export default function PhotosPage() {
             ) : (
               <Upload className="w-4 h-4" />
             )}
-            {isUploading ? 'Uploading...' : 'Upload Photos'}
+            {uploadProgress || 'Upload Photos'}
           </Button>
         </div>
       </div>

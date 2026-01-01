@@ -19,6 +19,8 @@ export async function GET(
       '.png': 'image/png',
       '.gif': 'image/gif',
       '.webp': 'image/webp',
+      '.heic': 'image/heic',
+      '.heif': 'image/heif',
     }[ext] || 'application/octet-stream';
 
     return new NextResponse(fileBuffer, {

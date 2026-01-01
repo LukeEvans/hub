@@ -25,28 +25,56 @@ export async function GET() {
     try {
       const baseFiles = await fs.readdir(photosDir);
       console.log(`Found ${baseFiles.length} total items in base photos directory`);
-      const localImages = baseFiles
-        .filter((f) => /\.(jpe?g|png|gif|webp)$/i.test(f))
-        .map((f) => `/api/photos/serve/${f}`);
+      
+      const fileStats = await Promise.all(
+        baseFiles
+          .filter((f) => /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(f))
+          .map(async (f) => {
+            const stat = await fs.stat(path.join(photosDir, f));
+            return {
+              url: `/api/photos/serve/${f}`,
+              mtime: stat.mtimeMs,
+            };
+          })
+      );
+
+      // Sort local images by modification time descending (newest first)
+      const localImages = fileStats
+        .sort((a, b) => b.mtime - a.mtime)
+        .map((f) => f.url);
+
       console.log(`Matched ${localImages.length} local images`);
       images = [...images, ...localImages];
     } catch (err) {
       console.warn(`Could not read base photos directory: ${err instanceof Error ? err.message : String(err)}`);
-      // Ignore if directory doesn't exist
     }
 
     // 2. Get cached Google photos
     try {
       const googleFiles = await fs.readdir(googlePhotosDir);
       console.log(`Found ${googleFiles.length} items in google photos directory`);
-      const googleImages = googleFiles
-        .filter((f) => /\.(jpe?g|png|gif|webp)$/i.test(f))
-        .map((f) => `/api/photos/serve/google/${f}`);
+      
+      const fileStats = await Promise.all(
+        googleFiles
+          .filter((f) => /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(f))
+          .map(async (f) => {
+            const stat = await fs.stat(path.join(googlePhotosDir, f));
+            return {
+              url: `/api/photos/serve/google/${f}`,
+              mtime: stat.mtimeMs,
+            };
+          })
+      );
+
+      // Sort google images by modification time descending
+      const googleImages = fileStats
+        .sort((a, b) => b.mtime - a.mtime)
+        .map((f) => f.url);
+
       console.log(`Matched ${googleImages.length} google images`);
       images = [...images, ...googleImages];
     } catch (err) {
       console.warn(`Could not read google photos directory: ${err instanceof Error ? err.message : String(err)}`);
-      // Ignore if directory doesn't exist
     }
     
     // Sort or shuffle? For now just return
