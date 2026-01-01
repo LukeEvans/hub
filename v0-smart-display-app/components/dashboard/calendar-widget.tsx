@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useApi } from "@/lib/use-api"
+import { parseSafeDate } from "@/lib/utils"
 
 export function CalendarWidget() {
   const router = useRouter()
@@ -15,9 +16,9 @@ export function CalendarWidget() {
     today.setHours(0, 0, 0, 0)
     const nextWeek = new Date(today)
     nextWeek.setDate(nextWeek.getDate() + 7)
-    const start = new Date(e.start)
+    const start = parseSafeDate(e.start)
     return start >= today && start < nextWeek
-  }).sort((a: any, b: any) => new Date(a.start).getTime() - new Date(b.start).getTime()) : []
+  }).sort((a: any, b: any) => parseSafeDate(a.start).getTime() - parseSafeDate(b.start).getTime()) : []
 
   if (isLoading) {
     return (
@@ -49,14 +50,14 @@ export function CalendarWidget() {
             <div className="text-sm text-foreground/60 italic py-4">No events this week</div>
           ) : (
             events.map((event: any, i: number) => {
-              const start = new Date(event.start)
+              const start = parseSafeDate(event.start)
               const time = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
               const isAllDay = event.start.length <= 10 // Date string format YYYY-MM-DD
               
               // Show day header if it's the first event or the day has changed
               const prevEvent = i > 0 ? events[i-1] : null
               const showDayHeader = !prevEvent || 
-                new Date(prevEvent.start).toDateString() !== start.toDateString()
+                parseSafeDate(prevEvent.start).toDateString() !== start.toDateString()
 
               return (
                 <div key={i} className="space-y-2">

@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useApi } from "@/lib/use-api"
+import { parseSafeDate } from "@/lib/utils"
 
 export function MenuWidget() {
   const router = useRouter()
@@ -20,7 +21,7 @@ export function MenuWidget() {
   }
 
   // Group meals by day if needed, or just show them in order
-  const sortedMeals = [...meals].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const sortedMeals = [...meals].sort((a, b) => parseSafeDate(a.date).getTime() - parseSafeDate(b.date).getTime())
 
   return (
     <Link 
@@ -44,7 +45,7 @@ export function MenuWidget() {
             <div className="text-sm text-foreground/60 italic py-2">No meals planned</div>
           ) : (
             sortedMeals.map((meal: any, i: number) => {
-              const date = new Date(meal.date)
+              const date = parseSafeDate(meal.date)
               const dayName = date.toLocaleDateString([], { weekday: 'short' })
               const isToday = new Date().toDateString() === date.toDateString()
 
