@@ -25,8 +25,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [timers, setTimers] = useState<Timer[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
   
-  // Use a reliable public sound URL as a fallback
-  const ALARM_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+  // Use the same reliable sound as the settings page
+  const ALARM_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
 
   const initAudio = useCallback(() => {
     if (!audioRef.current) {
