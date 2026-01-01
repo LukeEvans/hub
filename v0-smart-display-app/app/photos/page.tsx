@@ -1,19 +1,54 @@
 "use client"
 
-import { ImageIcon, Heart, Share2, Download, ChevronLeft, ChevronRight, Loader2, Play } from "lucide-react"
+import { ImageIcon, Heart, Share2, Download, ChevronLeft, ChevronRight, Loader2, Play, Upload } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useApi } from "@/lib/use-api"
 
 export default function PhotosPage() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null)
-  const { data, isLoading: loading } = useApi<any>('/api/photos')
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { data, isLoading: loading, mutate } = useApi<any>('/api/photos')
   const photos = data?.images || []
 
   const launchScreensaver = () => {
     window.dispatchEvent(new CustomEvent('launch-screensaver'))
+  }
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setIsUploading(true)
+    const formData = new FormData()
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i])
+    }
+
+    try {
+      const response = await fetch('/api/photos/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        mutate() // Refresh the photo list
+      } else {
+        const errorData = await response.json()
+        alert(errorData.error || 'Failed to upload photos')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Failed to upload photos')
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
   }
 
   if (loading) {
@@ -37,13 +72,37 @@ export default function PhotosPage() {
             <p className="text-muted-foreground text-lg">Google Smart Cache</p>
           </div>
         </div>
-        <Button 
-          onClick={launchScreensaver}
-          className="flex items-center gap-2"
-        >
-          <Play className="w-4 h-4 fill-current" />
-          Slideshow
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={launchScreensaver}
+            className="flex items-center gap-2"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            Slideshow
+          </Button>
+          
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleUpload}
+          />
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex items-center gap-2"
+          >
+            {isUploading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4" />
+            )}
+            {isUploading ? 'Uploading...' : 'Upload Photos'}
+          </Button>
+        </div>
       </div>
 
       {/* Recent Photos Section */}
