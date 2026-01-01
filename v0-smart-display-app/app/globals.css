@@ -156,7 +156,7 @@
   }
   main {
     position: absolute;
-    top: 0;
+    top: 4rem; /* Space for TimerBar */
     left: 0;
     right: 0;
     bottom: 0;
@@ -171,7 +171,7 @@
   }
   @media (max-width: 767px) {
     main {
-      padding-top: 4rem; /* Space for hamburger button */
+      /* main top is already 4rem (h-16), which fits the TimerBar */
     }
   }
   main::-webkit-scrollbar {

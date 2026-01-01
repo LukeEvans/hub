@@ -9,6 +9,9 @@ import { Screensaver } from "@/components/screensaver"
 import { VirtualKeyboardProvider } from "@/components/virtual-keyboard-context"
 import { VirtualKeyboard } from "@/components/virtual-keyboard"
 import { SWRProvider } from "@/lib/swr-provider"
+import { TimerProvider } from "@/lib/timer-context"
+import { TimerBar } from "@/components/timer-bar"
+import { Toaster } from "sonner"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -44,15 +47,19 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
         <SWRProvider>
-          <VirtualKeyboardProvider>
-            <TouchScrollProvider />
-            <Screensaver />
-            <SidebarNavigation />
-            <main>
-              {children}
-            </main>
-            <VirtualKeyboard />
-          </VirtualKeyboardProvider>
+          <TimerProvider>
+            <VirtualKeyboardProvider>
+              <TouchScrollProvider />
+              <Screensaver />
+              <SidebarNavigation />
+              <TimerBar />
+              <main>
+                {children}
+              </main>
+              <VirtualKeyboard />
+              <Toaster position="top-right" />
+            </VirtualKeyboardProvider>
+          </TimerProvider>
         </SWRProvider>
         <Analytics />
       </body>
