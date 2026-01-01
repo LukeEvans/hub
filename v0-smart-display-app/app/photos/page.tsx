@@ -29,16 +29,20 @@ export default function PhotosPage() {
     }
 
     try {
+      console.log(`Starting upload of ${files.length} files`);
       const response = await fetch('/api/photos/upload', {
         method: 'POST',
         body: formData,
       })
 
+      const data = await response.json();
+      console.log('Upload response:', data);
+
       if (response.ok) {
+        console.log(`Upload successful, saved ${data.count} files`);
         mutate() // Refresh the photo list
       } else {
-        const errorData = await response.json()
-        alert(errorData.error || 'Failed to upload photos')
+        alert(data.error || 'Failed to upload photos')
       }
     } catch (error) {
       console.error('Upload error:', error)
