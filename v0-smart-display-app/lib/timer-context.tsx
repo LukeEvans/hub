@@ -25,38 +25,34 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [timers, setTimers] = useState<Timer[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
   
-  // Initialize audio
-  useEffect(() => {
-    const audio = new Audio("/timer-alert.mp3")
-    audio.loop = true
-    audio.preload = "auto"
-    // Set a very low volume to "unlock" without being loud on first click
-    audio.volume = 1.0 
-    audioRef.current = audio
-    
-    return () => {
-      audio.pause()
-      audioRef.current = null
+  // Use a reliable public sound URL as a fallback
+  const ALARM_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+
+  const initAudio = useCallback(() => {
+    if (!audioRef.current) {
+      const audio = new Audio(ALARM_URL)
+      audio.loop = true
+      audio.preload = "auto"
+      audioRef.current = audio
     }
+    return audioRef.current
   }, [])
 
   const addTimer = useCallback((durationInSeconds: number, label?: string) => {
-    // Force unlock audio on user interaction by playing/pausing a silent moment
-    if (audioRef.current) {
-      audioRef.current.play().then(() => {
-        // Only pause if there are no already completed timers
-        setTimers(prev => {
-          if (!prev.some(t => t.isComplete)) {
-            audioRef.current?.pause()
-            audioRef.current!.currentTime = 0
-          }
-          return prev
-        })
-      }).catch(e => {
-        console.log("Audio unlock attempted:", e)
-        // If it failed, we can try again on the next interaction
+    // Force unlock audio on user interaction
+    const audio = initAudio()
+    audio.play().then(() => {
+      // Only pause if there are no already completed timers
+      setTimers(prev => {
+        if (!prev.some(t => t.isComplete)) {
+          audio.pause()
+          audio.currentTime = 0
+        }
+        return prev
       })
-    }
+    }).catch(e => {
+      console.log("Audio unlock attempted:", e)
+    })
 
     const newTimer: Timer = {
       id: Math.random().toString(36).substring(2, 9),
@@ -66,26 +62,26 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       isComplete: false,
     }
     setTimers((prev) => [...prev, newTimer])
-  }, [])
+  }, [initAudio])
 
   const testSound = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.play().then(() => {
-        setTimeout(() => {
-          setTimers(prev => {
-            if (!prev.some(t => t.isComplete)) {
-              audioRef.current?.pause()
-              audioRef.current!.currentTime = 0
-            }
-            return prev
-          })
-        }, 2000)
-      }).catch(e => {
-        console.error("Test sound failed:", e)
-        toast.error("Audio playback blocked. Please interact with the page first.")
-      })
-    }
-  }, [])
+    const audio = initAudio()
+    audio.play().then(() => {
+      toast.info("Playing test sound...")
+      setTimeout(() => {
+        setTimers(prev => {
+          if (!prev.some(t => t.isComplete)) {
+            audio.pause()
+            audio.currentTime = 0
+          }
+          return prev
+        })
+      }, 3000)
+    }).catch(e => {
+      console.error("Test sound failed:", e)
+      toast.error(`Audio failed: ${e.message}. Try interacting with the page first.`)
+    })
+  }, [initAudio])
 
   const removeTimer = useCallback((id: string) => {
     setTimers((prev) => prev.filter((t) => t.id !== id))
