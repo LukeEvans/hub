@@ -55,7 +55,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       isComplete: false,
     }
     setTimers((prev) => [...prev, newTimer])
-    toast.success(`Timer set for ${Math.floor(durationInSeconds / 60)}m ${durationInSeconds % 60}s`)
   }, [])
 
   const testSound = useCallback(() => {
