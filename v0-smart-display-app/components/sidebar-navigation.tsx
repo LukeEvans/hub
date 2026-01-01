@@ -1,11 +1,11 @@
 "use client"
 
-import { Calendar, Cloud, ImageIcon, Utensils, Music, HomeIcon, LayoutDashboard, Moon, Sun, Settings, Trophy } from "lucide-react"
+import { Calendar, Cloud, ImageIcon, Utensils, Music, HomeIcon, LayoutDashboard, Moon, Sun, Settings, Trophy, Menu, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 const navigationItems = [
   {
@@ -68,6 +68,7 @@ export function SidebarNavigation() {
   const pathname = usePathname()
   const router = useRouter()
   const [isDark, setIsDark] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
     // Check system preference on mount
@@ -83,50 +84,83 @@ export function SidebarNavigation() {
     document.documentElement.classList.toggle("dark")
   }
 
+  const toggleMenu = () => setIsOpen(!isOpen)
+  const closeMenu = useCallback(() => setIsOpen(false), [])
+
+  useEffect(() => {
+    // Close menu on navigation
+    closeMenu()
+  }, [pathname, closeMenu])
+
   return (
-    <aside className="fixed left-0 top-0 h-screen w-28 border-r border-sidebar-border bg-sidebar flex flex-col items-center py-6 gap-6">
-      {/* Navigation Items */}
-      <nav className="flex-1 flex flex-col items-center gap-3 w-full px-3">
-        {navigationItems.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={false}
-              className={cn(
-                "w-full aspect-square min-h-20 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-200",
-                "active:bg-sidebar-primary active:text-sidebar-primary-foreground active:scale-95",
-                isActive 
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground" 
-                  : "hover:bg-sidebar-accent",
-              )}
-              aria-label={item.label}
-              draggable={false}
-              onClick={(e) => {
-                e.preventDefault()
-                router.push(item.href)
-              }}
-            >
-              <Icon className="w-8 h-8" />
-              <span className="text-xs font-medium">{item.label}</span>
-            </Link>
-          )
-        })}
-      </nav>
-
-      {/* Dark Mode Toggle */}
+    <>
+      {/* Hamburger Button */}
       <Button
         variant="ghost"
         size="icon"
-        onClick={toggleDarkMode}
-        className="w-14 h-14 rounded-xl"
-        title="Toggle dark mode"
+        onClick={toggleMenu}
+        className="fixed top-4 left-4 z-[60] md:hidden w-12 h-12 rounded-xl bg-sidebar/80 backdrop-blur-sm border border-sidebar-border shadow-sm"
+        aria-label={isOpen ? "Close menu" : "Open menu"}
       >
-        {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </Button>
-    </aside>
+
+      {/* Backdrop Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40 md:hidden transition-opacity duration-300"
+          onClick={closeMenu}
+        />
+      )}
+
+      <aside className={cn(
+        "fixed left-0 top-0 h-screen w-64 md:w-28 border-r border-sidebar-border bg-sidebar flex flex-col items-center py-6 gap-6 z-50 transition-transform duration-300 ease-in-out",
+        !isOpen && "-translate-x-full md:translate-x-0"
+      )}>
+        {/* Navigation Items */}
+        <nav className="flex-1 flex flex-col items-center gap-3 w-full px-3">
+          {navigationItems.map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch={false}
+                className={cn(
+                  "w-full min-h-20 md:aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-200",
+                  "active:bg-sidebar-primary active:text-sidebar-primary-foreground active:scale-95",
+                  isActive 
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+                    : "hover:bg-sidebar-accent",
+                )}
+                aria-label={item.label}
+                draggable={false}
+                onClick={(e) => {
+                  e.preventDefault()
+                  router.push(item.href)
+                  closeMenu()
+                }}
+              >
+                <Icon className="w-8 h-8" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Dark Mode Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleDarkMode}
+          className="w-14 h-14 rounded-xl"
+          title="Toggle dark mode"
+        >
+          {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+        </Button>
+      </aside>
+    </>
   )
 }
