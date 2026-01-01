@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 import { CustomTimerDialog } from "./custom-timer-dialog"
 
 export function TimerBar() {
-  const { timers, addTimer, removeTimer } = useTimer()
+  const { timers, addTimer, removeTimer, testSound } = useTimer()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   
   const presets = [
@@ -20,20 +20,20 @@ export function TimerBar() {
   ]
 
   return (
-    <div className="fixed top-0 left-0 md:left-28 right-0 h-16 bg-background/80 backdrop-blur-md border-b border-border z-40 flex items-center px-6 justify-between">
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2 pl-12 md:pl-0">
-        <div className="flex items-center gap-2 pr-4 border-r border-border mr-2 shrink-0">
-          <TimerIcon className="w-5 h-5 text-primary" />
-          <span className="font-semibold hidden sm:inline">Timers</span>
+    <div className="fixed top-0 left-0 md:left-28 right-0 h-20 bg-background/80 backdrop-blur-md border-b border-border z-40 flex items-center px-6 justify-between">
+      <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2 pl-12 md:pl-0">
+        <div className="flex items-center gap-3 pr-4 border-r border-border mr-2 shrink-0">
+          <TimerIcon className="w-6 h-6 text-primary" />
+          <span className="font-bold text-lg hidden sm:inline">Timers</span>
         </div>
         
         {presets.map((preset) => (
           <Button
             key={preset.label}
             variant="outline"
-            size="sm"
+            size="lg"
             onClick={() => addTimer(preset.seconds, preset.label)}
-            className="rounded-full px-4 h-9"
+            className="rounded-full px-6 h-12 text-base font-semibold"
           >
             {preset.label}
           </Button>
@@ -41,12 +41,21 @@ export function TimerBar() {
         
         <Button
           variant="secondary"
-          size="sm"
+          size="lg"
           onClick={() => setIsDialogOpen(true)}
-          className="rounded-full px-4 h-9 gap-2"
+          className="rounded-full px-6 h-12 text-base font-semibold gap-2"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
           <span>Custom</span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={testSound}
+          className="rounded-full h-10 px-4 text-xs opacity-50 hover:opacity-100"
+        >
+          Test Sound
         </Button>
       </div>
 
@@ -93,22 +102,22 @@ function ActiveTimer({ timer, onRemove }: { timer: Timer; onRemove: () => void }
   return (
     <div 
       className={cn(
-        "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all animate-in fade-in slide-in-from-right-4",
+        "flex items-center gap-3 px-4 py-2 rounded-full border transition-all animate-in fade-in slide-in-from-right-4 h-12",
         isExpired 
-          ? "bg-destructive/20 border-destructive text-destructive animate-pulse" 
+          ? "bg-destructive/20 border-destructive text-destructive animate-pulse scale-105" 
           : "bg-primary/10 border-primary/20 text-primary"
       )}
     >
-      <Clock className={cn("w-3.5 h-3.5", isExpired && "animate-spin")} />
-      <span className="text-sm font-mono font-bold whitespace-nowrap">
+      <Clock className={cn("w-4 h-4", isExpired && "animate-spin")} />
+      <span className="text-base font-mono font-bold whitespace-nowrap">
         {timer.label && <span className="mr-1.5 opacity-70 font-sans">{timer.label}:</span>}
         {isExpired ? "0:00" : `${minutes}:${seconds.toString().padStart(2, "0")}`}
       </span>
       <button 
         onClick={onRemove}
-        className="ml-1 p-0.5 hover:bg-black/10 rounded-full transition-colors"
+        className="ml-1 p-1 hover:bg-black/10 rounded-full transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
       >
-        <X className="w-3.5 h-3.5" />
+        <X className="w-4 h-4" />
       </button>
     </div>
   )

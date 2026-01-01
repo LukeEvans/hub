@@ -16,6 +16,7 @@ interface TimerContextType {
   addTimer: (durationInSeconds: number, label?: string) => void
   removeTimer: (id: string) => void
   clearCompleted: () => void
+  testSound: () => void
 }
 
 const TimerContext = createContext<TimerContextType | undefined>(undefined)
@@ -38,6 +39,14 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const addTimer = useCallback((durationInSeconds: number, label?: string) => {
+    // Unlock audio on user interaction
+    if (audioRef.current && audioRef.current.paused) {
+      audioRef.current.play().then(() => {
+        audioRef.current?.pause()
+        audioRef.current!.currentTime = 0
+      }).catch(e => console.log("Initial audio unlock failed (expected on first run):", e))
+    }
+
     const newTimer: Timer = {
       id: Math.random().toString(36).substring(2, 9),
       label,
@@ -47,6 +56,19 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
     setTimers((prev) => [...prev, newTimer])
     toast.success(`Timer set for ${Math.floor(durationInSeconds / 60)}m ${durationInSeconds % 60}s`)
+  }, [])
+
+  const testSound = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(e => {
+        console.error("Test sound failed:", e)
+        toast.error("Audio playback blocked. Please interact with the page first.")
+      })
+      setTimeout(() => {
+        audioRef.current?.pause()
+        audioRef.current!.currentTime = 0
+      }, 2000)
+    }
   }, [])
 
   const removeTimer = useCallback((id: string) => {
@@ -111,7 +133,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, [clearCompleted])
 
   return (
-    <TimerContext.Provider value={{ timers, addTimer, removeTimer, clearCompleted }}>
+    <TimerContext.Provider value={{ timers, addTimer, removeTimer, clearCompleted, testSound }}>
       {children}
     </TimerContext.Provider>
   )

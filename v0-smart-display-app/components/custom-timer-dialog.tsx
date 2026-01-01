@@ -40,46 +40,49 @@ export function CustomTimerDialog({ open, onOpenChange, onAddTimer }: CustomTime
         <DialogHeader>
           <DialogTitle>Set Custom Timer</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="minutes">Minutes</Label>
+        <div className="grid gap-6 py-6">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="grid gap-3">
+              <Label htmlFor="minutes" className="text-base font-semibold">Minutes</Label>
               <Input
                 id="minutes"
                 type="number"
                 min="0"
                 max="1440"
+                className="h-14 text-lg text-center"
                 value={minutes}
                 onChange={(e) => setMinutes(e.target.value)}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="seconds">Seconds</Label>
+            <div className="grid gap-3">
+              <Label htmlFor="seconds" className="text-base font-semibold">Seconds</Label>
               <Input
                 id="seconds"
                 type="number"
                 min="0"
                 max="59"
+                className="h-14 text-lg text-center"
                 value={seconds}
                 onChange={(e) => setSeconds(e.target.value)}
               />
             </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="label">Label (Optional)</Label>
+          <div className="grid gap-3">
+            <Label htmlFor="label" className="text-base font-semibold">Label (Optional)</Label>
             <Input
               id="label"
               placeholder="Pizza, Eggs, etc."
+              className="h-14 text-lg"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-3">
+          <Button variant="outline" size="lg" className="h-14 text-lg flex-1" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleStart}>Start Timer</Button>
+          <Button size="lg" className="h-14 text-lg flex-1" onClick={handleStart}>Start Timer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

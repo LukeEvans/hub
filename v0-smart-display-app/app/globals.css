@@ -156,7 +156,7 @@
   }
   main {
     position: absolute;
-    top: 4rem; /* Space for TimerBar */
+    top: 5rem; /* Space for TimerBar (h-20) */
     left: 0;
     right: 0;
     bottom: 0;
@@ -171,7 +171,7 @@
   }
   @media (max-width: 767px) {
     main {
-      /* main top is already 4rem (h-16), which fits the TimerBar */
+      /* main top is already 5rem (h-20), which fits the TimerBar */
     }
   }
   main::-webkit-scrollbar {
