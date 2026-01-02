@@ -113,32 +113,20 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now()
-      let newlyCompleted = false
 
       setTimers((prev) => {
         const nextTimers = prev.map((timer) => {
           if (!timer.isComplete && now >= timer.endTime) {
-            newlyCompleted = true
             return { ...timer, isComplete: true }
           }
           return timer
         })
         return nextTimers
       })
-
-      if (newlyCompleted) {
-        toast.info("Timer complete!", {
-          duration: Infinity,
-          action: {
-            label: "Dismiss",
-            onClick: () => clearCompleted(),
-          },
-        })
-      }
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [clearCompleted])
+  }, [])
 
   return (
     <TimerContext.Provider value={{ timers, addTimer, removeTimer, clearCompleted, testSound }}>

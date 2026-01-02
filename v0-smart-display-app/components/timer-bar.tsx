@@ -6,10 +6,20 @@ import { Button } from "@/components/ui/button"
 import { useTimer, Timer } from "@/lib/timer-context"
 import { cn } from "@/lib/utils"
 import { CustomTimerDialog } from "./custom-timer-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Bell } from "lucide-react"
 
 export function TimerBar() {
-  const { timers, addTimer, removeTimer, testSound } = useTimer()
+  const { timers, addTimer, removeTimer, clearCompleted } = useTimer()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  
+  const completedTimers = timers.filter(t => t.isComplete)
+  const isCompleteDialogOpen = completedTimers.length > 0
   
   const presets = [
     { label: "1m", seconds: 60 },
@@ -68,6 +78,27 @@ export function TimerBar() {
           setIsDialogOpen(false)
         }} 
       />
+
+      <Dialog open={isCompleteDialogOpen} onOpenChange={(open) => !open && clearCompleted()}>
+        <DialogContent className="sm:max-w-[425px] border-destructive border-4 bg-destructive/5">
+          <DialogHeader className="items-center gap-4 py-8">
+            <div className="w-20 h-20 rounded-full bg-destructive flex items-center justify-center animate-bounce">
+              <Bell className="w-10 h-10 text-white" />
+            </div>
+            <DialogTitle className="text-4xl font-black text-destructive text-center leading-tight">
+              {completedTimers.length > 1 ? "Multiple Timers Done!" : `${completedTimers[0]?.label || "Timer"} Complete!`}
+            </DialogTitle>
+          </DialogHeader>
+          <Button 
+            size="lg" 
+            variant="destructive"
+            className="h-24 text-3xl font-black rounded-2xl shadow-xl active:scale-95 transition-transform"
+            onClick={() => clearCompleted()}
+          >
+            DISMISS
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
