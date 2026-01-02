@@ -80,7 +80,7 @@ export function TimerBar() {
       />
 
       <Dialog open={isCompleteDialogOpen} onOpenChange={(open) => !open && clearCompleted()}>
-        <DialogContent className="sm:max-w-[425px] border-destructive border-4 bg-destructive/5">
+        <DialogContent className="sm:max-w-[425px] border-destructive border-4 bg-white dark:bg-zinc-900 shadow-[0_0_50px_rgba(0,0,0,0.3)]">
           <DialogHeader className="items-center gap-4 py-8">
             <div className="w-20 h-20 rounded-full bg-destructive flex items-center justify-center animate-bounce">
               <Bell className="w-10 h-10 text-white" />
