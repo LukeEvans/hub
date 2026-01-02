@@ -48,15 +48,6 @@ export function TimerBar() {
           <Plus className="w-5 h-5" />
           <span>Custom</span>
         </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={testSound}
-          className="rounded-full h-10 px-4 text-xs opacity-50 hover:opacity-100"
-        >
-          Test Sound
-        </Button>
       </div>
 
       <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pl-4 ml-4 border-l border-border max-w-[50%]">
@@ -104,7 +95,7 @@ function ActiveTimer({ timer, onRemove }: { timer: Timer; onRemove: () => void }
       className={cn(
         "flex items-center gap-3 px-4 py-2 rounded-full border transition-all animate-in fade-in slide-in-from-right-4 h-12",
         isExpired 
-          ? "bg-destructive/20 border-destructive text-destructive animate-pulse scale-105" 
+          ? "bg-destructive/20 border-destructive text-destructive animate-pulse" 
           : "bg-primary/10 border-primary/20 text-primary"
       )}
     >
@@ -113,12 +104,14 @@ function ActiveTimer({ timer, onRemove }: { timer: Timer; onRemove: () => void }
         {timer.label && <span className="mr-1.5 opacity-70 font-sans">{timer.label}:</span>}
         {isExpired ? "0:00" : `${minutes}:${seconds.toString().padStart(2, "0")}`}
       </span>
-      <button 
+      <Button 
+        variant="ghost"
+        size="icon"
         onClick={onRemove}
-        className="ml-1 p-1 hover:bg-black/10 rounded-full transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
+        className="ml-1 h-10 w-10 rounded-full hover:bg-black/10 transition-colors"
       >
-        <X className="w-4 h-4" />
-      </button>
+        <X className="w-5 h-5" />
+      </Button>
     </div>
   )
 }
