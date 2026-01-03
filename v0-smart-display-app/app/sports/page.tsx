@@ -63,8 +63,10 @@ export default function SportsPage() {
   ]
 
   const getRecord = (competitor: any) => {
-    if (competitor.record) return competitor.record[0]?.summary
-    if (competitor.records) return competitor.records[0]?.summary
+    if (competitor.records?.[0]?.summary) return competitor.records[0].summary
+    if (competitor.record?.[0]?.summary) return competitor.record[0].summary
+    if (competitor.record?.items?.[0]?.summary) return competitor.record.items[0].summary
+    if (competitor.team?.record?.items?.[0]?.summary) return competitor.team.record.items[0].summary
     return "N/A"
   }
 
@@ -114,7 +116,10 @@ export default function SportsPage() {
                     const teamCompetitor = comp.competitors.find((c: any) => c.team.id === team.data.id)
                     const isHome = teamCompetitor.homeAway === "home"
                     const gameDate = parseISO(event.date)
-                    const broadcast = comp.broadcasts?.[0]?.names?.[0] || "Check local"
+                    const broadcast = comp.broadcasts?.[0]?.names?.[0] || 
+                                     comp.geoBroadcasts?.[0]?.media?.shortName || 
+                                     comp.broadcasts?.[0]?.media?.shortName || 
+                                     "Check local"
                     const opponentRecord = getRecord(opponent)
                     const status = comp.status.type.name
                     const isFinished = status === 'STATUS_FINAL'

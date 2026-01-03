@@ -41,12 +41,17 @@ export function SportsWidget() {
     day: "numeric" 
   })
 
-  const broadcast = nextEvent.competitions[0].broadcasts?.[0]?.names?.[0] || "Check local listings"
+  const broadcast = nextEvent.competitions[0].broadcasts?.[0]?.names?.[0] || 
+                    nextEvent.competitions[0].geoBroadcasts?.[0]?.media?.shortName || 
+                    nextEvent.competitions[0].broadcasts?.[0]?.media?.shortName || 
+                    "Check local listings"
   
   // Helper to get record summary
   const getRecord = (competitor: any) => {
-    if (competitor.record) return competitor.record[0]?.summary
-    if (competitor.records) return competitor.records[0]?.summary
+    if (competitor.records?.[0]?.summary) return competitor.records[0].summary
+    if (competitor.record?.[0]?.summary) return competitor.record[0].summary
+    if (competitor.record?.items?.[0]?.summary) return competitor.record.items[0].summary
+    if (competitor.team?.record?.items?.[0]?.summary) return competitor.team.record.items[0].summary
     return "N/A"
   }
 

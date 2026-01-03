@@ -89,6 +89,7 @@ function pruneTeamData(team: any) {
           }
         },
         broadcasts: event.competitions[0].broadcasts,
+        geoBroadcasts: event.competitions[0].geoBroadcasts,
         venue: {
           fullName: event.competitions[0].venue?.fullName,
           address: event.competitions[0].venue?.address
