@@ -48,6 +48,13 @@ function getMockCalendarEvents() {
     if (d % 3 === 0) {
       events.push(buildAllDay(d, `All-day Event ${d}`));
     }
+
+    // Add a mock birthday for testing
+    if (d === 0) {
+      events.push(buildAllDay(0, "Luke's Birthday 🎂"));
+    } else if (d === 3) {
+      events.push(buildAllDay(3, "Mom's Birthday"));
+    }
     
     const numEvents = Math.floor(Math.random() * 4) + 2;
     for (let i = 0; i < numEvents; i++) {
