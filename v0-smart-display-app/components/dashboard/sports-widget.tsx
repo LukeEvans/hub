@@ -54,7 +54,9 @@ export function SportsWidget() {
     const r = competitor.records?.[0] || 
               competitor.record?.[0] || 
               competitor.record?.items?.[0] || 
-              competitor.team?.record?.items?.[0]
+              competitor.team?.record?.items?.[0] ||
+              competitor.team?.record?.[0] ||
+              competitor.team?.records?.[0]
     
     if (r) return r.summary || r.displayValue || "N/A"
     
@@ -62,8 +64,7 @@ export function SportsWidget() {
   }
 
   const opponentRecord = getRecord(opponent)
-  const mainRecord = nuggetsData.record?.items?.[0]
-  const nuggetsRecord = mainRecord?.summary || mainRecord?.displayValue || "N/A"
+  const nuggetsRecord = getRecord(nuggetsData)
 
   return (
     <Link 

@@ -76,6 +76,7 @@ function pruneTeamData(team: any) {
     displayName: team.displayName,
     logos: team.logos?.map((l: any) => ({ href: l.href })),
     record: team.record,
+    records: team.records,
     nextEvent: team.nextEvent,
     fullSchedule: team.fullSchedule?.map((event: any) => ({
       id: event.id,
@@ -104,7 +105,9 @@ function pruneTeamData(team: any) {
             id: c.team.id,
             displayName: c.team.displayName,
             shortDisplayName: c.team.shortDisplayName,
-            logos: c.team.logos?.map((l: any) => ({ href: l.href }))
+            logos: c.team.logos?.map((l: any) => ({ href: l.href })),
+            record: c.team.record,
+            records: c.team.records
           }
         }))
       }]
@@ -113,7 +116,7 @@ function pruneTeamData(team: any) {
 }
 
 export async function GET() {
-  const cacheKey = 'sports-data-v7';
+  const cacheKey = 'sports-data-v8';
   const cached = cache.get(cacheKey);
   if (cached) return NextResponse.json(cached);
 

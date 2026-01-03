@@ -69,7 +69,9 @@ export default function SportsPage() {
     const r = competitor.records?.[0] || 
               competitor.record?.[0] || 
               competitor.record?.items?.[0] || 
-              competitor.team?.record?.items?.[0]
+              competitor.team?.record?.items?.[0] ||
+              competitor.team?.record?.[0] ||
+              competitor.team?.records?.[0]
     
     if (r) return r.summary || r.displayValue || "N/A"
     
@@ -94,8 +96,7 @@ export default function SportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {teams.map((team) => {
           const schedule = team.data?.fullSchedule || []
-          const mainRecord = team.data?.record?.items?.[0]
-          const teamRecord = mainRecord?.summary || mainRecord?.displayValue || "N/A"
+          const teamRecord = getRecord(team.data)
           
           return (
             <div key={team.id} className="space-y-6 flex flex-col h-full">
