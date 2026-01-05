@@ -84,7 +84,10 @@ export async function GET() {
     });
 
     console.log(`Mealie: Flattened into ${flattenedMeals.length} meals`);
-    const payload = { mealPlan: { meals: flattenedMeals } };
+    const payload = { 
+      mealPlan: { meals: flattenedMeals },
+      mealieUrl: process.env.MEALIE_BASE_URL // Include the base URL for the frontend
+    };
     cache.set(cacheKey, payload, 1800); // 30 min
 
     return NextResponse.json(payload, {

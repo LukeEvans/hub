@@ -27,6 +27,7 @@ export default function RecipesPage() {
   )
 
   const meals = mealPlanData?.mealPlan?.meals || []
+  const mealieBaseUrl = mealPlanData?.mealieUrl || 'http://hub.local:9000'
   
   // Find tonight's dinner
   const today = new Date().toDateString()
@@ -42,8 +43,7 @@ export default function RecipesPage() {
 
   const handleRecipeClick = (recipeId: string, slug?: string) => {
     if (slug) {
-      const baseUrl = process.env.NEXT_PUBLIC_MEALIE_URL || 'http://hub.local:9000'
-      window.location.href = `${baseUrl}/recipe/${slug}`
+      window.location.href = `${mealieBaseUrl}/recipe/${slug}`
       return
     }
     setSelectedRecipeId(recipeId)
