@@ -30,15 +30,20 @@ export function MenuWidget() {
     return dateA - dateB
   })
 
+  // Get next 7 days starting from today
+  const next7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() + i)
+    return d.toISOString().split('T')[0]
+  })
+
   // Group meals by date
-  const groupedMeals = sortedMeals.reduce((acc: any, meal: any) => {
+  const groupedMeals = meals.reduce((acc: any, meal: any) => {
     const dateStr = meal.date.split('T')[0]
     if (!acc[dateStr]) acc[dateStr] = []
     acc[dateStr].push(meal)
     return acc
   }, {})
-
-  const dates = Object.keys(groupedMeals).sort()
 
   return (
     <Link 
@@ -58,23 +63,23 @@ export function MenuWidget() {
         </div>
         
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide flex-1">
-          {dates.length === 0 ? (
-            <div className="text-sm text-foreground/60 italic py-2">No meals planned for this week</div>
-          ) : (
-            dates.map((dateStr: string) => {
-              const date = parseSafeDate(dateStr)
-              const dayName = date.toLocaleDateString([], { weekday: 'short' })
-              const isToday = dateStr === todayDate
-              const mealsForDay = groupedMeals[dateStr]
+          {next7Days.map((dateStr: string) => {
+            const date = parseSafeDate(dateStr)
+            const dayName = date.toLocaleDateString([], { weekday: 'short' })
+            const isToday = dateStr === todayDate
+            const mealsForDay = groupedMeals[dateStr] || []
 
-              return (
-                <div key={dateStr} className={`flex flex-col min-w-[160px] p-3 rounded-xl transition-colors ${isToday ? 'bg-white/40 shadow-sm ring-1 ring-white/20' : 'bg-black/5'}`}>
-                  <div className="text-[10px] font-bold text-foreground/70 uppercase mb-2 flex justify-between">
-                    <span>{isToday ? 'Today' : dayName}</span>
-                    <span className="opacity-60">{date.toLocaleDateString([], { month: 'numeric', day: 'numeric' })}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {mealsForDay.map((meal: any, idx: number) => (
+            return (
+              <div key={dateStr} className={`flex flex-col min-w-[160px] p-3 rounded-xl transition-colors ${isToday ? 'bg-white/40 shadow-sm ring-1 ring-white/20' : 'bg-black/5'}`}>
+                <div className="text-[10px] font-bold text-foreground/70 uppercase mb-2 flex justify-between">
+                  <span>{isToday ? 'Today' : dayName}</span>
+                  <span className="opacity-60">{date.toLocaleDateString([], { month: 'numeric', day: 'numeric' })}</span>
+                </div>
+                <div className="space-y-2 flex-1">
+                  {mealsForDay.length === 0 ? (
+                    <div className="text-[10px] text-foreground/40 italic py-2">No meals</div>
+                  ) : (
+                    mealsForDay.map((meal: any, idx: number) => (
                       <div key={idx} className="flex gap-2 items-center">
                         <div className="w-10 h-10 rounded-lg overflow-hidden bg-black/10 flex-shrink-0 shadow-sm">
                           <img 
@@ -95,12 +100,12 @@ export function MenuWidget() {
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  )}
                 </div>
-              )
-            })
-          )}
+              </div>
+            )
+          })}
         </div>
       </Card>
     </Link>

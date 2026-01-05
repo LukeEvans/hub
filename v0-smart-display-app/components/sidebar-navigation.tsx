@@ -39,10 +39,10 @@ const navigationItems = [
     label: "Photos",
   },
   {
-    name: "Recipes",
+    name: "Meals",
     href: "/recipes",
     icon: Utensils,
-    label: "Recipes",
+    label: "Meals",
   },
   /* {
     name: "Music",

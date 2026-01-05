@@ -1,6 +1,6 @@
 "use client"
 
-import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame, Loader2, ChevronLeft, ChevronRight, BookOpen, Calendar, Link, Plus, ShoppingBasket, Check, Trash2, MoreVertical, Edit2 } from "lucide-react"
+import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame, Loader2, ChevronLeft, ChevronRight, BookOpen, Calendar, Link, Plus, ShoppingBasket, Check, Trash2, MoreVertical, Edit2, ArrowLeft, ArrowRight } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -113,14 +113,18 @@ export default function RecipesPage() {
     }
   }
 
-  const handleRemoveFromPlan = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleShiftMeal = async (meal: any, direction: 'left' | 'right') => {
     try {
-      await axios.delete(`/api/mealplan?id=${id}`)
-      toast.success("Removed from plan")
+      const date = parseSafeDate(meal.date)
+      date.setDate(date.getDate() + (direction === 'left' ? -1 : 1))
+      await axios.put('/api/mealplan', {
+        ...meal,
+        date: date.toISOString().split('T')[0]
+      })
+      toast.success("Meal moved")
       mutate('/api/mealplan')
     } catch (error) {
-      toast.error("Failed to remove from plan")
+      toast.error("Failed to move meal")
     }
   }
 
@@ -142,7 +146,7 @@ export default function RecipesPage() {
               <Utensils className="w-7 h-7 text-foreground" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold">Smart Recipes</h1>
+              <h1 className="text-4xl font-bold">Smart Meals</h1>
               <p className="text-muted-foreground text-lg">Your AI-powered kitchen companion</p>
             </div>
           </div>
@@ -194,112 +198,108 @@ export default function RecipesPage() {
       </div>
 
       <div className="space-y-12">
-        {/* Tonight's Dinner Section */}
-        {tonightDinner && (
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <ChefHat className="w-6 h-6 text-[var(--widget-pink)]" />
-              <h2 className="text-2xl font-bold">Tonight's Dinner</h2>
-            </div>
-            <Card 
-              className="p-6 bg-gradient-to-r from-[var(--widget-pink)]/20 to-transparent border-l-4 border-l-[var(--widget-pink)] cursor-pointer hover:shadow-md transition-all group"
-              onClick={() => handleRecipeClick(tonightDinner.recipeId)}
-            >
-              <div className="flex gap-6 items-center">
-                <div className="w-24 h-24 rounded-xl overflow-hidden bg-muted flex-shrink-0">
-                  <img 
-                    src={tonightDinner.imageUrl || '/placeholder.jpg'} 
-                    alt={tonightDinner.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold mb-1">{tonightDinner.name}</h3>
-                  <p className="text-muted-foreground uppercase text-xs font-bold tracking-wider">
-                    {tonightDinner.mealType || 'Dinner'}
-                  </p>
-                </div>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setEditingMeal(tonightDinner)
-                    }}
-                  >
-                    <Edit2 className="w-5 h-5" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-destructive"
-                    onClick={(e) => handleRemoveFromPlan(tonightDinner.id, e)}
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </section>
-        )}
+        {/* Weekly Meal Planning Section */}
+        <section>
+          <div className="flex items-center gap-2 mb-6">
+            <Calendar className="w-6 h-6 text-blue-500" />
+            <h2 className="text-2xl font-bold">Weekly Meal Plan</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+            {Array.from({ length: 7 }, (_, i) => {
+              const date = new Date()
+              date.setDate(date.getDate() + i)
+              const dateStr = date.toISOString().split('T')[0]
+              const isToday = i === 0
+              const dayName = date.toLocaleDateString([], { weekday: 'short' })
+              const dayMeals = meals.filter((m: any) => m.date.split('T')[0] === dateStr)
 
-        {/* Weekly Plan Section */}
-        {weeklyPlan.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar className="w-6 h-6 text-blue-500" />
-              <h2 className="text-2xl font-bold">Weekly Plan</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {weeklyPlan.map((meal: any) => (
-                <Card 
-                  key={meal.id} 
-                  className="p-4 cursor-pointer hover:shadow-md transition-all flex flex-col gap-3 group"
-                  onClick={() => handleRecipeClick(meal.recipeId)}
-                >
-                  <div className="flex justify-between items-start">
-                    <span className="text-xs font-bold text-muted-foreground uppercase">
-                      {parseSafeDate(meal.date).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
-                      {meal.mealType && ` • ${meal.mealType}`}
-                    </span>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingMeal(meal)
-                        }}
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 text-destructive"
-                        onClick={(e) => handleRemoveFromPlan(meal.id, e)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
+              return (
+                <div key={dateStr} className="flex flex-col gap-3">
+                  <div className={`text-xs font-bold uppercase tracking-wider mb-1 flex justify-between items-center px-1 ${isToday ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                    <span>{isToday ? 'Today' : dayName}</span>
+                    <span className="opacity-60 font-medium">{date.toLocaleDateString([], { month: 'numeric', day: 'numeric' })}</span>
                   </div>
-                  <div className="flex gap-3 items-center">
-                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                      <img 
-                        src={meal.imageUrl || '/placeholder.jpg'} 
-                        alt={meal.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <h3 className="font-bold text-sm line-clamp-2">{meal.name}</h3>
+                  
+                  <div className="flex flex-col gap-3 min-h-[200px]">
+                    {dayMeals.length === 0 ? (
+                      <div className="flex-1 border-2 border-dashed border-muted rounded-2xl flex items-center justify-center p-4 text-center">
+                        <p className="text-[10px] text-muted-foreground font-medium italic">Empty</p>
+                      </div>
+                    ) : (
+                      dayMeals.map((meal: any) => (
+                        <Card 
+                          key={meal.id} 
+                          className="p-3 cursor-pointer hover:shadow-md transition-all flex flex-col gap-2 group relative border-none bg-muted/40"
+                          onClick={() => handleRecipeClick(meal.recipeId)}
+                        >
+                          <div className="aspect-video rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                            <img 
+                              src={meal.imageUrl || '/placeholder.jpg'} 
+                              alt={meal.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-[11px] line-clamp-2 leading-tight mb-1">{meal.name}</h3>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9px] font-bold text-muted-foreground uppercase">{meal.mealType || 'Dinner'}</span>
+                            </div>
+                          </div>
+
+                          {/* Hover Actions */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-1 px-2">
+                            <Button 
+                              variant="secondary" 
+                              size="icon" 
+                              className="h-7 w-7 rounded-full"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleShiftMeal(meal, 'left')
+                              }}
+                            >
+                              <ArrowLeft className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button 
+                              variant="secondary" 
+                              size="icon" 
+                              className="h-7 w-7 rounded-full"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditingMeal(meal)
+                              }}
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button 
+                              variant="secondary" 
+                              size="icon" 
+                              className="h-7 w-7 rounded-full text-destructive"
+                              onClick={(e) => handleRemoveFromPlan(meal.id, e)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button 
+                              variant="secondary" 
+                              size="icon" 
+                              className="h-7 w-7 rounded-full"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleShiftMeal(meal, 'right')
+                              }}
+                            >
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </Card>
+                      ))
+                    )}
                   </div>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
+                </div>
+              )
+            })}
+          </div>
+        </section>
 
         {/* Browse All Recipes Section */}
         <section>

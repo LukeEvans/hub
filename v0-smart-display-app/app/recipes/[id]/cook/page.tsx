@@ -107,20 +107,20 @@ export default function CookModePage() {
       </div>
 
       {/* Navigation Controls */}
-      <div className="p-8 md:p-12 grid grid-cols-2 gap-8 bg-muted/30 border-t">
+      <div className="p-4 md:p-6 grid grid-cols-2 gap-4 bg-muted/30 border-t">
         <Button 
           size="lg" 
           variant="outline" 
-          className="h-28 text-3xl rounded-3xl border-2"
+          className="h-20 text-2xl rounded-2xl border-2"
           disabled={currentStep === 0}
           onClick={() => setCurrentStep(s => Math.max(0, s - 1))}
         >
-          <ChevronLeft className="w-10 h-10 mr-4" />
+          <ChevronLeft className="w-8 h-8 mr-2" />
           Previous
         </Button>
         <Button 
           size="lg" 
-          className="h-28 text-3xl rounded-3xl shadow-2xl"
+          className="h-20 text-2xl rounded-2xl shadow-2xl"
           onClick={() => {
             if (currentStep === instructions.length - 1) {
               router.push('/recipes')
@@ -130,9 +130,9 @@ export default function CookModePage() {
           }}
         >
           {currentStep === instructions.length - 1 ? (
-            <>Finish <Check className="w-10 h-10 ml-4" /></>
+            <>Finish <Check className="w-8 h-8 ml-2" /></>
           ) : (
-            <>Next <ChevronRight className="w-10 h-10 ml-4" /></>
+            <>Next <ChevronRight className="w-8 h-8 ml-2" /></>
           )}
         </Button>
       </div>
