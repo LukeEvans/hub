@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music, Check, Search, Minimize2, X, RotateCcw } from "lucide-react"
 import { useSWRConfig } from "swr"
+import { toast } from "sonner"
 
 export default function SettingsPage() {
   const { mutate } = useSWRConfig()
@@ -36,6 +37,7 @@ export default function SettingsPage() {
   const [isHaLoading, setIsHaLoading] = useState(false)
   const [isSavingHa, setIsSavingHa] = useState(false)
   const [haSearch, setHaSearch] = useState("")
+  const [isSystemActionLoading, setIsSystemActionLoading] = useState<string | null>(null)
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -301,6 +303,37 @@ export default function SettingsPage() {
     })
     setAudio(newAudio)
     setIsPlaying(true)
+  }
+
+  const handleSystemAction = async (action: string) => {
+    if (!confirm(`Are you sure you want to ${action === 'quit' ? 'close the app' : action}?`)) return
+    
+    setIsSystemActionLoading(action)
+    try {
+      const response = await fetch('/api/system', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        if (action === 'quit') {
+          window.close()
+          // Fallback message if window doesn't close
+          alert("Command sent. If the window doesn't close, the host system will handle it shortly.")
+        } else {
+          alert(`System ${action} initiated.`)
+        }
+      } else {
+        throw new Error(data.error || 'Failed to execute system action')
+      }
+    } catch (err: any) {
+      console.error('System action failed:', err)
+      setError(err.message || 'Failed to execute system action')
+    } finally {
+      setIsSystemActionLoading(null)
+    }
   }
 
   const handleSaveHaConfig = async () => {
@@ -792,23 +825,64 @@ export default function SettingsPage() {
                 </div>
               </div>
               <Button 
-                onClick={() => {
-                  if (confirm("Close application?")) {
-                    window.close()
-                  }
-                }}
+                onClick={() => handleSystemAction('quit')}
+                disabled={isSystemActionLoading !== null}
                 variant="outline"
                 className="w-full sm:w-auto h-14 px-8 gap-3 text-lg font-semibold border-2"
               >
-                <X className="w-5 h-5" />
+                {isSystemActionLoading === 'quit' ? <Loader2 className="w-5 h-5 animate-spin" /> : <X className="w-5 h-5" />}
                 Close App
               </Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col items-start p-6 border-2 rounded-xl bg-muted/30 gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <RotateCcw className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg">Reboot</p>
+                    <p className="text-sm text-muted-foreground">Restart the display.</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => handleSystemAction('reboot')}
+                  disabled={isSystemActionLoading !== null}
+                  variant="outline"
+                  className="w-full h-14 px-8 gap-3 text-lg font-semibold border-2"
+                >
+                  {isSystemActionLoading === 'reboot' ? <Loader2 className="w-5 h-5 animate-spin" /> : <RotateCcw className="w-5 h-5" />}
+                  Reboot Device
+                </Button>
+              </div>
+
+              <div className="flex flex-col items-start p-6 border-2 rounded-xl bg-muted/30 gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                    <Minimize2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg">Shutdown</p>
+                    <p className="text-sm text-muted-foreground">Turn off the device.</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => handleSystemAction('shutdown')}
+                  disabled={isSystemActionLoading !== null}
+                  variant="destructive"
+                  className="w-full h-14 px-8 gap-3 text-lg font-semibold border-2"
+                >
+                  {isSystemActionLoading === 'shutdown' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Minimize2 className="w-5 h-5" />}
+                  Power Off
+                </Button>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl bg-muted/30 gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <RotateCcw className="w-6 h-6" />
+                  <RefreshCw className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="font-bold text-lg">Reload App</p>
