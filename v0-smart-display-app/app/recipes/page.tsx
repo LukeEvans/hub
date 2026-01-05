@@ -254,17 +254,17 @@ export default function RecipesPage() {
                           </div>
                           <div className="min-w-0">
                             <h3 className="font-bold text-[11px] line-clamp-2 leading-tight mb-1">{meal.name}</h3>
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between mb-2">
                               <span className="text-[9px] font-bold text-muted-foreground uppercase">{meal.mealType || 'Dinner'}</span>
                             </div>
                           </div>
 
-                          {/* Hover Actions */}
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-1 px-2">
+                          {/* Action Buttons */}
+                          <div className="flex items-center justify-between gap-1 mt-auto">
                             <Button 
                               variant="secondary" 
                               size="icon" 
-                              className="h-7 w-7 rounded-full"
+                              className="h-8 w-8 rounded-lg bg-background/50 hover:bg-background shadow-sm"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 handleShiftMeal(meal, 'left')
@@ -272,29 +272,31 @@ export default function RecipesPage() {
                             >
                               <ArrowLeft className="w-3.5 h-3.5" />
                             </Button>
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="secondary" 
+                                size="icon" 
+                                className="h-8 w-8 rounded-lg bg-background/50 hover:bg-background shadow-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setEditingMeal(meal)
+                                }}
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button 
+                                variant="secondary" 
+                                size="icon" 
+                                className="h-8 w-8 rounded-lg bg-background/50 hover:bg-background shadow-sm text-destructive"
+                                onClick={(e) => handleRemoveFromPlan(meal.id, e)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
                             <Button 
                               variant="secondary" 
                               size="icon" 
-                              className="h-7 w-7 rounded-full"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setEditingMeal(meal)
-                              }}
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button 
-                              variant="secondary" 
-                              size="icon" 
-                              className="h-7 w-7 rounded-full text-destructive"
-                              onClick={(e) => handleRemoveFromPlan(meal.id, e)}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button 
-                              variant="secondary" 
-                              size="icon" 
-                              className="h-7 w-7 rounded-full"
+                              className="h-8 w-8 rounded-lg bg-background/50 hover:bg-background shadow-sm"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 handleShiftMeal(meal, 'right')
@@ -361,33 +363,35 @@ export default function RecipesPage() {
                       alt={recipe.name}
                       className="w-full h-full object-cover transition-transform group-hover:scale-105"
                     />
-                    <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        variant="secondary" 
-                        size="icon" 
-                        className="h-8 w-8 rounded-full shadow-lg"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setPlanningRecipe(recipe)
-                        }}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="secondary" 
-                        size="icon" 
-                        className="h-8 w-8 rounded-full shadow-lg text-destructive"
-                        onClick={(e) => handleDeleteRecipe(recipe.id, e)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
                   </div>
                   <div className="p-3 flex flex-col flex-1">
                     <h3 className="font-bold text-sm line-clamp-2 mb-2 flex-1">{recipe.name}</h3>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-medium">
-                      <Clock className="w-3 h-3" />
-                      {recipe.totalTime || '30m'}
+                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-muted/50">
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-medium">
+                        <Clock className="w-3 h-3" />
+                        {recipe.totalTime || '30m'}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="secondary" 
+                          size="icon" 
+                          className="h-8 w-8 rounded-full shadow-sm bg-primary/10 hover:bg-primary hover:text-primary-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setPlanningRecipe(recipe)
+                          }}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="icon" 
+                          className="h-8 w-8 rounded-full shadow-sm text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={(e) => handleDeleteRecipe(recipe.id, e)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -410,7 +414,7 @@ export default function RecipesPage() {
           setShowOriginal(false)
         }
       }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="max-w-[95vw] w-full max-h-[95vh] overflow-y-auto p-0">
           {selectedRecipe && (
             <div className="flex flex-col">
               {/* Hero Image */}
