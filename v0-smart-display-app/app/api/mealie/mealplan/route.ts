@@ -26,10 +26,17 @@ export async function GET() {
       return NextResponse.json(getEmptyMealPlan());
     }
 
+    // Try to resolve hub.local issues inside Docker by using 'mealie' service name if on internal network
+    let effectiveBaseUrl = baseUrl;
+    if (baseUrl.includes('hub.local')) {
+      console.log('Mealie: hub.local detected, attempting to use internal "mealie" hostname for server-side call');
+      effectiveBaseUrl = baseUrl.replace('hub.local', 'mealie');
+    }
+
     // Try both current and household endpoints as different versions of Mealie use different paths
     const endpoints = [
-      `${baseUrl}/api/households/meal-plans/current`,
-      `${baseUrl}/api/meal-plans/current`
+      `${effectiveBaseUrl}/api/households/meal-plans/current`,
+      `${effectiveBaseUrl}/api/meal-plans/current`
     ];
 
     let resp;
@@ -57,19 +64,26 @@ export async function GET() {
     
     // Mealie returns either a list of days, or an object with a days property
     const data = resp.data;
+    console.log('Mealie: Meal plan raw data sample:', JSON.stringify(data).substring(0, 500));
     const days = Array.isArray(data) ? data : (data.days || []);
+    console.log(`Mealie: Found ${days.length} days in meal plan`);
     
-    const flattenedMeals = days.flatMap((day: any) => 
-      (day.meals || []).map((meal: any) => ({
+    const flattenedMeals = days.flatMap((day: any) => {
+      const meals = day.meals || [];
+      if (meals.length === 0) return [];
+      
+      return meals.map((meal: any) => ({
         id: meal.id,
         date: day.date,
         name: meal.recipe?.name || meal.name || 'Unknown Meal',
-        recipeId: meal.recipeId,
+        recipeId: meal.recipeId || meal.recipe?.id,
+        recipeSlug: meal.recipe?.slug, // Include slug for external linking
         entryType: meal.entryType,
         mealType: meal.mealType
-      }))
-    );
+      }));
+    });
 
+    console.log(`Mealie: Flattened into ${flattenedMeals.length} meals`);
     const payload = { mealPlan: { meals: flattenedMeals } };
     cache.set(cacheKey, payload, 1800); // 30 min
 

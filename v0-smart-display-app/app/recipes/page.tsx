@@ -12,6 +12,8 @@ import { parseSafeDate } from "@/lib/utils"
 
 export default function RecipesPage() {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
+  const [isCookMode, setIsCookMode] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
   const [recipePage, setRecipePage] = useState(1)
   const recipesPerPage = 12
@@ -38,8 +40,15 @@ export default function RecipesPage() {
   const totalRecipes = recipesData?.total || 0
   const totalPages = Math.ceil(totalRecipes / recipesPerPage)
 
-  const handleRecipeClick = (recipeId: string) => {
+  const handleRecipeClick = (recipeId: string, slug?: string) => {
+    if (slug) {
+      const baseUrl = process.env.NEXT_PUBLIC_MEALIE_URL || 'http://hub.local:9000'
+      window.location.href = `${baseUrl}/recipe/${slug}`
+      return
+    }
     setSelectedRecipeId(recipeId)
+    setIsCookMode(true) // Fallback to cook mode if no slug
+    setCurrentStep(0)
   }
 
   if (loadingPlan && recipePage === 1 && !searchQuery) {
@@ -91,7 +100,7 @@ export default function RecipesPage() {
             </div>
             <Card 
               className="p-6 bg-gradient-to-r from-[var(--widget-pink)]/20 to-transparent border-l-4 border-l-[var(--widget-pink)] cursor-pointer hover:shadow-md transition-all"
-              onClick={() => handleRecipeClick(tonightDinner.recipeId)}
+              onClick={() => handleRecipeClick(tonightDinner.recipeId, tonightDinner.recipeSlug)}
             >
               <div className="flex gap-6 items-center">
                 <div className="w-24 h-24 rounded-xl overflow-hidden bg-muted flex-shrink-0">
@@ -127,7 +136,7 @@ export default function RecipesPage() {
                 <Card 
                   key={meal.id} 
                   className="p-4 cursor-pointer hover:shadow-md transition-all flex flex-col gap-3"
-                  onClick={() => handleRecipeClick(meal.recipeId)}
+                  onClick={() => handleRecipeClick(meal.recipeId, meal.recipeSlug)}
                 >
                   <div className="flex justify-between items-start">
                     <span className="text-xs font-bold text-muted-foreground uppercase">
@@ -194,7 +203,7 @@ export default function RecipesPage() {
                 <Card
                   key={recipe.id}
                   className="overflow-hidden cursor-pointer hover:shadow-lg transition-all group flex flex-col h-full"
-                  onClick={() => handleRecipeClick(recipe.id)}
+                  onClick={() => handleRecipeClick(recipe.id, recipe.slug)}
                 >
                   <div className="aspect-square relative overflow-hidden bg-muted">
                     <img 
@@ -231,85 +240,152 @@ export default function RecipesPage() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           {selectedRecipe && (
             <div className="relative">
-              {/* Hero Image */}
-              <div className="h-64 w-full relative overflow-hidden">
-                <img 
-                  src={`/api/mealie/image/${selectedRecipe.id}`} 
-                  alt={selectedRecipe.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder.jpg'
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <h2 className="text-3xl font-bold text-white mb-2">{selectedRecipe.name}</h2>
-                  <div className="flex gap-4">
-                    {selectedRecipe.totalTime && (
-                      <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {selectedRecipe.totalTime}
+              {isCookMode ? (
+                /* Cook Mode View */
+                <div className="min-h-[60vh] flex flex-col">
+                  <div className="p-6 border-b flex items-center justify-between bg-muted/30">
+                    <div className="flex items-center gap-4">
+                      <Button variant="ghost" size="sm" onClick={() => setIsCookMode(false)}>
+                        <ChevronLeft className="w-4 h-4 mr-1" />
+                        Details
+                      </Button>
+                      <h2 className="text-xl font-bold truncate max-w-[400px]">{selectedRecipe.name}</h2>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono">
+                        Step {currentStep + 1} of {selectedRecipe.recipeInstructions?.length || 1}
                       </Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
+                    {selectedRecipe.recipeInstructions && selectedRecipe.recipeInstructions.length > 0 ? (
+                      <div className="space-y-8 animate-in fade-in zoom-in duration-300">
+                        <div className="text-4xl font-black text-primary/20 mb-4">
+                          {currentStep + 1}
+                        </div>
+                        <p className="text-3xl md:text-4xl font-medium leading-tight max-w-2xl mx-auto">
+                          {selectedRecipe.recipeInstructions[currentStep].text}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground italic">No instructions available</div>
                     )}
-                    {selectedRecipe.recipeYield && (
-                      <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md">
-                        <Users className="w-4 h-4 mr-1" />
-                        {selectedRecipe.recipeYield}
-                      </Badge>
+                  </div>
+
+                  <div className="p-8 grid grid-cols-2 gap-4 bg-muted/30">
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      className="h-20 text-xl"
+                      disabled={currentStep === 0}
+                      onClick={() => setCurrentStep(s => Math.max(0, s - 1))}
+                    >
+                      <ChevronLeft className="w-6 h-6 mr-2" />
+                      Previous
+                    </Button>
+                    <Button 
+                      size="lg" 
+                      className="h-20 text-xl"
+                      disabled={!selectedRecipe.recipeInstructions || currentStep === selectedRecipe.recipeInstructions.length - 1}
+                      onClick={() => setCurrentStep(s => Math.min(selectedRecipe.recipeInstructions.length - 1, s + 1))}
+                    >
+                      Next Step
+                      <ChevronRight className="w-6 h-6 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                /* Overview View */
+                <>
+                  {/* Hero Image */}
+                  <div className="h-64 w-full relative overflow-hidden">
+                    <img 
+                      src={`/api/mealie/image/${selectedRecipe.id}`} 
+                      alt={selectedRecipe.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/placeholder.jpg'
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                      <div>
+                        <h2 className="text-3xl font-bold text-white mb-2">{selectedRecipe.name}</h2>
+                        <div className="flex gap-4">
+                          {selectedRecipe.totalTime && (
+                            <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md">
+                              <Clock className="w-4 h-4 mr-1" />
+                              {selectedRecipe.totalTime}
+                            </Badge>
+                          )}
+                          {selectedRecipe.recipeYield && (
+                            <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md">
+                              <Users className="w-4 h-4 mr-1" />
+                              {selectedRecipe.recipeYield}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Button size="lg" className="shadow-xl" onClick={() => {
+                        setIsCookMode(true)
+                        setCurrentStep(0)
+                      }}>
+                        <ChefHat className="w-5 h-5 mr-2" />
+                        Start Cooking
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="p-8 space-y-8">
+                    {selectedRecipe.description && (
+                      <p className="text-lg text-muted-foreground leading-relaxed italic border-l-4 border-primary/20 pl-4">
+                        {selectedRecipe.description}
+                      </p>
                     )}
-                  </div>
-                </div>
-              </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      {/* Ingredients */}
+                      <div className="md:col-span-1">
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                          <Utensils className="w-5 h-5" />
+                          Ingredients
+                        </h3>
+                        <ul className="space-y-2">
+                          {selectedRecipe.recipeIngredient?.map((ing: any, idx: number) => (
+                            <li key={idx} className="text-sm border-b border-muted pb-2">
+                              <span className="font-medium text-foreground">{ing.note}</span>
+                            </li>
+                          )) || <li className="text-muted-foreground">No ingredients listed</li>}
+                        </ul>
+                      </div>
 
-              <div className="p-8 space-y-8">
-                {selectedRecipe.description && (
-                  <p className="text-lg text-muted-foreground leading-relaxed italic border-l-4 border-primary/20 pl-4">
-                    {selectedRecipe.description}
-                  </p>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {/* Ingredients */}
-                  <div className="md:col-span-1">
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <Utensils className="w-5 h-5" />
-                      Ingredients
-                    </h3>
-                    <ul className="space-y-2">
-                      {selectedRecipe.recipeIngredient?.map((ing: any, idx: number) => (
-                        <li key={idx} className="text-sm border-b border-muted pb-2">
-                          <span className="font-medium text-foreground">{ing.note}</span>
-                        </li>
-                      )) || <li className="text-muted-foreground">No ingredients listed</li>}
-                    </ul>
+                      {/* Instructions Preview */}
+                      <div className="md:col-span-2">
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                          <ChefHat className="w-5 h-5" />
+                          Instructions
+                        </h3>
+                        <ol className="space-y-4">
+                          {selectedRecipe.recipeInstructions?.slice(0, 3).map((step: any, idx: number) => (
+                            <li key={idx} className="flex gap-4 opacity-70">
+                              <span className="flex-shrink-0 w-8 h-8 rounded-full bg-muted text-foreground flex items-center justify-center text-sm font-bold">
+                                {idx + 1}
+                              </span>
+                              <span className="text-foreground leading-relaxed line-clamp-2">{step.text}</span>
+                            </li>
+                          )) || <li className="text-muted-foreground">No instructions provided</li>}
+                          {selectedRecipe.recipeInstructions?.length > 3 && (
+                            <li className="text-primary font-bold cursor-pointer hover:underline" onClick={() => setIsCookMode(true)}>
+                              + {selectedRecipe.recipeInstructions.length - 3} more steps...
+                            </li>
+                          )}
+                        </ol>
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Instructions */}
-                  <div className="md:col-span-2">
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <ChefHat className="w-5 h-5" />
-                      Instructions
-                    </h3>
-                    <ol className="space-y-4">
-                      {selectedRecipe.recipeInstructions?.map((step: any, idx: number) => (
-                        <li key={idx} className="flex gap-4">
-                          <span className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--widget-pink)] text-foreground flex items-center justify-center text-sm font-bold">
-                            {idx + 1}
-                          </span>
-                          <span className="text-foreground leading-relaxed">{step.text}</span>
-                        </li>
-                      )) || <li className="text-muted-foreground">No instructions provided</li>}
-                    </ol>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 pt-4">
-                  <Button className="flex-1 h-14 text-lg" size="lg">
-                    <ChefHat className="w-5 h-5 mr-2" />
-                    Start Cook Mode
-                  </Button>
-                </div>
-              </div>
+                </>
+              )}
             </div>
           )}
           {!selectedRecipe && selectedRecipeId && (

@@ -26,8 +26,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ items: [], total: 0, page: 1, perPage: 20 });
     }
 
-    console.log(`Mealie: Fetching recipes from ${baseUrl}/api/recipes`);
-    const resp = await axios.get(`${baseUrl}/api/recipes`, {
+    // Try to resolve hub.local issues inside Docker by using 'mealie' service name if on internal network
+    let effectiveBaseUrl = baseUrl;
+    if (baseUrl.includes('hub.local')) {
+      effectiveBaseUrl = baseUrl.replace('hub.local', 'mealie');
+    }
+
+    console.log(`Mealie: Fetching recipes from ${effectiveBaseUrl}/api/recipes`);
+    const resp = await axios.get(`${effectiveBaseUrl}/api/recipes`, {
       headers: { Authorization: `Bearer ${token}` },
       params: {
         page,
