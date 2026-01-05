@@ -128,6 +128,17 @@ export default function RecipesPage() {
     }
   }
 
+  const handleRemoveFromPlan = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await axios.delete(`/api/mealplan?id=${id}`)
+      toast.success("Removed from plan")
+      mutate('/api/mealplan')
+    } catch (error) {
+      toast.error("Failed to remove from plan")
+    }
+  }
+
   if (loadingPlan && recipePage === 1 && !searchQuery) {
     return (
       <div className="flex items-center justify-center h-screen">
