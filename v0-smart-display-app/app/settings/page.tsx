@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music, Check, Search } from "lucide-react"
+import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music, Check, Search, Minimize2, X, RotateCcw } from "lucide-react"
 import { useSWRConfig } from "swr"
 
 export default function SettingsPage() {
@@ -766,6 +766,64 @@ export default function SettingsPage() {
                     Play Sound
                   </>
                 )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>System</CardTitle>
+            <CardDescription>
+              Manage the application window and device.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Minimize2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-bold text-lg">Minimize / Close</p>
+                  <p className="text-sm text-muted-foreground">
+                    Try to close the app window to access the OS.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                onClick={() => {
+                  if (confirm("Close application?")) {
+                    window.close()
+                  }
+                }}
+                variant="outline"
+                className="w-full sm:w-auto h-14 px-8 gap-3 text-lg font-semibold border-2"
+              >
+                <X className="w-5 h-5" />
+                Close App
+              </Button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-2 rounded-xl bg-muted/30 gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <RotateCcw className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-bold text-lg">Reload App</p>
+                  <p className="text-sm text-muted-foreground">
+                    Refresh the page to clear states or update.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="outline"
+                className="w-full sm:w-auto h-14 px-8 gap-3 text-lg font-semibold border-2"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Reload
               </Button>
             </div>
           </CardContent>

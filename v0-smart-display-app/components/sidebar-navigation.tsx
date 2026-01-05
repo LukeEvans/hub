@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Cloud, ImageIcon, Utensils, Music, HomeIcon, LayoutDashboard, Moon, Sun, Settings, Trophy, Menu, X } from "lucide-react"
+import { Calendar, Cloud, ImageIcon, Utensils, Music, HomeIcon, LayoutDashboard, Moon, Sun, Settings, Trophy, Menu, X, Minimize2 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -150,16 +150,33 @@ export function SidebarNavigation() {
           })}
         </nav>
 
-        {/* Dark Mode Toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleDarkMode}
-          className="w-14 h-14 rounded-xl"
-          title="Toggle dark mode"
-        >
-          {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-        </Button>
+        {/* Bottom Actions */}
+        <div className="mt-auto flex flex-col items-center gap-2 pb-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (window.confirm("Close the application?")) {
+                window.close()
+              }
+            }}
+            className="w-14 h-14 rounded-xl text-muted-foreground hover:text-foreground"
+            title="Minimize/Close"
+          >
+            <Minimize2 className="w-6 h-6" />
+          </Button>
+
+          {/* Dark Mode Toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleDarkMode}
+            className="w-14 h-14 rounded-xl"
+            title="Toggle dark mode"
+          >
+            {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+          </Button>
+        </div>
       </aside>
     </>
   )
