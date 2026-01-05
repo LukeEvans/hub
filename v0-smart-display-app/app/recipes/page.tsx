@@ -1,14 +1,17 @@
 "use client"
 
-import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame, Loader2, ChevronLeft, ChevronRight, BookOpen, Calendar } from "lucide-react"
+import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame, Loader2, ChevronLeft, ChevronRight, BookOpen, Calendar, Link, Plus, ShoppingBasket, Check, Trash2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useState, useMemo } from "react"
 import { useApi } from "@/lib/use-api"
 import { parseSafeDate } from "@/lib/utils"
+import axios from "axios"
+import { toast } from "sonner"
+import { mutate } from "swr"
 
 export default function RecipesPage() {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
@@ -16,18 +19,20 @@ export default function RecipesPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
   const [recipePage, setRecipePage] = useState(1)
+  const [parseUrl, setParseUrl] = useState("")
+  const [isParsing, setIsParsing] = useState(false)
+  const [showIngredientsList, setShowIngredientsList] = useState(false)
   const recipesPerPage = 12
   
-  const { data: mealPlanData, isLoading: loadingPlan } = useApi<any>('/api/mealie/mealplan')
+  const { data: mealPlanData, isLoading: loadingPlan } = useApi<any>('/api/mealplan')
   const { data: recipesData, isLoading: loadingRecipes } = useApi<any>(
-    `/api/mealie/recipes?page=${recipePage}&perPage=${recipesPerPage}&search=${searchQuery}`
+    `/api/recipes?page=${recipePage}&perPage=${recipesPerPage}&search=${searchQuery}`
   )
   const { data: selectedRecipe } = useApi<any>(
-    selectedRecipeId ? `/api/mealie/recipe/${selectedRecipeId}` : null
+    selectedRecipeId ? `/api/recipes?id=${selectedRecipeId}` : null
   )
 
-  const meals = mealPlanData?.mealPlan?.meals || []
-  const mealieBaseUrl = mealPlanData?.mealieUrl || 'http://hub.local:9000'
+  const meals = mealPlanData?.meals || []
   
   // Find tonight's dinner
   const today = new Date().toDateString()
@@ -41,15 +46,75 @@ export default function RecipesPage() {
   const totalRecipes = recipesData?.total || 0
   const totalPages = Math.ceil(totalRecipes / recipesPerPage)
 
-  const handleRecipeClick = (recipeId: string, slug?: string) => {
-    if (slug) {
-      window.location.href = `${mealieBaseUrl}/recipe/${slug}`
-      return
-    }
+  const handleRecipeClick = (recipeId: string) => {
     setSelectedRecipeId(recipeId)
-    setIsCookMode(true) // Fallback to cook mode if no slug
+    setIsCookMode(false)
     setCurrentStep(0)
   }
+
+  const handleParseRecipe = async () => {
+    if (!parseUrl) return
+    setIsParsing(true)
+    try {
+      const response = await axios.post('/api/recipes/parse', { url: parseUrl })
+      const recipe = response.data
+      await axios.post('/api/recipes', recipe)
+      toast.success("Recipe added successfully!")
+      setParseUrl("")
+      mutate((key: string) => key.startsWith('/api/recipes'))
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Failed to parse recipe")
+    } finally {
+      setIsParsing(false)
+    }
+  }
+
+  const handleDeleteRecipe = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm("Are you sure you want to delete this recipe?")) return
+    try {
+      await axios.delete(`/api/recipes?id=${id}`)
+      toast.success("Recipe deleted")
+      mutate((key: string) => key.startsWith('/api/recipes'))
+      if (selectedRecipeId === id) setSelectedRecipeId(null)
+    } catch (error: any) {
+      toast.error("Failed to delete recipe")
+    }
+  }
+
+  const handleAddToPlan = async (recipe: any) => {
+    try {
+      const date = new Date().toISOString()
+      await axios.post('/api/mealplan', {
+        recipeId: recipe.id,
+        date,
+        mealType: 'Dinner'
+      })
+      toast.success("Added to meal plan")
+      mutate('/api/mealplan')
+    } catch (error) {
+      toast.error("Failed to add to plan")
+    }
+  }
+
+  const handleRemoveFromPlan = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await axios.delete(`/api/mealplan?id=${id}`)
+      toast.success("Removed from plan")
+      mutate('/api/mealplan')
+    } catch (error) {
+      toast.error("Failed to remove from plan")
+    }
+  }
+
+  // Get step-specific ingredients
+  const stepIngredients = useMemo(() => {
+    if (!selectedRecipe || !isCookMode) return []
+    return selectedRecipe.ingredients.filter((ing: any) => 
+      ing.stepIndices?.includes(currentStep)
+    )
+  }, [selectedRecipe, isCookMode, currentStep])
 
   if (loadingPlan && recipePage === 1 && !searchQuery) {
     return (
@@ -69,24 +134,54 @@ export default function RecipesPage() {
               <Utensils className="w-7 h-7 text-foreground" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold">Mealie Recipes</h1>
-              <p className="text-muted-foreground text-lg">Manage your meals and recipes</p>
+              <h1 className="text-4xl font-bold">Smart Recipes</h1>
+              <p className="text-muted-foreground text-lg">Your AI-powered kitchen companion</p>
             </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="lg" onClick={() => setShowIngredientsList(true)}>
+              <ShoppingBasket className="w-5 h-5 mr-2" />
+              Grocery List
+            </Button>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Search all recipes..."
-            className="pl-10 h-12 rounded-xl"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value)
-              setRecipePage(1) // Reset to first page on search
-            }}
-          />
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Search Bar */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Search recipes..."
+              className="pl-10 h-12 rounded-xl"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setRecipePage(1)
+              }}
+            />
+          </div>
+          
+          {/* Import Bar */}
+          <div className="flex gap-2 flex-1 max-w-xl">
+            <div className="relative flex-1">
+              <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                placeholder="Paste recipe URL (e.g. NYT Cooking)..."
+                className="pl-10 h-12 rounded-xl"
+                value={parseUrl}
+                onChange={(e) => setParseUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleParseRecipe()}
+              />
+            </div>
+            <Button 
+              className="h-12 px-6 rounded-xl" 
+              onClick={handleParseRecipe}
+              disabled={isParsing || !parseUrl}
+            >
+              {isParsing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5 mr-2" />}
+              Import
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -99,26 +194,31 @@ export default function RecipesPage() {
               <h2 className="text-2xl font-bold">Tonight's Dinner</h2>
             </div>
             <Card 
-              className="p-6 bg-gradient-to-r from-[var(--widget-pink)]/20 to-transparent border-l-4 border-l-[var(--widget-pink)] cursor-pointer hover:shadow-md transition-all"
-              onClick={() => handleRecipeClick(tonightDinner.recipeId, tonightDinner.recipeSlug)}
+              className="p-6 bg-gradient-to-r from-[var(--widget-pink)]/20 to-transparent border-l-4 border-l-[var(--widget-pink)] cursor-pointer hover:shadow-md transition-all group"
+              onClick={() => handleRecipeClick(tonightDinner.recipeId)}
             >
               <div className="flex gap-6 items-center">
                 <div className="w-24 h-24 rounded-xl overflow-hidden bg-muted flex-shrink-0">
                   <img 
-                    src={`/api/mealie/image/${tonightDinner.recipeId}`} 
+                    src={tonightDinner.imageUrl || '/placeholder.jpg'} 
                     alt={tonightDinner.name}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder.jpg'
-                    }}
                   />
                 </div>
-                <div>
+                <div className="flex-1">
                   <h3 className="text-2xl font-bold mb-1">{tonightDinner.name}</h3>
                   <p className="text-muted-foreground uppercase text-xs font-bold tracking-wider">
                     {tonightDinner.mealType || 'Dinner'}
                   </p>
                 </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="opacity-0 group-hover:opacity-100 text-destructive"
+                  onClick={(e) => handleRemoveFromPlan(tonightDinner.id, e)}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
               </div>
             </Card>
           </section>
@@ -135,24 +235,28 @@ export default function RecipesPage() {
               {weeklyPlan.map((meal: any) => (
                 <Card 
                   key={meal.id} 
-                  className="p-4 cursor-pointer hover:shadow-md transition-all flex flex-col gap-3"
-                  onClick={() => handleRecipeClick(meal.recipeId, meal.recipeSlug)}
+                  className="p-4 cursor-pointer hover:shadow-md transition-all flex flex-col gap-3 group"
+                  onClick={() => handleRecipeClick(meal.recipeId)}
                 >
                   <div className="flex justify-between items-start">
                     <span className="text-xs font-bold text-muted-foreground uppercase">
                       {parseSafeDate(meal.date).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
                     </span>
-                    <Badge variant="outline" className="text-[10px] py-0">{meal.mealType}</Badge>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive"
+                      onClick={(e) => handleRemoveFromPlan(meal.id, e)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                   <div className="flex gap-3 items-center">
                     <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                       <img 
-                        src={`/api/mealie/image/${meal.recipeId}`} 
+                        src={meal.imageUrl || '/placeholder.jpg'} 
                         alt={meal.name}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/placeholder.jpg'
-                        }}
                       />
                     </div>
                     <h3 className="font-bold text-sm line-clamp-2">{meal.name}</h3>
@@ -168,7 +272,7 @@ export default function RecipesPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-purple-500" />
-              <h2 className="text-2xl font-bold">Browse All Recipes</h2>
+              <h2 className="text-2xl font-bold">Your Cookbook</h2>
             </div>
             <div className="flex items-center gap-2">
               <Button 
@@ -202,18 +306,36 @@ export default function RecipesPage() {
               {allRecipes.map((recipe: any) => (
                 <Card
                   key={recipe.id}
-                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-all group flex flex-col h-full"
-                  onClick={() => handleRecipeClick(recipe.id, recipe.slug)}
+                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-all group flex flex-col h-full relative"
+                  onClick={() => handleRecipeClick(recipe.id)}
                 >
                   <div className="aspect-square relative overflow-hidden bg-muted">
                     <img 
-                      src={`/api/mealie/image/${recipe.id}`} 
+                      src={recipe.imageUrl || '/placeholder.jpg'} 
                       alt={recipe.name}
                       className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/placeholder.jpg'
-                      }}
                     />
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        variant="secondary" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full shadow-lg"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleAddToPlan(recipe)
+                        }}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full shadow-lg text-destructive"
+                        onClick={(e) => handleDeleteRecipe(recipe.id, e)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="p-3 flex flex-col flex-1">
                     <h3 className="font-bold text-sm line-clamp-2 mb-2 flex-1">{recipe.name}</h3>
@@ -228,133 +350,175 @@ export default function RecipesPage() {
           )}
 
           {!loadingRecipes && allRecipes.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground italic">
-              No recipes found
+            <div className="text-center py-12 text-muted-foreground italic bg-muted/20 rounded-2xl border-2 border-dashed">
+              No recipes found. Import one from the top to get started!
             </div>
           )}
         </section>
       </div>
 
-      {/* Recipe Detail Dialog */}
+      {/* Recipe Detail & Cook Mode Dialog */}
       <Dialog open={selectedRecipeId !== null} onOpenChange={() => setSelectedRecipeId(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden p-0">
           {selectedRecipe && (
-            <div className="relative">
+            <div className="h-full flex flex-col">
               {isCookMode ? (
                 /* Cook Mode View */
-                <div className="min-h-[60vh] flex flex-col">
+                <div className="h-full flex flex-col overflow-hidden">
                   <div className="p-6 border-b flex items-center justify-between bg-muted/30">
                     <div className="flex items-center gap-4">
                       <Button variant="ghost" size="sm" onClick={() => setIsCookMode(false)}>
                         <ChevronLeft className="w-4 h-4 mr-1" />
-                        Details
+                        Back to Details
                       </Button>
                       <h2 className="text-xl font-bold truncate max-w-[400px]">{selectedRecipe.name}</h2>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="font-mono">
-                        Step {currentStep + 1} of {selectedRecipe.recipeInstructions?.length || 1}
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1">
+                        {selectedRecipe.instructions.map((_: any, i: number) => (
+                          <div 
+                            key={i} 
+                            className={`h-1.5 w-6 rounded-full transition-colors ${i === currentStep ? 'bg-primary' : i < currentStep ? 'bg-primary/40' : 'bg-muted-foreground/20'}`} 
+                          />
+                        ))}
+                      </div>
+                      <Badge variant="outline" className="font-mono text-lg py-1 px-3">
+                        Step {currentStep + 1} / {selectedRecipe.instructions.length}
                       </Badge>
                     </div>
                   </div>
 
-                  <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
-                    {selectedRecipe.recipeInstructions && selectedRecipe.recipeInstructions.length > 0 ? (
-                      <div className="space-y-8 animate-in fade-in zoom-in duration-300">
-                        <div className="text-4xl font-black text-primary/20 mb-4">
+                  <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                    {/* Main Instruction Area */}
+                    <div className="flex-1 p-8 md:p-12 flex flex-col items-center justify-center text-center overflow-y-auto">
+                      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary text-4xl font-black mb-4">
                           {currentStep + 1}
                         </div>
-                        <p className="text-3xl md:text-4xl font-medium leading-tight max-w-2xl mx-auto">
-                          {selectedRecipe.recipeInstructions[currentStep].text}
+                        <p className="text-3xl md:text-5xl font-medium leading-tight max-w-3xl mx-auto">
+                          {selectedRecipe.instructions[currentStep]?.text}
                         </p>
                       </div>
-                    ) : (
-                      <div className="text-muted-foreground italic">No instructions available</div>
+                    </div>
+
+                    {/* Sidebar Ingredients for this step */}
+                    {stepIngredients.length > 0 && (
+                      <div className="w-full md:w-80 bg-muted/20 border-l p-8 overflow-y-auto">
+                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                          <Utensils className="w-5 h-5" />
+                          Needed Now
+                        </h3>
+                        <ul className="space-y-4">
+                          {stepIngredients.map((ing: any, idx: number) => (
+                            <li key={idx} className="flex gap-3 bg-card p-4 rounded-xl border shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
+                              <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                              <div>
+                                <div className="font-bold text-lg">
+                                  {ing.amount} {ing.unit}
+                                </div>
+                                <div className="text-muted-foreground">{ing.item}</div>
+                                {ing.note && <div className="text-xs italic text-muted-foreground/70 mt-1">{ing.note}</div>}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
 
-                  <div className="p-8 grid grid-cols-2 gap-4 bg-muted/30">
+                  {/* Navigation Controls */}
+                  <div className="p-8 grid grid-cols-2 gap-6 bg-muted/30 border-t">
                     <Button 
                       size="lg" 
                       variant="outline" 
-                      className="h-20 text-xl"
+                      className="h-24 text-2xl rounded-2xl border-2"
                       disabled={currentStep === 0}
                       onClick={() => setCurrentStep(s => Math.max(0, s - 1))}
                     >
-                      <ChevronLeft className="w-6 h-6 mr-2" />
+                      <ChevronLeft className="w-8 h-8 mr-3" />
                       Previous
                     </Button>
                     <Button 
                       size="lg" 
-                      className="h-20 text-xl"
-                      disabled={!selectedRecipe.recipeInstructions || currentStep === selectedRecipe.recipeInstructions.length - 1}
-                      onClick={() => setCurrentStep(s => Math.min(selectedRecipe.recipeInstructions.length - 1, s + 1))}
+                      className="h-24 text-2xl rounded-2xl shadow-xl"
+                      disabled={currentStep === selectedRecipe.instructions.length - 1}
+                      onClick={() => setCurrentStep(s => Math.min(selectedRecipe.instructions.length - 1, s + 1))}
                     >
-                      Next Step
-                      <ChevronRight className="w-6 h-6 ml-2" />
+                      {currentStep === selectedRecipe.instructions.length - 1 ? (
+                        <>Finish Cooking <Check className="w-8 h-8 ml-3" /></>
+                      ) : (
+                        <>Next Step <ChevronRight className="w-8 h-8 ml-3" /></>
+                      )}
                     </Button>
                   </div>
                 </div>
               ) : (
                 /* Overview View */
-                <>
+                <div className="flex-1 overflow-y-auto">
                   {/* Hero Image */}
-                  <div className="h-64 w-full relative overflow-hidden">
+                  <div className="h-80 w-full relative overflow-hidden">
                     <img 
-                      src={`/api/mealie/image/${selectedRecipe.id}`} 
+                      src={selectedRecipe.imageUrl || '/placeholder.jpg'} 
                       alt={selectedRecipe.name}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/placeholder.jpg'
-                      }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                    <div className="absolute bottom-8 left-8 right-8 flex items-end justify-between">
                       <div>
-                        <h2 className="text-3xl font-bold text-white mb-2">{selectedRecipe.name}</h2>
+                        <h2 className="text-5xl font-bold text-white mb-4 leading-tight">{selectedRecipe.name}</h2>
                         <div className="flex gap-4">
                           {selectedRecipe.totalTime && (
-                            <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md">
-                              <Clock className="w-4 h-4 mr-1" />
+                            <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md px-4 py-2 text-sm">
+                              <Clock className="w-4 h-4 mr-2" />
                               {selectedRecipe.totalTime}
                             </Badge>
                           )}
-                          {selectedRecipe.recipeYield && (
-                            <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md">
-                              <Users className="w-4 h-4 mr-1" />
-                              {selectedRecipe.recipeYield}
+                          {selectedRecipe.yield && (
+                            <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md px-4 py-2 text-sm">
+                              <Users className="w-4 h-4 mr-2" />
+                              {selectedRecipe.yield}
                             </Badge>
                           )}
                         </div>
                       </div>
-                      <Button size="lg" className="shadow-xl" onClick={() => {
-                        setIsCookMode(true)
-                        setCurrentStep(0)
-                      }}>
-                        <ChefHat className="w-5 h-5 mr-2" />
-                        Start Cooking
-                      </Button>
+                      <div className="flex gap-3">
+                        <Button variant="secondary" size="lg" className="bg-white text-black hover:bg-white/90" onClick={() => handleAddToPlan(selectedRecipe)}>
+                          <Calendar className="w-5 h-5 mr-2" />
+                          Plan
+                        </Button>
+                        <Button size="lg" className="shadow-2xl h-14 px-8 text-lg font-bold" onClick={() => {
+                          setIsCookMode(true)
+                          setCurrentStep(0)
+                        }}>
+                          <ChefHat className="w-6 h-6 mr-2" />
+                          Start Cooking
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="p-8 space-y-8">
+                  <div className="p-8 md:p-12 space-y-12">
                     {selectedRecipe.description && (
-                      <p className="text-lg text-muted-foreground leading-relaxed italic border-l-4 border-primary/20 pl-4">
+                      <p className="text-2xl text-muted-foreground leading-relaxed italic border-l-8 border-primary/20 pl-8">
                         {selectedRecipe.description}
                       </p>
                     )}
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                       {/* Ingredients */}
                       <div className="md:col-span-1">
-                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                          <Utensils className="w-5 h-5" />
+                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                          <Utensils className="w-6 h-6 text-primary" />
                           Ingredients
                         </h3>
-                        <ul className="space-y-2">
-                          {selectedRecipe.recipeIngredient?.map((ing: any, idx: number) => (
-                            <li key={idx} className="text-sm border-b border-muted pb-2">
-                              <span className="font-medium text-foreground">{ing.note}</span>
+                        <ul className="space-y-4">
+                          {selectedRecipe.ingredients?.map((ing: any, idx: number) => (
+                            <li key={idx} className="text-lg border-b border-muted pb-3 group">
+                              <span className="font-bold text-primary mr-2">
+                                {ing.amount} {ing.unit}
+                              </span>
+                              <span className="text-foreground">{ing.item}</span>
+                              {ing.note && <span className="text-muted-foreground text-sm block mt-1">{ing.note}</span>}
                             </li>
                           )) || <li className="text-muted-foreground">No ingredients listed</li>}
                         </ul>
@@ -362,39 +526,89 @@ export default function RecipesPage() {
 
                       {/* Instructions Preview */}
                       <div className="md:col-span-2">
-                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                          <ChefHat className="w-5 h-5" />
+                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                          <ChefHat className="w-6 h-6 text-primary" />
                           Instructions
                         </h3>
-                        <ol className="space-y-4">
-                          {selectedRecipe.recipeInstructions?.slice(0, 3).map((step: any, idx: number) => (
-                            <li key={idx} className="flex gap-4 opacity-70">
-                              <span className="flex-shrink-0 w-8 h-8 rounded-full bg-muted text-foreground flex items-center justify-center text-sm font-bold">
+                        <ol className="space-y-6">
+                          {selectedRecipe.instructions?.map((step: any, idx: number) => (
+                            <li key={idx} className="flex gap-6 group">
+                              <span className="flex-shrink-0 w-10 h-10 rounded-full bg-muted text-foreground flex items-center justify-center text-lg font-black group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                                 {idx + 1}
                               </span>
-                              <span className="text-foreground leading-relaxed line-clamp-2">{step.text}</span>
+                              <span className="text-lg text-foreground leading-relaxed pt-1">{step.text}</span>
                             </li>
                           )) || <li className="text-muted-foreground">No instructions provided</li>}
-                          {selectedRecipe.recipeInstructions?.length > 3 && (
-                            <li className="text-primary font-bold cursor-pointer hover:underline" onClick={() => setIsCookMode(true)}>
-                              + {selectedRecipe.recipeInstructions.length - 3} more steps...
-                            </li>
-                          )}
                         </ol>
                       </div>
                     </div>
                   </div>
-                </>
+                </div>
               )}
-            </div>
-          )}
-          {!selectedRecipe && selectedRecipeId && (
-            <div className="p-12 flex justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Grocery List Dialog */}
+      <Dialog open={showIngredientsList} onOpenChange={setShowIngredientsList}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <ShoppingBasket className="w-6 h-6 text-primary" />
+              Weekly Grocery List
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto pr-2">
+            <GroceryList />
+          </div>
+          <DialogFooter className="mt-4">
+            <Button onClick={() => setShowIngredientsList(false)} className="w-full h-12 text-lg">Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+function GroceryList() {
+  const { data, isLoading } = useApi<any>('/api/mealplan/ingredients')
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-3 text-lg font-medium">Calculating ingredients...</span>
+      </div>
+    )
+  }
+
+  const ingredients = data?.ingredients || []
+
+  if (ingredients.length === 0) {
+    return (
+      <div className="text-center py-20 text-muted-foreground italic">
+        No meals planned for this week yet.
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
+      {ingredients.map((ing: any, idx: number) => (
+        <div key={idx} className="flex items-start gap-3 p-4 bg-muted/30 rounded-xl border group hover:border-primary/50 transition-colors">
+          <div className="h-6 w-6 rounded border-2 border-primary/20 flex items-center justify-center mt-0.5 group-hover:border-primary/50 transition-colors">
+            <Check className="w-4 h-4 text-primary opacity-0 group-hover:opacity-20" />
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-lg leading-tight">
+              {ing.amount} {ing.unit}
+            </div>
+            <div className="text-muted-foreground">{ing.item}</div>
+            {ing.note && <div className="text-xs italic text-muted-foreground/60 mt-1">{ing.note}</div>}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
