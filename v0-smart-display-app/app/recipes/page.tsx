@@ -12,11 +12,11 @@ import { parseSafeDate } from "@/lib/utils"
 import axios from "axios"
 import { toast } from "sonner"
 import { mutate } from "swr"
+import { useRouter } from "next/navigation"
 
 export default function RecipesPage() {
+  const router = useRouter()
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
-  const [isCookMode, setIsCookMode] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
   const [recipePage, setRecipePage] = useState(1)
   const [parseUrl, setParseUrl] = useState("")
@@ -48,8 +48,6 @@ export default function RecipesPage() {
 
   const handleRecipeClick = (recipeId: string) => {
     setSelectedRecipeId(recipeId)
-    setIsCookMode(false)
-    setCurrentStep(0)
   }
 
   const handleParseRecipe = async () => {
@@ -107,14 +105,6 @@ export default function RecipesPage() {
       toast.error("Failed to remove from plan")
     }
   }
-
-  // Get step-specific ingredients
-  const stepIngredients = useMemo(() => {
-    if (!selectedRecipe || !isCookMode) return []
-    return selectedRecipe.ingredients.filter((ing: any) => 
-      ing.stepIndices?.includes(currentStep)
-    )
-  }, [selectedRecipe, isCookMode, currentStep])
 
   if (loadingPlan && recipePage === 1 && !searchQuery) {
     return (
@@ -357,194 +347,97 @@ export default function RecipesPage() {
         </section>
       </div>
 
-      {/* Recipe Detail & Cook Mode Dialog */}
+      {/* Recipe Detail Dialog */}
       <Dialog open={selectedRecipeId !== null} onOpenChange={() => setSelectedRecipeId(null)}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden p-0">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           {selectedRecipe && (
-            <div className="h-full flex flex-col">
-              {isCookMode ? (
-                /* Cook Mode View */
-                <div className="h-full flex flex-col overflow-hidden">
-                  <div className="p-6 border-b flex items-center justify-between bg-muted/30">
-                    <div className="flex items-center gap-4">
-                      <Button variant="ghost" size="sm" onClick={() => setIsCookMode(false)}>
-                        <ChevronLeft className="w-4 h-4 mr-1" />
-                        Back to Details
-                      </Button>
-                      <h2 className="text-xl font-bold truncate max-w-[400px]">{selectedRecipe.name}</h2>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex gap-1">
-                        {selectedRecipe.instructions.map((_: any, i: number) => (
-                          <div 
-                            key={i} 
-                            className={`h-1.5 w-6 rounded-full transition-colors ${i === currentStep ? 'bg-primary' : i < currentStep ? 'bg-primary/40' : 'bg-muted-foreground/20'}`} 
-                          />
-                        ))}
-                      </div>
-                      <Badge variant="outline" className="font-mono text-lg py-1 px-3">
-                        Step {currentStep + 1} / {selectedRecipe.instructions.length}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                    {/* Main Instruction Area */}
-                    <div className="flex-1 p-8 md:p-12 flex flex-col items-center justify-center text-center overflow-y-auto">
-                      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary text-4xl font-black mb-4">
-                          {currentStep + 1}
-                        </div>
-                        <p className="text-3xl md:text-5xl font-medium leading-tight max-w-3xl mx-auto">
-                          {selectedRecipe.instructions[currentStep]?.text}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Sidebar Ingredients for this step */}
-                    {stepIngredients.length > 0 && (
-                      <div className="w-full md:w-80 bg-muted/20 border-l p-8 overflow-y-auto">
-                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                          <Utensils className="w-5 h-5" />
-                          Needed Now
-                        </h3>
-                        <ul className="space-y-4">
-                          {stepIngredients.map((ing: any, idx: number) => (
-                            <li key={idx} className="flex gap-3 bg-card p-4 rounded-xl border shadow-sm animate-in fade-in slide-in-from-right-4 duration-300">
-                              <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                              <div>
-                                <div className="font-bold text-lg">
-                                  {ing.amount} {ing.unit}
-                                </div>
-                                <div className="text-muted-foreground">{ing.item}</div>
-                                {ing.note && <div className="text-xs italic text-muted-foreground/70 mt-1">{ing.note}</div>}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Navigation Controls */}
-                  <div className="p-8 grid grid-cols-2 gap-6 bg-muted/30 border-t">
-                    <Button 
-                      size="lg" 
-                      variant="outline" 
-                      className="h-24 text-2xl rounded-2xl border-2"
-                      disabled={currentStep === 0}
-                      onClick={() => setCurrentStep(s => Math.max(0, s - 1))}
-                    >
-                      <ChevronLeft className="w-8 h-8 mr-3" />
-                      Previous
-                    </Button>
-                    <Button 
-                      size="lg" 
-                      className="h-24 text-2xl rounded-2xl shadow-xl"
-                      disabled={currentStep === selectedRecipe.instructions.length - 1}
-                      onClick={() => setCurrentStep(s => Math.min(selectedRecipe.instructions.length - 1, s + 1))}
-                    >
-                      {currentStep === selectedRecipe.instructions.length - 1 ? (
-                        <>Finish Cooking <Check className="w-8 h-8 ml-3" /></>
-                      ) : (
-                        <>Next Step <ChevronRight className="w-8 h-8 ml-3" /></>
+            <div className="flex flex-col">
+              {/* Hero Image */}
+              <div className="h-64 w-full relative overflow-hidden">
+                <img 
+                  src={selectedRecipe.imageUrl || '/placeholder.jpg'} 
+                  alt={selectedRecipe.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                  <div>
+                    <h2 className="text-3xl font-bold text-white mb-2 leading-tight">{selectedRecipe.name}</h2>
+                    <div className="flex gap-3">
+                      {selectedRecipe.totalTime && (
+                        <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md px-3 py-1 text-xs">
+                          <Clock className="w-3.5 h-3.5 mr-1.5" />
+                          {selectedRecipe.totalTime}
+                        </Badge>
                       )}
+                      {selectedRecipe.yield && (
+                        <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md px-3 py-1 text-xs">
+                          <Users className="w-3.5 h-3.5 mr-1.5" />
+                          {selectedRecipe.yield}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" size="sm" className="bg-white text-black hover:bg-white/90" onClick={() => handleAddToPlan(selectedRecipe)}>
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Plan
+                    </Button>
+                    <Button size="sm" className="shadow-xl" onClick={() => {
+                      router.push(`/recipes/${selectedRecipe.id}/cook`)
+                    }}>
+                      <ChefHat className="w-4 h-4 mr-2" />
+                      Start Cooking
                     </Button>
                   </div>
                 </div>
-              ) : (
-                /* Overview View */
-                <div className="flex-1 overflow-y-auto">
-                  {/* Hero Image */}
-                  <div className="h-80 w-full relative overflow-hidden">
-                    <img 
-                      src={selectedRecipe.imageUrl || '/placeholder.jpg'} 
-                      alt={selectedRecipe.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                    <div className="absolute bottom-8 left-8 right-8 flex items-end justify-between">
-                      <div>
-                        <h2 className="text-5xl font-bold text-white mb-4 leading-tight">{selectedRecipe.name}</h2>
-                        <div className="flex gap-4">
-                          {selectedRecipe.totalTime && (
-                            <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md px-4 py-2 text-sm">
-                              <Clock className="w-4 h-4 mr-2" />
-                              {selectedRecipe.totalTime}
-                            </Badge>
-                          )}
-                          {selectedRecipe.yield && (
-                            <Badge variant="secondary" className="bg-white/20 text-white border-none backdrop-blur-md px-4 py-2 text-sm">
-                              <Users className="w-4 h-4 mr-2" />
-                              {selectedRecipe.yield}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <Button variant="secondary" size="lg" className="bg-white text-black hover:bg-white/90" onClick={() => handleAddToPlan(selectedRecipe)}>
-                          <Calendar className="w-5 h-5 mr-2" />
-                          Plan
-                        </Button>
-                        <Button size="lg" className="shadow-2xl h-14 px-8 text-lg font-bold" onClick={() => {
-                          setIsCookMode(true)
-                          setCurrentStep(0)
-                        }}>
-                          <ChefHat className="w-6 h-6 mr-2" />
-                          Start Cooking
-                        </Button>
-                      </div>
-                    </div>
+              </div>
+
+              <div className="p-8 space-y-8">
+                {selectedRecipe.description && (
+                  <p className="text-lg text-muted-foreground leading-relaxed italic border-l-4 border-primary/20 pl-4">
+                    {selectedRecipe.description}
+                  </p>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Ingredients */}
+                  <div className="md:col-span-1">
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <Utensils className="w-5 h-5 text-primary" />
+                      Ingredients
+                    </h3>
+                    <ul className="space-y-2">
+                      {selectedRecipe.ingredients?.map((ing: any, idx: number) => (
+                        <li key={idx} className="text-sm border-b border-muted pb-2">
+                          <span className="font-bold text-primary mr-1">
+                            {ing.amount} {ing.unit}
+                          </span>
+                          <span className="text-foreground">{ing.item}</span>
+                        </li>
+                      )) || <li className="text-muted-foreground">No ingredients listed</li>}
+                    </ul>
                   </div>
 
-                  <div className="p-8 md:p-12 space-y-12">
-                    {selectedRecipe.description && (
-                      <p className="text-2xl text-muted-foreground leading-relaxed italic border-l-8 border-primary/20 pl-8">
-                        {selectedRecipe.description}
-                      </p>
-                    )}
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                      {/* Ingredients */}
-                      <div className="md:col-span-1">
-                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                          <Utensils className="w-6 h-6 text-primary" />
-                          Ingredients
-                        </h3>
-                        <ul className="space-y-4">
-                          {selectedRecipe.ingredients?.map((ing: any, idx: number) => (
-                            <li key={idx} className="text-lg border-b border-muted pb-3 group">
-                              <span className="font-bold text-primary mr-2">
-                                {ing.amount} {ing.unit}
-                              </span>
-                              <span className="text-foreground">{ing.item}</span>
-                              {ing.note && <span className="text-muted-foreground text-sm block mt-1">{ing.note}</span>}
-                            </li>
-                          )) || <li className="text-muted-foreground">No ingredients listed</li>}
-                        </ul>
-                      </div>
-
-                      {/* Instructions Preview */}
-                      <div className="md:col-span-2">
-                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                          <ChefHat className="w-6 h-6 text-primary" />
-                          Instructions
-                        </h3>
-                        <ol className="space-y-6">
-                          {selectedRecipe.instructions?.map((step: any, idx: number) => (
-                            <li key={idx} className="flex gap-6 group">
-                              <span className="flex-shrink-0 w-10 h-10 rounded-full bg-muted text-foreground flex items-center justify-center text-lg font-black group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                {idx + 1}
-                              </span>
-                              <span className="text-lg text-foreground leading-relaxed pt-1">{step.text}</span>
-                            </li>
-                          )) || <li className="text-muted-foreground">No instructions provided</li>}
-                        </ol>
-                      </div>
-                    </div>
+                  {/* Instructions Preview */}
+                  <div className="md:col-span-2">
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <ChefHat className="w-5 h-5 text-primary" />
+                      Instructions
+                    </h3>
+                    <ol className="space-y-4">
+                      {selectedRecipe.instructions?.map((step: any, idx: number) => (
+                        <li key={idx} className="flex gap-4 group">
+                          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-muted text-foreground flex items-center justify-center text-xs font-black">
+                            {idx + 1}
+                          </span>
+                          <span className="text-sm text-foreground leading-relaxed pt-1">{step.text}</span>
+                        </li>
+                      )) || <li className="text-muted-foreground">No instructions provided</li>}
+                    </ol>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           )}
         </DialogContent>
