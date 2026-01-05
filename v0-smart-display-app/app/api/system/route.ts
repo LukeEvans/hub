@@ -15,16 +15,16 @@ export async function POST(request: NextRequest) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    if (action === 'quit' || action === 'reboot' || action === 'shutdown') {
-      // Write the command to the file
-      fs.writeFileSync(commandFilePath, action);
-      
-      // Also try to close the window as a fallback if possible
-      return NextResponse.json({ 
-        success: true, 
-        message: `Command '${action}' sent to host system.` 
-      });
+    // Write the command to the file
+    fs.writeFileSync(commandFilePath, action);
+    // Ensure the file is readable/writable by the host user (pi)
+    try {
+      fs.chmodSync(commandFilePath, 0o666);
+    } catch (e) {
+      console.warn('Could not set permissions on command file:', e);
     }
+    
+    console.log(`System action '${action}' written to ${commandFilePath}`);
 
     return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (error: any) {

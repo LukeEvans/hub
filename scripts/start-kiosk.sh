@@ -3,10 +3,25 @@
 # Launch Chromium in kiosk mode pointed at local app
 export DISPLAY=:0
 
+# Path to maintenance file - if this exists, we don't start chromium
+MAINTENANCE_FILE="data/maintenance_mode"
+COMMAND_FILE="data/system_command"
+
+# Ensure data directory exists
+mkdir -p data
+
+# If we are in maintenance mode, wait until the file is removed
+if [ -f "$MAINTENANCE_FILE" ]; then
+    echo "Maintenance mode active (delete $MAINTENANCE_FILE to resume kiosk). Sleeping..."
+    while [ -f "$MAINTENANCE_FILE" ]; do
+        sleep 5
+    done
+    echo "Maintenance mode cleared. Starting kiosk..."
+fi
+
 # Function to clean up on exit
 cleanup() {
     echo "Cleaning up..."
-    # Kill chromium if it's still running
     if [ -n "$CHROMIUM_PID" ]; then
         kill "$CHROMIUM_PID" 2>/dev/null
     fi
@@ -19,22 +34,18 @@ CHROMIUM_PID=$!
 
 echo "Chromium started with PID $CHROMIUM_PID"
 
-# Watch for commands from the app via the shared data volume
-COMMAND_FILE="data/system_command"
-
-# Ensure data directory exists so we don't fail the loop
-mkdir -p data
-
 while true; do
     if [ -f "$COMMAND_FILE" ]; then
         COMMAND=$(cat "$COMMAND_FILE")
-        rm "$COMMAND_FILE"
+        # Use sudo rm to ensure we can delete it regardless of container permissions
+        sudo rm -f "$COMMAND_FILE"
         
         echo "Received system command: $COMMAND"
         
         case "$COMMAND" in
             "quit")
-                echo "Quitting chromium..."
+                echo "Quitting chromium and entering maintenance mode..."
+                touch "$MAINTENANCE_FILE"
                 kill "$CHROMIUM_PID" 2>/dev/null
                 exit 0
                 ;;
@@ -52,7 +63,7 @@ while true; do
         esac
     fi
     
-    # Check if chromium died unexpectedly
+    # Check if chromium died unexpectedly (and we aren't trying to quit)
     if ! kill -0 "$CHROMIUM_PID" 2>/dev/null; then
         echo "Chromium exited unexpectedly. Restarting in 5 seconds..."
         sleep 5

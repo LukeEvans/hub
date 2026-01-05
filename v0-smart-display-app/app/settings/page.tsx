@@ -319,17 +319,17 @@ export default function SettingsPage() {
       
       if (data.success) {
         if (action === 'quit') {
-          window.close()
-          // Fallback message if window doesn't close
-          alert("Command sent. If the window doesn't close, the host system will handle it shortly.")
+          toast.success("Close command sent. The app will close shortly.")
+          setTimeout(() => window.close(), 1000)
         } else {
-          alert(`System ${action} initiated.`)
+          toast.success(`System ${action} initiated.`)
         }
       } else {
         throw new Error(data.error || 'Failed to execute system action')
       }
     } catch (err: any) {
       console.error('System action failed:', err)
+      toast.error(err.message || 'Failed to execute system action')
       setError(err.message || 'Failed to execute system action')
     } finally {
       setIsSystemActionLoading(null)
