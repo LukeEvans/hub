@@ -41,7 +41,13 @@ export async function POST(request: Request) {
         messages: [
           {
             role: 'system',
-            content: `You are a recipe parser. Extract recipe information from the provided HTML. 
+            content: `You are a professional executive chef and recipe parser. Extract recipe information from the provided HTML. 
+            
+            Reorganize the instructions into a logical, expert culinary sequence:
+            1. PREP FIRST: Start with preheating the oven, preparing pans, and critical mise en place (e.g., "finely chop the onions").
+            2. COOKING FLOW: Ensure the cooking steps follow a logical progression that an expert chef would follow.
+            3. CONSISTENCY: Ensure ingredients match the steps they are used in.
+
             Return a JSON object with the following structure:
             {
               "name": "Recipe Name",
@@ -56,13 +62,13 @@ export async function POST(request: Request) {
               ],
               "imageUrl": "URL to the main recipe image if found"
             }
-            Important: "stepIndices" should be an array of instruction indices (0-based) where this ingredient is used. 
-            If you cannot find specific indices, leave it empty.
+            Important: "stepIndices" MUST be an accurate array of instruction indices (0-based) where this ingredient is used. 
+            If an ingredient is used in multiple steps, include all those indices.
             Normalize units (cups, tbsp, tsp, g, kg, ml, l).`
           },
           {
             role: 'user',
-            content: `Parse this recipe from the following HTML: ${cleanedHtml.substring(0, 100000)}` // gpt-5.2 handles larger context
+            content: `Parse this recipe into an expert chef's sequence from the following HTML: ${cleanedHtml.substring(0, 100000)}` // gpt-5.2 handles larger context
           }
         ],
         response_format: { type: "json_object" },
