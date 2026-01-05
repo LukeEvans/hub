@@ -29,7 +29,20 @@ export async function GET() {
       headers: { Authorization: `Bearer ${token}` },
     });
     
-    const payload = resp.data;
+    // Mealie returns a list of days, flatten them into a simple list of meals
+    const days = resp.data || [];
+    const flattenedMeals = days.flatMap((day: any) => 
+      (day.meals || []).map((meal: any) => ({
+        id: meal.id,
+        date: day.date,
+        name: meal.recipe?.name || meal.name || 'Unknown Meal',
+        recipeId: meal.recipeId,
+        entryType: meal.entryType,
+        mealType: meal.mealType
+      }))
+    );
+
+    const payload = { mealPlan: { meals: flattenedMeals } };
     cache.set(cacheKey, payload, 1800); // 30 min
 
     return NextResponse.json(payload, {

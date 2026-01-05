@@ -50,12 +50,24 @@ export function MenuWidget() {
               const isToday = new Date().toDateString() === date.toDateString()
 
               return (
-                <div key={i} className={`flex flex-col min-w-[120px] p-2 rounded-xl transition-colors ${isToday ? 'bg-white/20' : 'bg-black/5'}`}>
+                <div key={i} className={`flex flex-col min-w-[140px] p-2 rounded-xl transition-colors ${isToday ? 'bg-white/30 shadow-sm' : 'bg-black/5'}`}>
                   <div className="text-[10px] font-bold text-foreground/70 uppercase mb-1">
                     {isToday ? 'Today' : dayName}
                   </div>
-                  <div className="text-xs font-semibold text-foreground line-clamp-2 leading-tight">
-                    {meal.name}
+                  <div className="flex gap-2 items-center">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-black/10 flex-shrink-0">
+                      <img 
+                        src={`/api/mealie/image/${meal.recipeId}`} 
+                        alt={meal.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/placeholder.jpg'
+                        }}
+                      />
+                    </div>
+                    <div className="text-xs font-semibold text-foreground line-clamp-2 leading-tight">
+                      {meal.name}
+                    </div>
                   </div>
                 </div>
               )
