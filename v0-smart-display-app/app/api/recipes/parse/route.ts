@@ -25,6 +25,14 @@ export async function POST(request: Request) {
 
     const html = response.data;
     
+    // Clean the HTML to remove script and style tags to fit more content
+    const cleanedHtml = typeof html === 'string' 
+      ? html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+      : '';
+    
     // Use OpenAI to parse the recipe
     const openaiResponse = await axios.post(
       'https://api.openai.com/v1/chat/completions',
@@ -54,10 +62,11 @@ export async function POST(request: Request) {
           },
           {
             role: 'user',
-            content: `Parse this recipe from the following HTML: ${html.substring(0, 50000)}` // Limit HTML to avoid token limits
+            content: `Parse this recipe from the following HTML: ${cleanedHtml.substring(0, 100000)}` // gpt-5.2 handles larger context
           }
         ],
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
+        reasoning_effort: "medium"
       },
       {
         headers: {
