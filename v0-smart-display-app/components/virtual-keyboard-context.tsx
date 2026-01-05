@@ -58,12 +58,8 @@ export function VirtualKeyboardProvider({ children }: { children: React.ReactNod
     if (key === "backspace") {
       if (start === end && start > 0) {
         newValue = value.substring(0, start - 1) + value.substring(end)
-        input.value = newValue
-        input.setSelectionRange(start - 1, start - 1)
       } else if (start !== end) {
         newValue = value.substring(0, start) + value.substring(end)
-        input.value = newValue
-        input.setSelectionRange(start, start)
       }
     } else if (key === "enter") {
       hideKeyboard()
@@ -71,13 +67,30 @@ export function VirtualKeyboardProvider({ children }: { children: React.ReactNod
       return
     } else if (key === "space") {
       newValue = value.substring(0, start) + " " + value.substring(end)
-      input.value = newValue
-      input.setSelectionRange(start + 1, start + 1)
     } else {
       newValue = value.substring(0, start) + key + value.substring(end)
-      input.value = newValue
-      input.setSelectionRange(start + 1, start + 1)
     }
+
+    // Use React's internal value setter to ensure onChange is triggered for controlled components
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      input instanceof HTMLTextAreaElement 
+        ? window.HTMLTextAreaElement.prototype 
+        : window.HTMLInputElement.prototype,
+      "value"
+    )?.set
+    
+    if (nativeInputValueSetter) {
+      nativeInputValueSetter.call(input, newValue)
+    } else {
+      input.value = newValue
+    }
+
+    // Update selection range
+    const newCursorPos = key === "backspace" 
+      ? (start === end ? Math.max(0, start - 1) : start)
+      : start + (key === "space" ? 1 : key.length)
+    
+    input.setSelectionRange(newCursorPos, newCursorPos)
 
     setCurrentValue(newValue)
     
