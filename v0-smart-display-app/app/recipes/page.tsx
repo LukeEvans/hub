@@ -408,13 +408,13 @@ export default function RecipesPage() {
       </div>
 
       {/* Recipe Detail Dialog */}
-      <Dialog open={selectedRecipeId !== null} onOpenChange={(open) => {
+      <Dialog open={selectedRecipeId !== null} onOpenChange={(open: boolean) => {
         if (!open) {
           setSelectedRecipeId(null)
           setShowOriginal(false)
         }
       }}>
-        <DialogContent className="max-w-[95vw] w-full max-h-[95vh] overflow-y-auto p-0">
+        <DialogContent className="max-w-[95vw] sm:max-w-[95vw] w-full max-h-[95vh] overflow-y-auto p-0">
           {selectedRecipe && (
             <div className="flex flex-col">
               {/* Hero Image */}
