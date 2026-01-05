@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const openaiResponse = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.2',
         messages: [
           {
             role: 'system',
