@@ -89,12 +89,13 @@ function PhotoSlot({ photos, index, activePhotos, onPhotoChange }: PhotoSlotProp
   return (
     <div className="w-full mb-4 px-2">
       <div
-        className={`w-full h-full rounded-2xl overflow-hidden shadow-xl bg-muted transition-all duration-1000 ${
+        className={`w-full h-full rounded-2xl overflow-hidden shadow-xl bg-muted ${
           isTransitioning ? "animate-collage-exit" : "animate-collage-enter"
         } ${aspectRatio}`}
         style={{ "--rotation": "0deg" } as any}
       >
         <img
+          key={currentPhoto}
           src={currentPhoto}
           alt="Masonry piece"
           className="w-full h-full object-cover"
