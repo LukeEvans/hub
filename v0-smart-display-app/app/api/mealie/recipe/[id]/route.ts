@@ -29,6 +29,7 @@ export async function GET(
       return NextResponse.json(getEmptyRecipe());
     }
 
+    console.log(`Mealie: Fetching recipe ${id} from ${baseUrl}/api/recipes/${id}`);
     const resp = await axios.get(`${baseUrl}/api/recipes/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });

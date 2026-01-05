@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ items: [], total: 0, page: 1, perPage: 20 });
     }
 
+    console.log(`Mealie: Fetching recipes from ${baseUrl}/api/recipes`);
     const resp = await axios.get(`${baseUrl}/api/recipes`, {
       headers: { Authorization: `Bearer ${token}` },
       params: {
