@@ -1,12 +1,12 @@
 "use client"
 
-import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame, Loader2, ChevronLeft, ChevronRight, BookOpen, Calendar, Link, Plus, ShoppingBasket, Check, Trash2, MoreVertical, Edit2, ArrowLeft, ArrowRight } from "lucide-react"
+import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame, Loader2, ChevronLeft, ChevronRight, BookOpen, Calendar, Link, Plus, ShoppingBasket, Check, Trash2, MoreVertical, Edit2, ArrowLeft, ArrowRight, ExternalLink } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useApi } from "@/lib/use-api"
 import { parseSafeDate } from "@/lib/utils"
 import axios from "axios"
@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation"
 export default function RecipesPage() {
   const router = useRouter()
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
+  const [showOriginal, setShowOriginal] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [recipePage, setRecipePage] = useState(1)
   const [parseUrl, setParseUrl] = useState("")
@@ -403,7 +404,12 @@ export default function RecipesPage() {
       </div>
 
       {/* Recipe Detail Dialog */}
-      <Dialog open={selectedRecipeId !== null} onOpenChange={() => setSelectedRecipeId(null)}>
+      <Dialog open={selectedRecipeId !== null} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedRecipeId(null)
+          setShowOriginal(false)
+        }
+      }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           {selectedRecipe && (
             <div className="flex flex-col">
@@ -434,6 +440,17 @@ export default function RecipesPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    {selectedRecipe.sourceUrl && (
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="bg-white/20 text-white hover:bg-white/30 border-none backdrop-blur-md"
+                        onClick={() => setShowOriginal(!showOriginal)}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        {showOriginal ? "Show Recipe" : "Original Site"}
+                      </Button>
+                    )}
                     <Button variant="secondary" size="sm" className="bg-white text-black hover:bg-white/90" onClick={() => setPlanningRecipe(selectedRecipe)}>
                       <Calendar className="w-4 h-4 mr-2" />
                       Plan
@@ -449,49 +466,71 @@ export default function RecipesPage() {
               </div>
 
               <div className="p-8 space-y-8">
-                {selectedRecipe.description && (
-                  <p className="text-lg text-muted-foreground leading-relaxed italic border-l-4 border-primary/20 pl-4">
-                    {selectedRecipe.description}
-                  </p>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {/* Ingredients */}
-                  <div className="md:col-span-1">
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <Utensils className="w-5 h-5 text-primary" />
-                      Ingredients
-                    </h3>
-                    <ul className="space-y-2">
-                      {selectedRecipe.ingredients?.map((ing: any, idx: number) => (
-                        <li key={idx} className="text-sm border-b border-muted pb-2">
-                          <span className="font-bold text-primary mr-1">
-                            {ing.amount} {ing.unit}
-                          </span>
-                          <span className="text-foreground">{ing.item}</span>
-                        </li>
-                      )) || <li className="text-muted-foreground">No ingredients listed</li>}
-                    </ul>
+                {showOriginal && selectedRecipe.sourceUrl ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold">Original Recipe Page</h3>
+                      <Button variant="outline" size="sm" onClick={() => window.open(selectedRecipe.sourceUrl, '_blank')}>
+                        <Link className="w-4 h-4 mr-2" />
+                        Open in New Tab
+                      </Button>
+                    </div>
+                    <div className="w-full h-[60vh] rounded-xl overflow-hidden border bg-white shadow-inner">
+                      <iframe 
+                        src={selectedRecipe.sourceUrl} 
+                        className="w-full h-full"
+                        title="Original Recipe"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                      />
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    {selectedRecipe.description && (
+                      <p className="text-lg text-muted-foreground leading-relaxed italic border-l-4 border-primary/20 pl-4">
+                        {selectedRecipe.description}
+                      </p>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      {/* Ingredients */}
+                      <div className="md:col-span-1">
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                          <Utensils className="w-5 h-5 text-primary" />
+                          Ingredients
+                        </h3>
+                        <ul className="space-y-2">
+                          {selectedRecipe.ingredients?.map((ing: any, idx: number) => (
+                            <li key={idx} className="text-sm border-b border-muted pb-2">
+                              <span className="font-bold text-primary mr-1">
+                                {ing.amount} {ing.unit}
+                              </span>
+                              <span className="text-foreground">{ing.item}</span>
+                            </li>
+                          )) || <li className="text-muted-foreground">No ingredients listed</li>}
+                        </ul>
+                      </div>
 
-                  {/* Instructions Preview */}
-                  <div className="md:col-span-2">
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <ChefHat className="w-5 h-5 text-primary" />
-                      Instructions
-                    </h3>
-                    <ol className="space-y-4">
-                      {selectedRecipe.instructions?.map((step: any, idx: number) => (
-                        <li key={idx} className="flex gap-4 group">
-                          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-muted text-foreground flex items-center justify-center text-xs font-black">
-                            {idx + 1}
-                          </span>
-                          <span className="text-sm text-foreground leading-relaxed pt-1">{step.text}</span>
-                        </li>
-                      )) || <li className="text-muted-foreground">No instructions provided</li>}
-                    </ol>
-                  </div>
-                </div>
+                      {/* Instructions Preview */}
+                      <div className="md:col-span-2">
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                          <ChefHat className="w-5 h-5 text-primary" />
+                          Instructions
+                        </h3>
+                        <ol className="space-y-4">
+                          {selectedRecipe.instructions?.map((step: any, idx: number) => (
+                            <li key={idx} className="flex gap-4 group">
+                              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-muted text-foreground flex items-center justify-center text-xs font-black">
+                                {idx + 1}
+                              </span>
+                              <span className="text-sm text-foreground leading-relaxed pt-1">{step.text}</span>
+                            </li>
+                          )) || <li className="text-muted-foreground">No instructions provided</li>}
+                        </ol>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -519,15 +558,15 @@ export default function RecipesPage() {
       <PlanningDialog 
         recipe={planningRecipe} 
         open={planningRecipe !== null} 
-        onOpenChange={(open) => !open && setPlanningRecipe(null)}
-        onConfirm={(date, mealType) => handleAddToPlan(planningRecipe, date, mealType)}
+        onOpenChange={(open: boolean) => !open && setPlanningRecipe(null)}
+        onConfirm={(date: string, mealType: string) => handleAddToPlan(planningRecipe, date, mealType)}
       />
 
       <PlanningDialog 
         meal={editingMeal} 
         open={editingMeal !== null} 
-        onOpenChange={(open) => !open && setEditingMeal(null)}
-        onConfirm={(date, mealType) => handleUpdateMeal(editingMeal.id, date, mealType)}
+        onOpenChange={(open: boolean) => !open && setEditingMeal(null)}
+        onConfirm={(date: string, mealType: string) => handleUpdateMeal(editingMeal.id, date, mealType)}
       />
     </div>
   )
