@@ -35,6 +35,19 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  try {
+    const entry: MealPlanEntry = await request.json();
+    if (!entry.id) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    }
+    await db.updateMealPlanEntry(entry);
+    return NextResponse.json({ success: true, entry });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

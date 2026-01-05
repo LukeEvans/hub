@@ -4,6 +4,7 @@ import path from 'path';
 const DATA_DIR = path.join(process.cwd(), 'data');
 const RECIPES_FILE = path.join(DATA_DIR, 'recipes.json');
 const MEAL_PLAN_FILE = path.join(DATA_DIR, 'mealplan.json');
+const SHOPPING_LIST_FILE = path.join(DATA_DIR, 'shopping-list.json');
 
 export interface Ingredient {
   item: string;
@@ -11,6 +12,13 @@ export interface Ingredient {
   unit?: string;
   note?: string;
   stepIndices?: number[]; // Which steps this ingredient is used in
+}
+
+export interface ShoppingListItem extends Ingredient {
+  id: string;
+  status: 'need' | 'have';
+  category?: string;
+  isManual?: boolean;
 }
 
 export interface Instruction {
@@ -97,10 +105,27 @@ export const db = {
     await writeJson(MEAL_PLAN_FILE, plan);
   },
 
+  async updateMealPlanEntry(entry: MealPlanEntry): Promise<void> {
+    const plan = await this.getMealPlan();
+    const index = plan.findIndex(e => e.id === entry.id);
+    if (index >= 0) {
+      plan[index] = entry;
+      await writeJson(MEAL_PLAN_FILE, plan);
+    }
+  },
+
   async removeFromMealPlan(id: string): Promise<void> {
     const plan = await this.getMealPlan();
     const filtered = plan.filter(e => e.id !== id);
     await writeJson(MEAL_PLAN_FILE, filtered);
+  },
+
+  async getShoppingList(): Promise<ShoppingListItem[]> {
+    return readJson<ShoppingListItem[]>(SHOPPING_LIST_FILE, []);
+  },
+
+  async saveShoppingList(items: ShoppingListItem[]): Promise<void> {
+    await writeJson(SHOPPING_LIST_FILE, items);
   }
 };
 

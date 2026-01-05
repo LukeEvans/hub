@@ -1,6 +1,6 @@
 "use client"
 
-import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame, Loader2, ChevronLeft, ChevronRight, BookOpen, Calendar, Link, Plus, ShoppingBasket, Check, Trash2 } from "lucide-react"
+import { Utensils, Clock, ChefHat, Search, Heart, Users, Flame, Loader2, ChevronLeft, ChevronRight, BookOpen, Calendar, Link, Plus, ShoppingBasket, Check, Trash2, MoreVertical, Edit2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,8 @@ export default function RecipesPage() {
   const [parseUrl, setParseUrl] = useState("")
   const [isParsing, setIsParsing] = useState(false)
   const [showIngredientsList, setShowIngredientsList] = useState(false)
+  const [planningRecipe, setPlanningRecipe] = useState<any>(null)
+  const [editingMeal, setEditingMeal] = useState<any>(null)
   const recipesPerPage = 12
   
   const { data: mealPlanData, isLoading: loadingPlan } = useApi<any>('/api/mealplan')
@@ -80,18 +82,34 @@ export default function RecipesPage() {
     }
   }
 
-  const handleAddToPlan = async (recipe: any) => {
+  const handleAddToPlan = async (recipe: any, date: string, mealType: string) => {
     try {
-      const date = new Date().toISOString()
       await axios.post('/api/mealplan', {
         recipeId: recipe.id,
         date,
-        mealType: 'Dinner'
+        mealType
       })
       toast.success("Added to meal plan")
       mutate('/api/mealplan')
+      setPlanningRecipe(null)
     } catch (error) {
       toast.error("Failed to add to plan")
+    }
+  }
+
+  const handleUpdateMeal = async (mealId: string, date: string, mealType: string) => {
+    try {
+      const meal = meals.find((m: any) => m.id === mealId)
+      await axios.put('/api/mealplan', {
+        ...meal,
+        date,
+        mealType
+      })
+      toast.success("Meal updated")
+      mutate('/api/mealplan')
+      setEditingMeal(null)
+    } catch (error) {
+      toast.error("Failed to update meal")
     }
   }
 
@@ -201,14 +219,26 @@ export default function RecipesPage() {
                     {tonightDinner.mealType || 'Dinner'}
                   </p>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="opacity-0 group-hover:opacity-100 text-destructive"
-                  onClick={(e) => handleRemoveFromPlan(tonightDinner.id, e)}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setEditingMeal(tonightDinner)
+                    }}
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-destructive"
+                    onClick={(e) => handleRemoveFromPlan(tonightDinner.id, e)}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
             </Card>
           </section>
@@ -231,15 +261,29 @@ export default function RecipesPage() {
                   <div className="flex justify-between items-start">
                     <span className="text-xs font-bold text-muted-foreground uppercase">
                       {parseSafeDate(meal.date).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+                      {meal.mealType && ` • ${meal.mealType}`}
                     </span>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive"
-                      onClick={(e) => handleRemoveFromPlan(meal.id, e)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingMeal(meal)
+                        }}
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 text-destructive"
+                        onClick={(e) => handleRemoveFromPlan(meal.id, e)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="flex gap-3 items-center">
                     <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
@@ -312,7 +356,7 @@ export default function RecipesPage() {
                         className="h-8 w-8 rounded-full shadow-lg"
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleAddToPlan(recipe)
+                          setPlanningRecipe(recipe)
                         }}
                       >
                         <Plus className="w-4 h-4" />
@@ -379,7 +423,7 @@ export default function RecipesPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" className="bg-white text-black hover:bg-white/90" onClick={() => handleAddToPlan(selectedRecipe)}>
+                    <Button variant="secondary" size="sm" className="bg-white text-black hover:bg-white/90" onClick={() => setPlanningRecipe(selectedRecipe)}>
                       <Calendar className="w-4 h-4 mr-2" />
                       Plan
                     </Button>
@@ -460,48 +504,208 @@ export default function RecipesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PlanningDialog 
+        recipe={planningRecipe} 
+        open={planningRecipe !== null} 
+        onOpenChange={(open) => !open && setPlanningRecipe(null)}
+        onConfirm={(date, mealType) => handleAddToPlan(planningRecipe, date, mealType)}
+      />
+
+      <PlanningDialog 
+        meal={editingMeal} 
+        open={editingMeal !== null} 
+        onOpenChange={(open) => !open && setEditingMeal(null)}
+        onConfirm={(date, mealType) => handleUpdateMeal(editingMeal.id, date, mealType)}
+      />
     </div>
   )
 }
 
+function PlanningDialog({ recipe, meal, open, onOpenChange, onConfirm }: any) {
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [mealType, setMealType] = useState('Dinner')
+
+  // When meal is provided (editing), initialize with meal values
+  useMemo(() => {
+    if (meal) {
+      setDate(meal.date.split('T')[0])
+      setMealType(meal.mealType || 'Dinner')
+    } else {
+      setDate(new Date().toISOString().split('T')[0])
+      setMealType('Dinner')
+    }
+  }, [meal, open])
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{meal ? 'Edit Meal Plan' : 'Add to Meal Plan'}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Date</label>
+            <Input 
+              type="date" 
+              value={date} 
+              onChange={(e) => setDate(e.target.value)} 
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Meal Type</label>
+            <select 
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              value={mealType} 
+              onChange={(e) => setMealType(e.target.value)}
+            >
+              <option value="Breakfast">Breakfast</option>
+              <option value="Lunch">Lunch</option>
+              <option value="Dinner">Dinner</option>
+              <option value="Snack">Snack</option>
+            </select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={() => onConfirm(date, mealType)}>{meal ? 'Save Changes' : 'Add to Plan'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function GroceryList() {
-  const { data, isLoading } = useApi<any>('/api/mealplan/ingredients')
+  const { data, isLoading } = useApi<any>('/api/shopping-list')
+  const [isUpdating, setIsUpdating] = useState(false)
   
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <span className="ml-3 text-lg font-medium">Calculating ingredients...</span>
+        <span className="ml-3 text-lg font-medium">Loading grocery list...</span>
       </div>
     )
   }
 
-  const ingredients = data?.ingredients || []
+  const items = data?.items || []
+  const needItems = items.filter((i: any) => i.status === 'need')
+  const haveItems = items.filter((i: any) => i.status === 'have')
 
-  if (ingredients.length === 0) {
+  const handleAction = async (id: string, action: string) => {
+    setIsUpdating(true)
+    try {
+      await axios.post('/api/shopping-list', { id, action })
+      mutate('/api/shopping-list')
+    } catch (error) {
+      toast.error("Failed to update item")
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleClearHave = async () => {
+    setIsUpdating(true)
+    try {
+      await axios.post('/api/shopping-list', { action: 'clear_have' })
+      mutate('/api/shopping-list')
+    } catch (error) {
+      toast.error("Failed to clear items")
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  if (items.length === 0) {
     return (
       <div className="text-center py-20 text-muted-foreground italic">
-        No meals planned for this week yet.
+        No items in your grocery list.
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
-      {ingredients.map((ing: any, idx: number) => (
-        <div key={idx} className="flex items-start gap-3 p-4 bg-muted/30 rounded-xl border group hover:border-primary/50 transition-colors">
-          <div className="h-6 w-6 rounded border-2 border-primary/20 flex items-center justify-center mt-0.5 group-hover:border-primary/50 transition-colors">
-            <Check className="w-4 h-4 text-primary opacity-0 group-hover:opacity-20" />
-          </div>
-          <div className="flex-1">
-            <div className="font-bold text-lg leading-tight">
-              {ing.amount} {ing.unit}
+    <div className="space-y-8 py-2">
+      {/* Need to Buy Section */}
+      <section>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">What I need to buy</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {needItems.map((ing: any) => (
+            <div 
+              key={ing.id} 
+              className="flex items-start gap-3 p-4 bg-muted/30 rounded-xl border group hover:border-primary/50 transition-colors cursor-pointer"
+              onClick={() => handleAction(ing.id, 'toggle')}
+            >
+              <div className="h-6 w-6 rounded border-2 border-primary/20 flex items-center justify-center mt-0.5 group-hover:border-primary/50 transition-colors">
+                <div className="w-4 h-4 text-primary opacity-0 group-hover:opacity-20" />
+              </div>
+              <div className="flex-1">
+                <div className="font-bold text-lg leading-tight">
+                  {ing.amount} {ing.unit}
+                </div>
+                <div className="text-muted-foreground">{ing.item}</div>
+                {ing.note && <div className="text-xs italic text-muted-foreground/60 mt-1">{ing.note}</div>}
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="opacity-0 group-hover:opacity-100 h-8 w-8 text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleAction(ing.id, 'delete')
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
-            <div className="text-muted-foreground">{ing.item}</div>
-            {ing.note && <div className="text-xs italic text-muted-foreground/60 mt-1">{ing.note}</div>}
-          </div>
+          ))}
+          {needItems.length === 0 && (
+            <div className="col-span-2 text-center py-8 text-muted-foreground italic bg-muted/10 rounded-xl border-2 border-dashed">
+              Nothing left to buy!
+            </div>
+          )}
         </div>
-      ))}
+      </section>
+
+      {/* Already Have Section */}
+      {haveItems.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">What I already have</h3>
+            <Button variant="ghost" size="sm" onClick={handleClearHave} className="text-xs h-8">Clear all</Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {haveItems.map((ing: any) => (
+              <div 
+                key={ing.id} 
+                className="flex items-start gap-3 p-4 bg-primary/5 rounded-xl border border-primary/20 group hover:border-primary/50 transition-colors cursor-pointer opacity-70"
+                onClick={() => handleAction(ing.id, 'toggle')}
+              >
+                <div className="h-6 w-6 rounded border-2 border-primary bg-primary flex items-center justify-center mt-0.5">
+                  <Check className="w-4 h-4 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-bold text-lg leading-tight line-through opacity-50">
+                    {ing.amount} {ing.unit}
+                  </div>
+                  <div className="text-muted-foreground line-through opacity-50">{ing.item}</div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="opacity-0 group-hover:opacity-100 h-8 w-8 text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleAction(ing.id, 'delete')
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

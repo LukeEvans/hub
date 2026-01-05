@@ -9,8 +9,8 @@ import { parseSafeDate } from "@/lib/utils"
 
 export function MenuWidget() {
   const router = useRouter()
-  const { data, isLoading } = useApi<any>('/api/mealie/mealplan')
-  const meals = data?.mealPlan?.meals || []
+  const { data, isLoading } = useApi<any>('/api/mealplan')
+  const meals = data?.meals || []
 
   if (isLoading) {
     return (
@@ -78,7 +78,7 @@ export function MenuWidget() {
                       <div key={idx} className="flex gap-2 items-center">
                         <div className="w-10 h-10 rounded-lg overflow-hidden bg-black/10 flex-shrink-0 shadow-sm">
                           <img 
-                            src={`/api/mealie/image/${meal.recipeId}`} 
+                            src={meal.imageUrl || '/placeholder.jpg'} 
                             alt={meal.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
