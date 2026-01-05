@@ -12,6 +12,7 @@ import { SWRProvider } from "@/lib/swr-provider"
 import { TimerProvider } from "@/lib/timer-context"
 import { TimerBar } from "@/components/timer-bar"
 import { Toaster } from "sonner"
+import { LoadingScreen } from "@/components/loading-screen"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -49,6 +50,7 @@ export default function RootLayout({
         <SWRProvider>
           <TimerProvider>
             <VirtualKeyboardProvider>
+              <LoadingScreen />
               <TouchScrollProvider />
               <Screensaver />
               <SidebarNavigation />
