@@ -12,9 +12,6 @@ import { SWRProvider } from "@/lib/swr-provider"
 import { TimerProvider } from "@/lib/timer-context"
 import { TimerBar } from "@/components/timer-bar"
 import { Toaster } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Home } from "lucide-react"
-import Link from "next/link"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -59,14 +56,7 @@ export default function RootLayout({
               <main>
                 {children}
               </main>
-              
-              {/* Floating Hub Return Button - Visible when browsing external sites like Mealie */}
-              <Link href="/" className="fixed bottom-6 right-6 z-[100] transition-transform active:scale-95">
-                <Button size="icon" className="w-14 h-14 rounded-full shadow-2xl bg-primary hover:bg-primary/90 border-4 border-background">
-                  <Home className="w-7 h-7" />
-                </Button>
-              </Link>
-              
+
               <VirtualKeyboard />
               <Toaster position="top-right" />
             </VirtualKeyboardProvider>

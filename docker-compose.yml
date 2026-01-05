@@ -14,21 +14,4 @@ services:
       - ./data/photos:/app/photos
     restart: unless-stopped
 
-  mealie:
-    image: ghcr.io/mealie-recipes/mealie:latest
-    container_name: mealie
-    ports:
-      - "9000:9000"
-    volumes:
-      - mealie-data:/app/data
-    environment:
-      - ALLOW_SIGNUP=true
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - MEALIE_LLM_PROVIDER=${MEALIE_LLM_PROVIDER}
-    restart: unless-stopped
-
 volumes:
-  mealie-data:

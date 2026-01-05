@@ -42,7 +42,7 @@ const navigationItems = [
     name: "Recipes",
     href: "/recipes",
     icon: Utensils,
-    label: "Mealie",
+    label: "Recipes",
   },
   /* {
     name: "Music",
