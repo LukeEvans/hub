@@ -13,5 +13,3 @@ services:
       - ./data:/app/data
       - ./data/photos:/app/photos
     restart: unless-stopped
-
-volumes:
