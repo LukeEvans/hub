@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music, Check, Search, Minimize2, X, RotateCcw } from "lucide-react"
+import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music, Check, Search, Minimize2, X, RotateCcw, Moon, Sun, Power } from "lucide-react"
 import { useSWRConfig } from "swr"
 import { toast } from "sonner"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 export default function SettingsPage() {
   const { mutate } = useSWRConfig()
@@ -14,6 +16,14 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
+  
+  // System Config states
+  const [systemConfig, setSystemConfig] = useState<any>({
+    sleepScheduleEnabled: false,
+    sleepStartTime: '22:00',
+    sleepEndTime: '07:00'
+  })
+  const [isSavingSystemConfig, setIsSavingSystemConfig] = useState(false)
   
   // Google Photos Picker states
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null)
@@ -72,6 +82,12 @@ export default function SettingsPage() {
         setLastSyncTime(data.lastSyncTime)
       })
       .catch(err => console.error('Failed to fetch Google Photos config:', err))
+
+    // Fetch system config
+    fetch('/api/system/config')
+      .then(res => res.json())
+      .then(data => setSystemConfig(data))
+      .catch(err => console.error('Failed to fetch system config:', err))
 
     // Check if we have picker media saved
     fetch('/api/google/photos/picker/status')
@@ -303,6 +319,28 @@ export default function SettingsPage() {
     })
     setAudio(newAudio)
     setIsPlaying(true)
+  }
+
+  const handleSaveSystemConfig = async (newConfig: any) => {
+    setIsSavingSystemConfig(true)
+    try {
+      const response = await fetch('/api/system/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConfig),
+      })
+      if (response.ok) {
+        setSystemConfig(newConfig)
+        toast.success("System configuration saved!")
+      } else {
+        throw new Error("Failed to save configuration")
+      }
+    } catch (err: any) {
+      console.error("Failed to save system config:", err)
+      toast.error(err.message || "Failed to save system config")
+    } finally {
+      setIsSavingSystemConfig(false)
+    }
   }
 
   const handleSystemAction = async (action: string) => {
@@ -799,6 +837,85 @@ export default function SettingsPage() {
                     Play Sound
                   </>
                 )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Power Management</CardTitle>
+            <CardDescription>
+              Configure when the display should automatically turn off to save power.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-6 border-2 rounded-xl gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Moon className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-bold text-lg">Sleep Schedule</p>
+                  <p className="text-sm text-muted-foreground">Automatically turn off display at night</p>
+                </div>
+              </div>
+              <Switch 
+                checked={systemConfig.sleepScheduleEnabled}
+                onCheckedChange={(checked) => handleSaveSystemConfig({ ...systemConfig, sleepScheduleEnabled: checked })}
+                disabled={isSavingSystemConfig}
+              />
+            </div>
+
+            {systemConfig.sleepScheduleEnabled && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 border-2 rounded-xl bg-muted/30 space-y-3">
+                  <div className="flex items-center gap-3 text-primary">
+                    <Moon className="w-5 h-5" />
+                    <Label className="font-bold">Sleep Time</Label>
+                  </div>
+                  <Input 
+                    type="time" 
+                    value={systemConfig.sleepStartTime}
+                    onChange={(e) => setSystemConfig({ ...systemConfig, sleepStartTime: e.target.value })}
+                    onBlur={() => handleSaveSystemConfig(systemConfig)}
+                    className="h-12 text-lg"
+                  />
+                </div>
+                <div className="p-6 border-2 rounded-xl bg-muted/30 space-y-3">
+                  <div className="flex items-center gap-3 text-primary">
+                    <Sun className="w-5 h-5" />
+                    <Label className="font-bold">Wake Time</Label>
+                  </div>
+                  <Input 
+                    type="time" 
+                    value={systemConfig.sleepEndTime}
+                    onChange={(e) => setSystemConfig({ ...systemConfig, sleepEndTime: e.target.value })}
+                    onBlur={() => handleSaveSystemConfig(systemConfig)}
+                    className="h-12 text-lg"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button 
+                onClick={() => handleSystemAction('display_off')}
+                variant="outline"
+                className="flex-1 h-14 gap-3 text-lg font-semibold border-2"
+                disabled={isSystemActionLoading !== null}
+              >
+                <Power className="w-5 h-5" />
+                Turn Display Off
+              </Button>
+              <Button 
+                onClick={() => handleSystemAction('display_on')}
+                variant="outline"
+                className="flex-1 h-14 gap-3 text-lg font-semibold border-2"
+                disabled={isSystemActionLoading !== null}
+              >
+                <Sun className="w-5 h-5" />
+                Turn Display On
               </Button>
             </div>
           </CardContent>

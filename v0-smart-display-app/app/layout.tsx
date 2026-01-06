@@ -6,6 +6,7 @@ import "./globals.css"
 import { SidebarNavigation } from "@/components/sidebar-navigation"
 import { TouchScrollProvider } from "@/components/touch-scroll-provider"
 import { Screensaver } from "@/components/screensaver"
+import { PowerManager } from "@/components/power-manager"
 import { VirtualKeyboardProvider } from "@/components/virtual-keyboard-context"
 import { VirtualKeyboard } from "@/components/virtual-keyboard"
 import { SWRProvider } from "@/lib/swr-provider"
@@ -53,6 +54,7 @@ export default function RootLayout({
               <LoadingScreen />
               <TouchScrollProvider />
               <Screensaver />
+              <PowerManager />
               <SidebarNavigation />
               <TimerBar />
               <main>

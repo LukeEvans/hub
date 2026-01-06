@@ -57,6 +57,14 @@ while true; do
                 echo "Shutting down system..."
                 sudo poweroff
                 ;;
+            "display_off")
+                echo "Turning display off..."
+                vcgencmd display_power 0
+                ;;
+            "display_on")
+                echo "Turning display on..."
+                vcgencmd display_power 1
+                ;;
             *)
                 echo "Unknown command: $COMMAND"
                 ;;
