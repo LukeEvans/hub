@@ -3,9 +3,10 @@
 import { Calendar, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useState, useEffect } from "react"
-import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, startOfMonth, addMonths, subMonths, addDays as addDaysFn, subDays } from "date-fns"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, startOfMonth, addMonths, subMonths, addDays as addDaysFn, subDays, endOfMonth } from "date-fns"
 import { useApi } from "@/lib/use-api"
+import useEmblaCarousel from 'embla-carousel-react'
 
 interface CalendarEvent {
   id: string;
@@ -14,6 +15,147 @@ interface CalendarEvent {
   end: string;
   location?: string;
   description?: string;
+}
+
+function CalendarView({ view, days }: { view: string, days: any[] }) {
+  if (view === "Month") {
+    return (
+      <div className="grid grid-cols-7 h-full gap-px bg-border flex-1 border border-border">
+        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+          <div key={day} className="bg-muted p-2 text-center text-sm font-medium border-b border-border">
+            {day}
+          </div>
+        ))}
+        {days.map((day) => (
+          <div 
+            key={day.dateStr} 
+            className={`bg-background p-2 min-h-0 flex flex-col gap-1 overflow-hidden border-r border-b border-border ${!day.isCurrentMonth ? "opacity-40" : ""}`}
+          >
+            <div className="flex items-center justify-between">
+              <span className={`text-sm font-bold ${day.isToday ? "bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center" : ""}`}>
+                {day.date}
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+              {[...day.events.allDay, ...day.events.timed].slice(0, 4).map(event => (
+                <div key={event.id} className="text-[10px] px-1 py-0.5 bg-primary/10 rounded truncate border-l-2 border-primary shrink-0">
+                  {event.summary}
+                </div>
+              ))}
+              {(day.events.allDay.length + day.events.timed.length) > 4 && (
+                <div className="text-[10px] text-muted-foreground pl-1">
+                  +{(day.events.allDay.length + day.events.timed.length) - 4} more
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Day/Week View Header */}
+      <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 mb-2 shrink-0`}>
+        <div className="text-sm font-medium text-muted-foreground">Time</div>
+        {days.map((day) => (
+          <div key={day.dateStr} className="text-center">
+            <div className="text-2xl font-bold mb-1">
+              {day.name} <span className={day.isToday ? "text-primary" : ""}>{day.date}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* All-Day Events Row */}
+      <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 mb-2 shrink-0 max-h-[120px] overflow-y-auto custom-scrollbar`}>
+        <div className="text-[10px] uppercase font-bold text-muted-foreground pt-2">All Day</div>
+        {days.map((day) => (
+          <div key={day.dateStr} className="flex flex-col gap-1 py-1">
+            {day.events.allDay.map(event => (
+              <div key={event.id} className="bg-primary/20 text-primary-foreground border-l-4 border-primary px-2 py-1 rounded text-[10px] sm:text-xs font-semibold truncate">
+                {event.summary}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Time Grid Area */}
+      <div className="flex-1 min-h-0 pointer-events-auto">
+        <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 h-full relative`}>
+          {/* Time Labels */}
+          <div className="flex flex-col h-full">
+            {Array.from({ length: 16 }).map((_, i) => {
+              const hour = 7 + i
+              const ampm = hour >= 12 ? "PM" : "AM"
+              const displayHour = hour > 12 ? hour - 12 : hour
+              return (
+                <div key={hour} className="text-sm text-muted-foreground font-medium flex-1 flex items-start pt-0 border-t border-transparent">
+                  {displayHour} {ampm}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Day Columns */}
+          {days.map((day) => (
+            <div key={day.dateStr} className="relative h-full border-l border-border flex flex-col">
+              {/* Hour horizontal lines */}
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div 
+                  key={i} 
+                  className="flex-1 border-t border-border/50" 
+                />
+              ))}
+              
+              {/* Overlay for events */}
+              <div className="absolute inset-0 pointer-events-none">
+                {day.events.timed.map((event: CalendarEvent) => {
+                  const startDate = parseISO(event.start)
+                  const endDate = parseISO(event.end)
+                  const startHour = startDate.getHours()
+                  const startMinutes = startDate.getMinutes()
+                  
+                  if (startHour < 7 || startHour >= 23) return null
+
+                  const totalHours = 16
+                  const top = ((startHour - 7) + (startMinutes / 60)) / totalHours * 100
+                  
+                  const durationMs = endDate.getTime() - startDate.getTime()
+                  const durationHours = durationMs / (1000 * 60 * 60)
+                  const height = (durationHours / totalHours) * 100
+                  
+                  return (
+                    <div 
+                      key={event.id} 
+                      className="absolute left-1 right-1 z-10 pointer-events-auto"
+                      style={{ 
+                        top: `${top}%`,
+                        height: `calc(${height}% - 2px)`
+                      }}
+                    >
+                      <Card className="h-full p-1 sm:p-2 bg-[var(--widget-blue)] overflow-hidden cursor-pointer hover:shadow-md transition-shadow border-none shadow-sm flex flex-col">
+                        <div className="font-semibold text-[9px] sm:text-xs text-foreground leading-tight break-words line-clamp-2">
+                          {event.summary}
+                        </div>
+                        {height > 8 && (
+                          <div className="text-[8px] sm:text-[10px] text-foreground/70 mt-auto shrink-0">
+                            {format(startDate, 'h:mm a')}
+                          </div>
+                        )}
+                      </Card>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function CalendarPage() {
@@ -31,139 +173,150 @@ export default function CalendarPage() {
 
   const events = eventsData?.events || []
   const currentTemp = weatherData?.current?.temp !== undefined ? Math.round(weatherData.current.temp) : null
-  const loading = eventsLoading
 
   const currentTime = format(new Date(), "h:mm a")
   const currentMonthYear = format(currentDate, "MMMM yyyy")
 
-  const handlePrevious = () => {
-    if (view === "Week") setCurrentDate(subWeeks(currentDate, 1))
-    else if (view === "Day") setCurrentDate(subDays(currentDate, 1))
-    else if (view === "Month") setCurrentDate(subMonths(currentDate, 1))
-  }
-
-  const handleNext = () => {
-    if (view === "Week") setCurrentDate(addWeeks(currentDate, 1))
-    else if (view === "Day") setCurrentDate(addDaysFn(currentDate, 1))
-    else if (view === "Month") setCurrentDate(addMonths(currentDate, 1))
-  }
-
-  const handleToday = () => {
-    setCurrentDate(new Date())
-  }
-
   // Group events by day (yyyy-MM-dd)
-  const eventsByDay: Record<string, { timed: CalendarEvent[], allDay: CalendarEvent[] }> = {}
-  events.forEach(event => {
-    const isAllDay = !event.start.includes('T')
-    const dateStr = isAllDay ? event.start : format(parseISO(event.start), 'yyyy-MM-dd')
-    
-    if (!eventsByDay[dateStr]) {
-      eventsByDay[dateStr] = { timed: [], allDay: [] }
-    }
-    
-    if (isAllDay) {
-      eventsByDay[dateStr].allDay.push(event)
-    } else {
-      eventsByDay[dateStr].timed.push(event)
-    }
-  })
+  const eventsByDay = useMemo(() => {
+    const grouped: Record<string, { timed: CalendarEvent[], allDay: CalendarEvent[] }> = {}
+    events.forEach(event => {
+      const isAllDay = !event.start.includes('T')
+      const dateStr = isAllDay ? event.start : format(parseISO(event.start), 'yyyy-MM-dd')
+      
+      if (!grouped[dateStr]) {
+        grouped[dateStr] = { timed: [], allDay: [] }
+      }
+      
+      if (isAllDay) {
+        grouped[dateStr].allDay.push(event)
+      } else {
+        grouped[dateStr].timed.push(event)
+      }
+    })
+    return grouped
+  }, [events])
 
-  const getDaysForView = () => {
-    if (view === "Day") {
-      const dateStr = format(currentDate, 'yyyy-MM-dd')
+  const getDaysForDate = useCallback((date: Date, currentView: string) => {
+    if (currentView === "Day") {
+      const dateStr = format(date, 'yyyy-MM-dd')
       return [{
-        name: format(currentDate, 'EEEE'),
-        date: format(currentDate, 'd'),
+        name: format(date, 'EEEE'),
+        date: format(date, 'd'),
         dateStr,
-        isToday: isSameDay(currentDate, new Date()),
+        isToday: isSameDay(date, new Date()),
         isCurrentMonth: true,
         events: eventsByDay[dateStr] || { timed: [], allDay: [] }
       }]
     }
     
-    if (view === "Month") {
-      const monthStart = startOfMonth(currentDate)
+    if (currentView === "Month") {
+      const monthStart = startOfMonth(date)
       const monthDays = []
-      // Find the Monday of the week containing the 1st of the month
       const start = startOfWeek(monthStart, { weekStartsOn: 1 })
       
-      for (let i = 0; i < 42; i++) { // 6 weeks
-        const date = addDays(start, i)
-        const dateStr = format(date, 'yyyy-MM-dd')
+      for (let i = 0; i < 42; i++) {
+        const d = addDays(start, i)
+        const dateStr = format(d, 'yyyy-MM-dd')
         monthDays.push({
-          name: format(date, 'EEE'),
-          date: format(date, 'd'),
+          name: format(d, 'EEE'),
+          date: format(d, 'd'),
           dateStr,
-          isToday: isSameDay(date, new Date()),
-          isCurrentMonth: date.getMonth() === currentDate.getMonth(),
+          isToday: isSameDay(d, new Date()),
+          isCurrentMonth: d.getMonth() === date.getMonth(),
           events: eventsByDay[dateStr] || { timed: [], allDay: [] }
         })
       }
       return monthDays
     }
 
-    // Default: Week
-    const start = startOfWeek(currentDate, { weekStartsOn: 1 })
+    const start = startOfWeek(date, { weekStartsOn: 1 })
     return Array.from({ length: 7 }).map((_, i) => {
-      const date = addDays(start, i)
-      const dateStr = format(date, 'yyyy-MM-dd')
+      const d = addDays(start, i)
+      const dateStr = format(d, 'yyyy-MM-dd')
       return {
-        name: format(date, 'EEE'),
-        date: format(date, 'd'),
+        name: format(d, 'EEE'),
+        date: format(d, 'd'),
         dateStr,
-        isToday: isSameDay(date, new Date()),
+        isToday: isSameDay(d, new Date()),
         isCurrentMonth: true,
         events: eventsByDay[dateStr] || { timed: [], allDay: [] }
       }
     })
+  }, [eventsByDay])
+
+  const handlePrevious = useCallback(() => {
+    if (view === "Week") setCurrentDate(prev => subWeeks(prev, 1))
+    else if (view === "Day") setCurrentDate(prev => subDays(prev, 1))
+    else if (view === "Month") setCurrentDate(prev => subMonths(prev, 1))
+  }, [view])
+
+  const handleNext = useCallback(() => {
+    if (view === "Week") setCurrentDate(prev => addWeeks(prev, 1))
+    else if (view === "Day") setCurrentDate(prev => addDaysFn(prev, 1))
+    else if (view === "Month") setCurrentDate(prev => addMonths(prev, 1))
+  }, [view])
+
+  const handleToday = () => {
+    setCurrentDate(new Date())
   }
 
-  const viewDays = getDaysForView()
+  // Embla setup
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: false,
+    startIndex: 1,
+    skipSnaps: true,
+    watchDrag: !eventsLoading
+  })
 
-  // Swipe logic using pointer events
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return
+    const index = emblaApi.selectedScrollSnap()
+    if (index === 0) {
+      handlePrevious()
+      emblaApi.scrollTo(1, false)
+    } else if (index === 2) {
+      handleNext()
+      emblaApi.scrollTo(1, false)
+    }
+  }, [emblaApi, handlePrevious, handleNext])
+
   useEffect(() => {
-    let startX: number | null = null
-    let startY: number | null = null
-
-    const handlePointerDown = (e: PointerEvent) => {
-      const target = e.target as HTMLElement
-      if (target.closest('button, a, input, [role="button"], .no-swipe')) return
-      
-      startX = e.clientX
-      startY = e.clientY
-    }
-
-    const handlePointerUp = (e: PointerEvent) => {
-      if (startX === null || startY === null) return
-
-      const diffX = startX - e.clientX
-      const diffY = startY - e.clientY
-      const absDiffX = Math.abs(diffX)
-      const absDiffY = Math.abs(diffY)
-
-      // Only trigger if horizontal movement is significantly greater than vertical
-      // and exceeds the threshold
-      if (absDiffX > absDiffY && absDiffX > 50) {
-        if (diffX > 0) {
-          handleNext()
-        } else {
-          handlePrevious()
-        }
-      }
-
-      startX = null
-      startY = null
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown, { capture: true })
-    document.addEventListener('pointerup', handlePointerUp, { capture: true })
-
+    if (!emblaApi) return
+    emblaApi.on('select', onSelect)
     return () => {
-      document.removeEventListener('pointerdown', handlePointerDown, { capture: true })
-      document.removeEventListener('pointerup', handlePointerUp, { capture: true })
+      emblaApi.off('select', onSelect)
     }
-  }, [view, currentDate]) // Re-bind when view or date changes to ensure handlers use fresh state
+  }, [emblaApi, onSelect])
+
+  // Re-center when view changes
+  useEffect(() => {
+    if (emblaApi) emblaApi.scrollTo(1, false)
+  }, [view, emblaApi])
+
+  const getDateForIndex = (index: number) => {
+    if (index === 0) {
+      if (view === "Week") return subWeeks(currentDate, 1)
+      if (view === "Day") return subDays(currentDate, 1)
+      return subMonths(currentDate, 1)
+    }
+    if (index === 2) {
+      if (view === "Week") return addWeeks(currentDate, 1)
+      if (view === "Day") return addDaysFn(currentDate, 1)
+      return addMonths(currentDate, 1)
+    }
+    return currentDate
+  }
+
+  const navigatePrevious = () => {
+    if (emblaApi) emblaApi.scrollPrev()
+    else handlePrevious()
+  }
+
+  const navigateNext = () => {
+    if (emblaApi) emblaApi.scrollNext()
+    else handleNext()
+  }
 
   return (
     <div className="h-screen p-4 sm:p-6 bg-background overflow-hidden flex flex-col">
@@ -208,162 +361,37 @@ export default function CalendarPage() {
                 Month
               </Button>
             </div>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={handlePrevious}>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={navigatePrevious}>
               <ChevronLeft className="w-5 h-5" />
             </Button>
             <Button variant="ghost" className="text-sm font-medium" onClick={handleToday}>
               Today
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={handleNext}>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={navigateNext}>
               <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
         </div>
       </div>
 
-      {loading ? (
+      {eventsLoading && events.length === 0 ? (
         <div className="flex items-center justify-center flex-1">
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
         </div>
       ) : (
         <Card className="flex-1 overflow-hidden flex flex-col p-4">
-          {view === "Month" ? (
-            <div className="grid grid-cols-7 h-full gap-px bg-border flex-1 border border-border">
-              {/* Day headers */}
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                <div key={day} className="bg-muted p-2 text-center text-sm font-medium border-b border-border">
-                  {day}
-                </div>
-              ))}
-              {/* Calendar cells */}
-              {viewDays.map((day) => (
-                <div 
-                  key={day.dateStr} 
-                  className={`bg-background p-2 min-h-0 flex flex-col gap-1 overflow-hidden border-r border-b border-border ${!day.isCurrentMonth ? "opacity-40" : ""}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm font-bold ${day.isToday ? "bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center" : ""}`}>
-                      {day.date}
-                    </span>
-                  </div>
-                  <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
-                    {[...day.events.allDay, ...day.events.timed].slice(0, 4).map(event => (
-                      <div key={event.id} className="text-[10px] px-1 py-0.5 bg-primary/10 rounded truncate border-l-2 border-primary shrink-0">
-                        {event.summary}
-                      </div>
-                    ))}
-                    {(day.events.allDay.length + day.events.timed.length) > 4 && (
-                      <div className="text-[10px] text-muted-foreground pl-1">
-                        +{(day.events.allDay.length + day.events.timed.length) - 4} more
-                      </div>
-                    )}
-                  </div>
+          <div className="flex-1 overflow-hidden" ref={emblaRef}>
+            <div className="flex h-full">
+              {[0, 1, 2].map((index) => (
+                <div key={index} className="flex-[0_0_100%] min-w-0 h-full">
+                  <CalendarView 
+                    view={view} 
+                    days={getDaysForDate(getDateForIndex(index), view)} 
+                  />
                 </div>
               ))}
             </div>
-          ) : (
-            <>
-              {/* Day/Week View Header */}
-              <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 mb-2 shrink-0`}>
-                <div className="text-sm font-medium text-muted-foreground">Time</div>
-                {viewDays.map((day) => (
-                  <div key={day.dateStr} className="text-center">
-                    <div className="text-2xl font-bold mb-1">
-                      {day.name} <span className={day.isToday ? "text-primary" : ""}>{day.date}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* All-Day Events Row */}
-              <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 mb-2 shrink-0 max-h-[120px] overflow-y-auto custom-scrollbar`}>
-                <div className="text-[10px] uppercase font-bold text-muted-foreground pt-2">All Day</div>
-                {viewDays.map((day) => (
-                  <div key={day.dateStr} className="flex flex-col gap-1 py-1">
-                    {day.events.allDay.map(event => (
-                      <div key={event.id} className="bg-primary/20 text-primary-foreground border-l-4 border-primary px-2 py-1 rounded text-[10px] sm:text-xs font-semibold truncate">
-                        {event.summary}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-
-              {/* Time Grid Area */}
-              <div className="flex-1 min-h-0 pointer-events-auto">
-                <div className={`grid ${view === 'Day' ? 'grid-cols-[100px_1fr]' : 'grid-cols-[100px_repeat(7,1fr)]'} gap-4 h-full relative`}>
-                  {/* Time Labels */}
-                  <div className="flex flex-col h-full">
-                    {Array.from({ length: 16 }).map((_, i) => {
-                      const hour = 7 + i
-                      const ampm = hour >= 12 ? "PM" : "AM"
-                      const displayHour = hour > 12 ? hour - 12 : hour
-                      return (
-                        <div key={hour} className="text-sm text-muted-foreground font-medium flex-1 flex items-start pt-0 border-t border-transparent">
-                          {displayHour} {ampm}
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* Day Columns */}
-                  {viewDays.map((day) => (
-                    <div key={day.dateStr} className="relative h-full border-l border-border flex flex-col">
-                      {/* Hour horizontal lines */}
-                      {Array.from({ length: 16 }).map((_, i) => (
-                        <div 
-                          key={i} 
-                          className="flex-1 border-t border-border/50" 
-                        />
-                      ))}
-                      
-                      {/* Overlay for events */}
-                      <div className="absolute inset-0 pointer-events-none">
-                        {day.events.timed.map((event) => {
-                          const startDate = parseISO(event.start)
-                          const endDate = parseISO(event.end)
-                          const startHour = startDate.getHours()
-                          const startMinutes = startDate.getMinutes()
-                          
-                          // Only show if it overlaps with our 7 AM - 10 PM range (16 hours)
-                          if (startHour < 7 || startHour >= 23) return null
-
-                          const totalHours = 16
-                          const top = ((startHour - 7) + (startMinutes / 60)) / totalHours * 100
-                          
-                          const durationMs = endDate.getTime() - startDate.getTime()
-                          const durationHours = durationMs / (1000 * 60 * 60)
-                          const height = (durationHours / totalHours) * 100
-                          
-                          return (
-                            <div 
-                              key={event.id} 
-                              className="absolute left-1 right-1 z-10 pointer-events-auto"
-                              style={{ 
-                                top: `${top}%`,
-                                height: `calc(${height}% - 2px)` // Small gap
-                              }}
-                            >
-                              <Card className="h-full p-1 sm:p-2 bg-[var(--widget-blue)] overflow-hidden cursor-pointer hover:shadow-md transition-shadow border-none shadow-sm flex flex-col">
-                                <div className="font-semibold text-[9px] sm:text-xs text-foreground leading-tight break-words line-clamp-2">
-                                  {event.summary}
-                                </div>
-                                {height > 8 && (
-                                  <div className="text-[8px] sm:text-[10px] text-foreground/70 mt-auto shrink-0">
-                                    {format(startDate, 'h:mm a')}
-                                  </div>
-                                )}
-                              </Card>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+          </div>
         </Card>
       )}
     </div>
