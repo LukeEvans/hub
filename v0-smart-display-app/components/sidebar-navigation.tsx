@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useCallback } from "react"
+import { useOrientation } from "@/lib/orientation-context"
 
 const navigationItems = [
   {
@@ -67,6 +68,7 @@ const navigationItems = [
 export function SidebarNavigation() {
   const pathname = usePathname()
   const router = useRouter()
+  const { orientation } = useOrientation()
   const [isDark, setIsDark] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
 
@@ -99,14 +101,17 @@ export function SidebarNavigation() {
         variant="ghost"
         size="icon"
         onClick={toggleMenu}
-        className="fixed top-4 left-4 z-[60] md:hidden w-12 h-12 rounded-xl bg-sidebar/80 backdrop-blur-sm border border-sidebar-border shadow-sm"
+        className={cn(
+          "fixed top-4 left-4 z-[60] md:hidden w-12 h-12 rounded-xl bg-sidebar/80 backdrop-blur-sm border border-sidebar-border shadow-sm",
+          orientation === 'portrait' && "hidden"
+        )}
         aria-label={isOpen ? "Close menu" : "Open menu"}
       >
         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </Button>
 
       {/* Backdrop Overlay */}
-      {isOpen && (
+      {isOpen && orientation !== 'portrait' && (
         <div 
           className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40 md:hidden transition-opacity duration-300"
           onClick={closeMenu}
@@ -114,11 +119,17 @@ export function SidebarNavigation() {
       )}
 
       <aside className={cn(
-        "fixed left-0 top-0 h-screen w-64 md:w-28 border-r border-sidebar-border bg-sidebar flex flex-col items-center py-6 gap-6 z-50 transition-transform duration-300 ease-in-out",
-        !isOpen && "-translate-x-full md:translate-x-0"
+        "fixed z-50 transition-all duration-300 ease-in-out bg-sidebar border-sidebar-border",
+        orientation === 'landscape' 
+          ? "left-0 top-0 h-screen w-64 md:w-28 border-r flex flex-col items-center py-6 gap-6" 
+          : "left-0 bottom-0 w-full h-20 border-t flex flex-row items-center px-4 gap-2",
+        orientation === 'landscape' && !isOpen && "-translate-x-full md:translate-x-0"
       )}>
         {/* Navigation Items */}
-        <nav className="flex-1 flex flex-col items-center gap-3 w-full px-3">
+        <nav className={cn(
+          "flex items-center w-full",
+          orientation === 'landscape' ? "flex-1 flex-col gap-3 px-3" : "flex-row justify-around h-full"
+        )}>
           {navigationItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
@@ -129,7 +140,10 @@ export function SidebarNavigation() {
                 href={item.href}
                 prefetch={false}
                 className={cn(
-                  "w-full min-h-20 md:aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-200",
+                  "rounded-2xl flex flex-col items-center justify-center transition-all duration-200",
+                  orientation === 'landscape' 
+                    ? "w-full min-h-20 md:aspect-square gap-2" 
+                    : "h-full px-2 gap-1 flex-1 min-w-0",
                   "active:bg-sidebar-primary active:text-sidebar-primary-foreground active:scale-95",
                   isActive 
                     ? "bg-sidebar-primary text-sidebar-primary-foreground" 
@@ -143,21 +157,30 @@ export function SidebarNavigation() {
                   closeMenu()
                 }}
               >
-                <Icon className="w-8 h-8" />
-                <span className="text-xs font-medium">{item.label}</span>
+                <Icon className={cn(orientation === 'landscape' ? "w-8 h-8" : "w-6 h-6")} />
+                <span className={cn(
+                  "font-medium truncate w-full text-center px-1",
+                  orientation === 'landscape' ? "text-xs" : "text-[10px]"
+                )}>{item.label}</span>
               </Link>
             )
           })}
         </nav>
 
         {/* Bottom Actions */}
-        <div className="mt-auto flex flex-col items-center gap-2 pb-6">
+        <div className={cn(
+          "flex items-center gap-2",
+          orientation === 'landscape' ? "mt-auto flex-col pb-6" : ""
+        )}>
           {/* Dark Mode Toggle */}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleDarkMode}
-            className="w-14 h-14 rounded-xl"
+            className={cn(
+              "rounded-xl",
+              orientation === 'landscape' ? "w-14 h-14" : "w-12 h-12"
+            )}
             title="Toggle dark mode"
           >
             {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}

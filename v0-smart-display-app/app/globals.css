@@ -163,12 +163,20 @@
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    transition: all 0.3s ease-in-out;
   }
-  @media (min-width: 768px) {
-    main {
-      left: 7rem;
-    }
+
+  /* Orientation specific main layout */
+  body.orientation-landscape main {
+    left: 7rem;
+    bottom: 0;
   }
+
+  body.orientation-portrait main {
+    left: 0;
+    bottom: 5rem; /* Space for bottom navigation (h-20) */
+  }
+
   @media (max-width: 767px) {
     main {
       /* main top is already 5rem (h-20), which fits the TimerBar */

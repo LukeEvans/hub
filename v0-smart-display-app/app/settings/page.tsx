@@ -4,14 +4,16 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music, Check, Search, Minimize2, X, RotateCcw, Moon, Sun, Power } from "lucide-react"
+import { LogIn, Settings, Image as ImageIcon, RefreshCw, Loader2, Volume2, Square, Play, ExternalLink, Music, Check, Search, Minimize2, X, RotateCcw, Moon, Sun, Power, Monitor } from "lucide-react"
 import { useSWRConfig } from "swr"
 import { toast } from "sonner"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { useOrientation } from "@/lib/orientation-context"
 
 export default function SettingsPage() {
   const { mutate } = useSWRConfig()
+  const { orientation, setOrientation } = useOrientation()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -426,6 +428,36 @@ export default function SettingsPage() {
             Error: {error}
           </div>
         )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Display Settings</CardTitle>
+            <CardDescription>
+              Adjust how the app looks on your device.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-6 border-2 rounded-xl gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Monitor className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-bold text-lg">Screen Orientation</p>
+                  <p className="text-sm text-muted-foreground">Toggle between landscape and portrait</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className={`text-sm ${orientation === 'landscape' ? 'font-bold' : 'text-muted-foreground'}`}>Landscape</Label>
+                <Switch 
+                  checked={orientation === 'portrait'}
+                  onCheckedChange={(checked) => setOrientation(checked ? 'portrait' : 'landscape')}
+                />
+                <Label className={`text-sm ${orientation === 'portrait' ? 'font-bold' : 'text-muted-foreground'}`}>Portrait</Label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

@@ -8,6 +8,7 @@ const DEFAULT_CONFIG = {
   sleepScheduleEnabled: false,
   sleepStartTime: '22:00',
   sleepEndTime: '07:00',
+  orientation: 'landscape',
 };
 
 export async function GET() {
