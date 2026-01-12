@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { useOrientation } from "@/lib/orientation-context"
+import { cn } from "@/lib/utils"
 
 export default function SettingsPage() {
   const { mutate } = useSWRConfig()
@@ -416,13 +417,22 @@ export default function SettingsPage() {
   )
 
   return (
-    <div className="flex-1 p-8">
-      <div className="flex items-center gap-4 mb-8">
+    <div className={cn(
+      "flex-1 transition-all duration-300",
+      orientation === 'landscape' ? "p-8" : "p-4 pb-24"
+    )}>
+      <div className={cn(
+        "flex items-center gap-4 mb-8",
+        orientation === 'portrait' && "flex-col text-center"
+      )}>
         <Settings className="w-10 h-10" />
         <h1 className="text-4xl font-bold">Settings</h1>
       </div>
 
-      <div className="max-w-2xl space-y-6">
+      <div className={cn(
+        "max-w-2xl space-y-6 mx-auto",
+        orientation === 'portrait' && "max-w-full"
+      )}>
         {error && (
           <div className="p-4 bg-destructive/15 text-destructive border border-destructive/20 rounded-lg text-sm">
             Error: {error}
@@ -437,8 +447,14 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-6 border-2 rounded-xl gap-4">
-              <div className="flex items-center gap-4">
+            <div className={cn(
+              "flex items-center justify-between p-6 border-2 rounded-xl gap-4",
+              orientation === 'portrait' && "flex-col text-center"
+            )}>
+              <div className={cn(
+                "flex items-center gap-4",
+                orientation === 'portrait' && "flex-col"
+              )}>
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <Monitor className="w-6 h-6" />
                 </div>

@@ -42,7 +42,10 @@ export default function DashboardPage() {
     )}>
       {/* Header with real-time clock and date */}
       <div className="flex flex-col border-b pb-6 gap-4">
-        <div className="flex justify-between items-end">
+        <div className={cn(
+          "flex items-end transition-all duration-300",
+          orientation === 'landscape' ? "justify-between" : "justify-center text-center"
+        )}>
           <div>
             <h1 className={cn(
               "font-black tracking-tighter transition-all duration-300",
@@ -77,37 +80,51 @@ export default function DashboardPage() {
         "grid gap-8 overflow-hidden",
         orientation === 'landscape' ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1"
       )}>
-        {/* Left/Top Column: Weather */}
-        <div className={cn(
-          orientation === 'landscape' ? "lg:col-span-1 h-[600px]" : "h-auto min-h-[300px]"
-        )}>
-          <WeatherWidget />
-        </div>
+        {/* In Landscape: Weather(1/3) and Calendar(2/3) */}
+        {/* In Portrait: Calendar(Full) then Split Row then Menu(Full) */}
+        
+        {orientation === 'landscape' ? (
+          <>
+            <div className="lg:col-span-1 h-[600px]">
+              <WeatherWidget />
+            </div>
+            <div className="lg:col-span-2 h-[600px]">
+              <CalendarWidget />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="h-auto min-h-[400px]">
+              <CalendarWidget />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-8">
+              <div className="h-auto min-h-[300px]">
+                <WeatherWidget />
+              </div>
+              <div className="h-auto">
+                <SportsWidget />
+              </div>
+            </div>
 
-        {/* Right/Middle Column: Calendar */}
-        <div className={cn(
-          orientation === 'landscape' ? "lg:col-span-2 h-[600px]" : "h-auto min-h-[400px]"
-        )}>
-          <CalendarWidget />
-        </div>
+            <div className="h-auto">
+              <MenuWidget />
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Bottom Row: Nuggets Schedule and Weekly Menu */}
-      <div className={cn(
-        "grid gap-8",
-        orientation === 'landscape' ? "grid-cols-1 md:grid-cols-4 h-40" : "grid-cols-1 h-auto"
-      )}>
-        <div className={cn(
-          orientation === 'landscape' ? "md:col-span-1" : "h-auto"
-        )}>
-          <SportsWidget />
+      {/* Bottom Row (Only used in Landscape now as Portrait is handled above) */}
+      {orientation === 'landscape' && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 h-40">
+          <div className="md:col-span-1">
+            <SportsWidget />
+          </div>
+          <div className="md:col-span-3">
+            <MenuWidget />
+          </div>
         </div>
-        <div className={cn(
-          orientation === 'landscape' ? "md:col-span-3" : "h-auto"
-        )}>
-          <MenuWidget />
-        </div>
-      </div>
+      )}
     </div>
   )
 }

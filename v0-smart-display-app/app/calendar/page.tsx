@@ -7,6 +7,8 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks, startOfMonth, addMonths, subMonths, addDays as addDaysFn, subDays, endOfMonth } from "date-fns"
 import { useApi } from "@/lib/use-api"
 import useEmblaCarousel from 'embla-carousel-react'
+import { useOrientation } from "@/lib/orientation-context"
+import { cn } from "@/lib/utils"
 
 interface CalendarEvent {
   id: string;
@@ -161,6 +163,7 @@ function CalendarView({ view, days }: { view: string, days: any[] }) {
 export default function CalendarPage() {
   const [view, setView] = useState("Week")
   const [currentDate, setCurrentDate] = useState(new Date())
+  const { orientation } = useOrientation()
 
   // Calculate range for SWR key
   const start = startOfMonth(subMonths(currentDate, 1)).toISOString()
@@ -319,11 +322,20 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="h-screen p-4 sm:p-6 bg-background overflow-hidden flex flex-col">
+    <div className={cn(
+      "h-screen bg-background overflow-hidden flex flex-col",
+      orientation === 'landscape' ? "p-4 sm:p-6" : "p-4 pb-24"
+    )}>
       {/* Header */}
       <div className="mb-2 shrink-0">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-4">
+        <div className={cn(
+          "flex items-center justify-between mb-2",
+          orientation === 'portrait' && "flex-col gap-4 text-center"
+        )}>
+          <div className={cn(
+            "flex items-center gap-4",
+            orientation === 'portrait' && "flex-col"
+          )}>
             <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center">
               <Calendar className="w-7 h-7 text-primary-foreground" />
             </div>
@@ -361,15 +373,17 @@ export default function CalendarPage() {
                 Month
               </Button>
             </div>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={navigatePrevious}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" className="text-sm font-medium" onClick={handleToday}>
-              Today
-            </Button>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={navigateNext}>
-              <ChevronRight className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={navigatePrevious}>
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" className="text-sm font-medium" onClick={handleToday}>
+                Today
+              </Button>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={navigateNext}>
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

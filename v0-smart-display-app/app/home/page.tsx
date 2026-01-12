@@ -10,9 +10,12 @@ import { useApi } from "@/lib/use-api"
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
+import { useOrientation } from "@/lib/orientation-context"
+import { cn } from "@/lib/utils"
 
 export default function HomeAssistantPage() {
   const { data, isLoading, mutate } = useApi<any>('/api/homeassistant/states')
+  const { orientation } = useOrientation()
   const [optimisticStates, setOptimisticStates] = useState<Record<string, any>>({})
 
   const entities = data?.entities || []
@@ -89,11 +92,20 @@ export default function HomeAssistantPage() {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-background">
+    <div className={cn(
+      "min-h-screen bg-background transition-all duration-300",
+      orientation === 'landscape' ? "p-8" : "p-4 pb-24"
+    )}>
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-4">
+        <div className={cn(
+          "flex items-center justify-between mb-2",
+          orientation === 'portrait' && "flex-col gap-4 text-center"
+        )}>
+          <div className={cn(
+            "flex items-center gap-4",
+            orientation === 'portrait' && "flex-col"
+          )}>
             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--widget-blue)] to-[var(--widget-mint)] flex items-center justify-center">
               <HomeIcon className="w-7 h-7 text-white" />
             </div>
@@ -136,7 +148,10 @@ export default function HomeAssistantPage() {
       </div>
 
       {/* Quick Status Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className={cn(
+        "grid gap-4 mb-8 transition-all duration-300",
+        orientation === 'landscape' ? "grid-cols-4" : "grid-cols-2"
+      )}>
         <Card className="p-4 bg-[var(--widget-blue)]">
           <div className="flex items-center gap-3 mb-2">
             <Lightbulb className="w-5 h-5 text-foreground/70" />
@@ -178,9 +193,15 @@ export default function HomeAssistantPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={cn(
+        "grid gap-6 transition-all duration-300",
+        orientation === 'landscape' ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1"
+      )}>
         {/* Main Controls */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={cn(
+          "space-y-6",
+          orientation === 'landscape' ? "lg:col-span-2" : ""
+        )}>
           {/* Climate Control */}
           {climate.slice(0, 1).map((entity: any) => (
             <Card key={entity.entity_id} className="p-6">

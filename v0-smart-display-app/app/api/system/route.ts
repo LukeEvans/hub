@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    if (action === 'quit' || action === 'reboot' || action === 'shutdown' || action === 'display_off' || action === 'display_on') {
+    if (action === 'quit' || action === 'reboot' || action === 'shutdown' || action === 'display_off' || action === 'display_on' || action === 'rotate_landscape' || action === 'rotate_portrait') {
       // Write the command to the file
       fs.writeFileSync(commandFilePath, action);
       // Ensure the file is readable/writable by the host user (pi)

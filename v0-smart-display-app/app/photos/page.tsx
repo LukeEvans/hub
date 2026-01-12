@@ -7,12 +7,15 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { useState, useRef } from "react"
 import { useApi } from "@/lib/use-api"
 import { toast } from "sonner"
+import { useOrientation } from "@/lib/orientation-context"
+import { cn } from "@/lib/utils"
 
 export default function PhotosPage() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { orientation } = useOrientation()
   const { data, isLoading: loading, mutate } = useApi<any>('/api/photos')
   const photos = data?.images || []
 
@@ -73,10 +76,19 @@ export default function PhotosPage() {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-background">
+    <div className={cn(
+      "min-h-screen bg-background transition-all duration-300",
+      orientation === 'landscape' ? "p-8" : "p-4 pb-24"
+    )}>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-2">
+      <div className={cn(
+        "mb-8 flex flex-col gap-4",
+        orientation === 'portrait' && "items-center text-center"
+      )}>
+        <div className={cn(
+          "flex items-center gap-4 mb-2",
+          orientation === 'portrait' && "flex-col"
+        )}>
           <div className="w-14 h-14 rounded-full bg-[var(--widget-mint)] flex items-center justify-center">
             <ImageIcon className="w-7 h-7 text-foreground" />
           </div>
@@ -120,11 +132,19 @@ export default function PhotosPage() {
 
       {/* Recent Photos Section */}
       <div>
-        <h2 className="text-2xl font-bold mb-4">All Photos</h2>
+        <h2 className={cn(
+          "text-2xl font-bold mb-4",
+          orientation === 'portrait' && "text-center"
+        )}>All Photos</h2>
         {photos.length === 0 ? (
-          <p className="text-muted-foreground">No photos found in the photos directory.</p>
+          <p className="text-muted-foreground text-center">No photos found in the photos directory.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <div className={cn(
+            "grid gap-3 transition-all duration-300",
+            orientation === 'landscape' 
+              ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6" 
+              : "grid-cols-2 sm:grid-cols-3"
+          )}>
             {photos.map((photoUrl: string, index: number) => (
               <Card
                 key={index}

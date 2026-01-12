@@ -39,16 +39,22 @@ export function OrientationProvider({ children }: { children: React.ReactNode })
   const setOrientation = async (newOrientation: Orientation) => {
     setInternalOrientation(newOrientation)
     try {
-      const response = await fetch('/api/system/config', {
+      // Update config
+      const configResponse = await fetch('/api/system/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orientation: newOrientation }),
       })
-      if (response.ok) {
+      if (configResponse.ok) {
         mutate('/api/system/config')
-      } else {
-        console.error('Failed to save orientation to server')
       }
+
+      // Trigger OS rotation
+      await fetch('/api/system', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: `rotate_${newOrientation}` }),
+      })
     } catch (err) {
       console.error('Error saving orientation:', err)
     }
