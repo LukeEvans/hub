@@ -49,6 +49,9 @@ echo "Building and starting containers..."
 docker compose up -d --build
 
 if command -v systemctl >/dev/null 2>&1; then
+  echo "Installing kiosk dependencies (x11-xserver-utils)..."
+  sudo apt-get install -y x11-xserver-utils
+  
   echo "Installing kiosk systemd service (requires sudo)..."
   TMP_FILE="$(mktemp)"
   sed \
