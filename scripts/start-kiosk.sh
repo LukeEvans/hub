@@ -36,11 +36,11 @@ echo "Chromium started with PID $CHROMIUM_PID"
 
 while true; do
     if [ -f "$COMMAND_FILE" ]; then
-        COMMAND=$(cat "$COMMAND_FILE")
+        COMMAND=$(sudo cat "$COMMAND_FILE")
         # Use sudo rm to ensure we can delete it regardless of container permissions
         sudo rm -f "$COMMAND_FILE"
         
-        echo "Received system command: $COMMAND"
+        echo "$(date): Received system command: $COMMAND"
         
         case "$COMMAND" in
             "quit")
@@ -59,11 +59,29 @@ while true; do
                 ;;
             "display_off")
                 echo "Turning display off..."
-                vcgencmd display_power 0
+                # Try multiple methods to turn off display
+                vcgencmd display_power 0 || true
+                DISPLAY=:0 xset dpms force off || true
                 ;;
             "display_on")
                 echo "Turning display on..."
-                vcgencmd display_power 1
+                # Try multiple methods to turn on display
+                vcgencmd display_power 1 || true
+                DISPLAY=:0 xset dpms force on || true
+                # Also move mouse slightly to wake up some screen savers
+                DISPLAY=:0 xset s reset || true
+                ;;
+            "rotate_portrait")
+                echo "Rotating display to portrait..."
+                # Find the connected output and rotate it left
+                OUTPUT=$(DISPLAY=:0 xrandr | grep " connected" | cut -f1 -d" ")
+                DISPLAY=:0 xrandr --output "$OUTPUT" --rotate left || true
+                ;;
+            "rotate_landscape")
+                echo "Rotating display to landscape..."
+                # Find the connected output and rotate it back to normal
+                OUTPUT=$(DISPLAY=:0 xrandr | grep " connected" | cut -f1 -d" ")
+                DISPLAY=:0 xrandr --output "$OUTPUT" --rotate normal || true
                 ;;
             *)
                 echo "Unknown command: $COMMAND"

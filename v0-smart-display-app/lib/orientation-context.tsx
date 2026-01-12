@@ -7,13 +7,16 @@ type Orientation = 'landscape' | 'portrait'
 
 interface OrientationContextType {
   orientation: Orientation
+  softwareRotation: boolean
   setOrientation: (orientation: Orientation) => Promise<void>
+  setSoftwareRotation: (enabled: boolean) => Promise<void>
 }
 
 const OrientationContext = createContext<OrientationContextType | undefined>(undefined)
 
 export function OrientationProvider({ children }: { children: React.ReactNode }) {
   const [orientation, setInternalOrientation] = useState<Orientation>('landscape')
+  const [softwareRotation, setInternalSoftwareRotation] = useState<boolean>(false)
   const { mutate } = useSWRConfig()
 
   useEffect(() => {
@@ -24,6 +27,9 @@ export function OrientationProvider({ children }: { children: React.ReactNode })
         if (data.orientation) {
           setInternalOrientation(data.orientation)
         }
+        if (data.softwareRotation !== undefined) {
+          setInternalSoftwareRotation(data.softwareRotation)
+        }
       })
       .catch(err => console.error('Failed to fetch orientation:', err))
   }, [])
@@ -31,10 +37,13 @@ export function OrientationProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     // Apply class to body
     if (typeof document !== 'undefined') {
-      document.body.classList.remove('orientation-landscape', 'orientation-portrait')
+      document.body.classList.remove('orientation-landscape', 'orientation-portrait', 'software-rotate-portrait')
       document.body.classList.add(`orientation-${orientation}`)
+      if (softwareRotation && orientation === 'portrait') {
+        document.body.classList.add('software-rotate-portrait')
+      }
     }
-  }, [orientation])
+  }, [orientation, softwareRotation])
 
   const setOrientation = async (newOrientation: Orientation) => {
     setInternalOrientation(newOrientation)
@@ -60,8 +69,24 @@ export function OrientationProvider({ children }: { children: React.ReactNode })
     }
   }
 
+  const setSoftwareRotation = async (enabled: boolean) => {
+    setInternalSoftwareRotation(enabled)
+    try {
+      const response = await fetch('/api/system/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ softwareRotation: enabled }),
+      })
+      if (response.ok) {
+        mutate('/api/system/config')
+      }
+    } catch (err) {
+      console.error('Error saving software rotation:', err)
+    }
+  }
+
   return (
-    <OrientationContext.Provider value={{ orientation, setOrientation }}>
+    <OrientationContext.Provider value={{ orientation, softwareRotation, setOrientation, setSoftwareRotation }}>
       {children}
     </OrientationContext.Provider>
   )

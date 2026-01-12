@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils"
 
 export default function SettingsPage() {
   const { mutate } = useSWRConfig()
-  const { orientation, setOrientation } = useOrientation()
+  const { orientation, softwareRotation, setOrientation, setSoftwareRotation } = useOrientation()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -24,7 +24,8 @@ export default function SettingsPage() {
   const [systemConfig, setSystemConfig] = useState<any>({
     sleepScheduleEnabled: false,
     sleepStartTime: '22:00',
-    sleepEndTime: '07:00'
+    sleepEndTime: '07:00',
+    softwareRotation: false
   })
   const [isSavingSystemConfig, setIsSavingSystemConfig] = useState(false)
   
@@ -471,6 +472,29 @@ export default function SettingsPage() {
                 />
                 <Label className={`text-sm ${orientation === 'portrait' ? 'font-bold' : 'text-muted-foreground'}`}>Portrait</Label>
               </div>
+            </div>
+
+            <div className={cn(
+              "flex items-center justify-between p-6 border-2 rounded-xl gap-4 bg-muted/30",
+              orientation === 'portrait' && "flex-col text-center"
+            )}>
+              <div className={cn(
+                "flex items-center gap-4",
+                orientation === 'portrait' && "flex-col"
+              )}>
+                <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
+                  <RotateCcw className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-bold text-lg">Software Rotation Fallback</p>
+                  <p className="text-sm text-muted-foreground">Force 90° flip via CSS if OS rotation fails</p>
+                </div>
+              </div>
+              <Switch 
+                checked={softwareRotation}
+                onCheckedChange={setSoftwareRotation}
+                disabled={orientation === 'landscape'}
+              />
             </div>
           </CardContent>
         </Card>
