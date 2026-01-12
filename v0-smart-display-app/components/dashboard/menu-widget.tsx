@@ -56,13 +56,13 @@ export function MenuWidget() {
         router.push('/recipes')
       }}
     >
-      <Card className="h-full p-4 bg-[var(--widget-pink)] hover:shadow-lg transition-all border-none flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-          <Utensils className="w-5 h-5 text-foreground/70" />
-          <h3 className="font-bold text-foreground">Weekly Menu</h3>
+      <Card className="h-full p-6 bg-[var(--widget-pink)] hover:shadow-lg transition-all border-none flex flex-col">
+        <div className="flex items-center gap-3 mb-4">
+          <Utensils className="w-7 h-7 text-foreground/70" />
+          <h3 className="text-2xl font-bold text-foreground">Weekly Menu</h3>
         </div>
         
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide flex-1">
+        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide flex-1">
           {next7Days.map((dateStr: string) => {
             const date = parseSafeDate(dateStr)
             const dayName = date.toLocaleDateString([], { weekday: 'short' })
@@ -70,18 +70,18 @@ export function MenuWidget() {
             const mealsForDay = groupedMeals[dateStr] || []
 
             return (
-              <div key={dateStr} className={`flex flex-col min-w-[160px] p-3 rounded-xl transition-colors ${isToday ? 'bg-white/40 shadow-sm ring-1 ring-white/20' : 'bg-black/5'}`}>
-                <div className="text-[10px] font-bold text-foreground/70 uppercase mb-2 flex justify-between">
+              <div key={dateStr} className={`flex flex-col min-w-[200px] p-4 rounded-2xl transition-colors ${isToday ? 'bg-white/40 shadow-md ring-2 ring-white/20' : 'bg-black/5'}`}>
+                <div className="text-xs font-bold text-foreground/70 uppercase mb-3 flex justify-between tracking-wider">
                   <span>{isToday ? 'Today' : dayName}</span>
                   <span className="opacity-60">{date.toLocaleDateString([], { month: 'numeric', day: 'numeric' })}</span>
                 </div>
-                <div className="space-y-2 flex-1">
+                <div className="space-y-4 flex-1">
                   {mealsForDay.length === 0 ? (
-                    <div className="text-[10px] text-foreground/40 italic py-2">No meals</div>
+                    <div className="text-xs text-foreground/40 italic py-4">No meals</div>
                   ) : (
                     mealsForDay.map((meal: any, idx: number) => (
-                      <div key={idx} className="flex gap-2 items-center">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-black/10 flex-shrink-0 shadow-sm">
+                      <div key={idx} className="flex gap-3 items-center">
+                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-black/10 flex-shrink-0 shadow-md">
                           <img 
                             src={meal.imageUrl || '/placeholder.jpg'} 
                             alt={meal.name}
@@ -92,10 +92,10 @@ export function MenuWidget() {
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-foreground line-clamp-2 leading-tight">
+                          <div className="text-sm font-bold text-foreground line-clamp-2 leading-tight mb-1">
                             {meal.name}
                           </div>
-                          <div className="text-[9px] text-foreground/60 uppercase font-medium">
+                          <div className="text-[10px] text-foreground/60 uppercase font-bold tracking-tight">
                             {meal.mealType}
                           </div>
                         </div>

@@ -80,17 +80,17 @@ export function SportsWidget() {
       <Card className="h-full p-4 bg-gradient-to-br from-[#0E2240] to-[#FEC524] text-white border-none overflow-hidden relative cursor-pointer hover:opacity-90 transition-opacity">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-[#FEC524]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-white/80">Next Nuggets Game</span>
+            <Trophy className="w-6 h-6 text-[#FEC524]" />
+            <span className="text-sm font-bold uppercase tracking-widest text-white/80">Next Nuggets Game</span>
           </div>
-          <div className="text-[10px] font-medium bg-white/20 px-2 py-0.5 rounded-full">
+          <div className="text-xs font-bold bg-white/20 px-3 py-1 rounded-full">
             {isHome ? "HOME" : "AWAY"}
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 mt-2">
+        <div className="flex items-center justify-between gap-4 mt-4">
           <div className="flex-1 flex flex-col items-center">
-            <div className="relative w-12 h-12 mb-1">
+            <div className="relative w-16 h-16 mb-2">
               <img 
                 src={nuggetsData.logos[0].href} 
                 alt="Nuggets" 
@@ -98,20 +98,20 @@ export function SportsWidget() {
                 draggable={false}
               />
             </div>
-            <span className="text-[10px] font-bold truncate w-full text-center">NUGGETS</span>
-            <span className="text-[8px] text-white/70">({nuggetsRecord})</span>
+            <span className="text-sm font-bold truncate w-full text-center">NUGGETS</span>
+            <span className="text-xs text-white/70">({nuggetsRecord})</span>
           </div>
 
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-lg font-black italic">VS</span>
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-2xl font-black italic">VS</span>
             <div className="flex flex-col items-center">
-              <span className="text-[10px] font-bold">{timeString}</span>
-              <span className="text-[8px] text-white/70 uppercase">{dateString}</span>
+              <span className="text-sm font-bold">{timeString}</span>
+              <span className="text-xs text-white/70 uppercase">{dateString}</span>
             </div>
           </div>
 
           <div className="flex-1 flex flex-col items-center">
-            <div className="relative w-12 h-12 mb-1">
+            <div className="relative w-16 h-16 mb-2">
               <img 
                 src={opponent.team.logos[0].href} 
                 alt={opponent.team.displayName} 
@@ -119,21 +119,21 @@ export function SportsWidget() {
                 draggable={false}
               />
             </div>
-            <span className="text-[10px] font-bold truncate w-full text-center uppercase">
+            <span className="text-sm font-bold truncate w-full text-center uppercase">
               {opponent.team.shortDisplayName}
             </span>
-            <span className="text-[8px] text-white/70">({opponentRecord})</span>
+            <span className="text-xs text-white/70">({opponentRecord})</span>
           </div>
         </div>
 
-        <div className="mt-4 pt-2 border-t border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Tv className="w-3 h-3 text-[#FEC524]" />
-            <span className="text-[10px] font-medium">{broadcast}</span>
+        <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Tv className="w-4 h-4 text-[#FEC524]" />
+            <span className="text-xs font-medium">{broadcast}</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Users className="w-3 h-3 text-[#FEC524]" />
-            <span className="text-[10px] font-medium">{nextEvent.competitions[0].venue.fullName}</span>
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-[#FEC524]" />
+            <span className="text-xs font-medium truncate max-w-[120px]">{nextEvent.competitions[0].venue.fullName}</span>
           </div>
         </div>
       </Card>

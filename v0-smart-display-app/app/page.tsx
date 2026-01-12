@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { PhotoWidget } from "@/components/dashboard/photo-widget"
 import { WeatherWidget } from "@/components/dashboard/weather-widget"
 import { CalendarWidget } from "@/components/dashboard/calendar-widget"
 import { MenuWidget } from "@/components/dashboard/menu-widget"
@@ -40,8 +39,8 @@ export default function DashboardPage() {
       <div className="flex flex-col border-b pb-6 gap-4">
         <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-6xl font-black tracking-tighter">{timeString}</h1>
-            <p className="text-2xl text-muted-foreground font-medium">{dateString}</p>
+            <h1 className="text-8xl font-black tracking-tighter">{timeString}</h1>
+            <p className="text-3xl text-muted-foreground font-medium">{dateString}</p>
           </div>
         </div>
 
@@ -64,28 +63,14 @@ export default function DashboardPage() {
 
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 overflow-hidden">
-        {/* Left Column: Rotating Photo (Now 1/3 width for portrait photos) */}
-        <Link 
-          href="/photos" 
-          prefetch={false}
-          className="lg:col-span-1 relative h-[500px] block transition-opacity hover:opacity-90"
-          draggable={false}
-          onClick={(e) => {
-            e.preventDefault()
-            router.push('/photos')
-          }}
-        >
-          <PhotoWidget />
-        </Link>
+        {/* Left Column: Weather (1/3 width) */}
+        <div className="lg:col-span-1 h-[600px]">
+          <WeatherWidget />
+        </div>
 
-        {/* Right Column: Weather and Calendar (Now 2/3 width, side-by-side) */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="h-[500px]">
-            <WeatherWidget />
-          </div>
-          <div className="h-[500px]">
-            <CalendarWidget />
-          </div>
+        {/* Right Column: Calendar (2/3 width) */}
+        <div className="lg:col-span-2 h-[600px]">
+          <CalendarWidget />
         </div>
       </div>
 

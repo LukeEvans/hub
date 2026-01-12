@@ -43,13 +43,13 @@ export function CalendarWidget() {
         router.push('/calendar')
       }}
     >
-      <Card className="h-full p-4 bg-[var(--widget-blue)] hover:shadow-lg transition-all border-none overflow-hidden flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-          <CalendarIcon className="w-5 h-5 text-foreground/70" />
-          <h3 className="font-bold text-foreground">Weekly Schedule</h3>
+      <Card className="h-full p-6 bg-[var(--widget-blue)] hover:shadow-lg transition-all border-none overflow-hidden flex flex-col">
+        <div className="flex items-center gap-3 mb-6">
+          <CalendarIcon className="w-8 h-8 text-foreground/70" />
+          <h3 className="text-3xl font-bold text-foreground">Weekly Schedule</h3>
         </div>
         
-        <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto space-y-6 scrollbar-hide">
           {events.length === 0 ? (
             <div className="text-sm text-foreground/60 italic py-4">No events this week</div>
           ) : (
@@ -70,33 +70,33 @@ export function CalendarWidget() {
               )
 
               return (
-                <div key={i} className="space-y-2">
+                <div key={i} className="space-y-4">
                   {showDayHeader && (
-                    <div className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider border-b border-foreground/5 pb-1 mt-2 flex items-center justify-between">
-                      <span>{start.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}</span>
-                      {dayHasBirthday && <PartyPopper className="w-3 h-3 text-pink-500 animate-bounce" />}
+                    <div className="text-sm font-bold text-foreground/50 uppercase tracking-widest border-b-2 border-foreground/10 pb-2 mt-4 flex items-center justify-between">
+                      <span>{start.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+                      {dayHasBirthday && <PartyPopper className="w-5 h-5 text-pink-500 animate-bounce" />}
                     </div>
                   )}
                   <div className={cn(
-                    "flex gap-3 items-start p-1 rounded-md transition-colors",
-                    eventIsBirthday && "bg-pink-500/10 border border-pink-500/20 shadow-sm"
+                    "flex gap-6 items-start p-3 rounded-xl transition-colors",
+                    eventIsBirthday && "bg-pink-500/10 border-2 border-pink-500/30 shadow-md"
                   )}>
                     <div className={cn(
-                      "text-[10px] font-bold w-12 pt-1 uppercase",
-                      eventIsBirthday ? "text-pink-600 dark:text-pink-400" : "text-foreground/70"
+                      "text-sm font-black w-20 pt-1 uppercase tracking-tight",
+                      eventIsBirthday ? "text-pink-600 dark:text-pink-400" : "text-foreground/60"
                     )}>
                       {isAllDay ? 'All Day' : time}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className={cn(
-                        "text-sm font-semibold truncate flex items-center gap-1.5",
+                        "text-xl font-bold truncate flex items-center gap-2",
                         eventIsBirthday ? "text-pink-700 dark:text-pink-300" : "text-foreground"
                       )}>
                         {event.summary}
-                        {eventIsBirthday && <Cake className="w-3.5 h-3.5 text-pink-500 animate-pulse" />}
+                        {eventIsBirthday && <Cake className="w-5 h-5 text-pink-500 animate-pulse" />}
                       </div>
                       {event.location && (
-                        <div className="text-[10px] text-foreground/60 truncate">{event.location}</div>
+                        <div className="text-sm text-foreground/50 truncate mt-1">{event.location}</div>
                       )}
                     </div>
                   </div>

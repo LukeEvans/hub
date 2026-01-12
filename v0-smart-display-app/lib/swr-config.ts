@@ -5,5 +5,6 @@ export const swrConfig: SWRConfiguration = {
   revalidateOnFocus: true,
   revalidateIfStale: true,
   dedupingInterval: 2000, // 2 seconds
+  refreshInterval: 60000, // 1 minute
 };
 

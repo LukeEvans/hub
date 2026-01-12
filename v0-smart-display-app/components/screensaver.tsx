@@ -7,7 +7,7 @@ export function Screensaver() {
   const [isVisible, setIsVisible] = useState(false)
   const [photos, setPhotos] = useState<string[]>([])
   const [currentTime, setCurrentTime] = useState(new Date())
-  const idleTime = 300000 // 5 minutes
+  const idleTime = 3600000 // 1 hour
 
   useEffect(() => {
     const timer = setInterval(() => {
